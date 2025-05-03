@@ -1,0 +1,23 @@
+{
+  "files.exclude": {
+    "**/.idea": true,
+    "**/.vs": true,
+    "**/bin": true,
+    "**/obj": true,
+    "**/*.csproj.user": true,
+    "**/*.DotSettings.user": true
+  },
+  "telemetry.telemetryLevel": "off",
+  "explorer.confirmDelete": false,
+  "git.autofetch": true,
+  "github.copilot.enable": {
+    "*": false,
+    "plaintext": false,
+    "markdown": true,
+    "scminput": false,
+    "jsonc": true
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
+}

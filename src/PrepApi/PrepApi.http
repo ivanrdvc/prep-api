@@ -1,0 +1,65 @@
+@PrepApi_HostAddress = http://localhost:5053
+@Bearer_Token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6Iml2YW5yIiwic3ViIjoiaXZhbnIiLCJqdGkiOiJhMTg4OTUzZSIsImF1ZCI6InByZXAtYXBpIiwibmJmIjoxNzQ1NTc5MjAzLCJleHAiOjE3NTM0NDE2MDMsImlhdCI6MTc0NTU3OTIwNCwiaXNzIjoiZG90bmV0LXVzZXItand0cyJ9.M5TynhpTB2uyyIXE8jOpWWOhWurrGrJ2ovJX1zxwKD8
+
+### Create a recipe
+POST {{PrepApi_HostAddress}}/api/recipes/
+Content-Type: application/json
+Authorization: Bearer {{Bearer_Token}}
+
+{
+  "name": "Pancakes",
+  "description": "Classic fluffy pancakes.",
+  "prepTime": 10,
+  "cookTime": 15,
+  "yield": "Makes about 8 pancakes",
+  "steps": [
+    { "description": "Combine dry ingredients (flour, sugar, baking powder, salt).", "order": 1 },
+    { "description": "In a separate bowl, whisk wet ingredients (milk, egg, melted butter).", "order": 2 },
+    { "description": "Pour wet ingredients into dry and whisk until just combined (don't overmix).", "order": 3 },
+    { "description": "Heat a lightly oiled griddle or pan. Pour or scoop batter onto griddle.", "order": 4 },
+    { "description": "Cook until bubbles form on top, then flip and cook until golden brown.", "order": 5 }
+  ],
+  "ingredients": [
+    {
+      "ingredientId": "11111111-1111-1111-1111-111111111111", 
+      "quantity": 550,
+      "unit": 2
+    },
+    {
+      "ingredientId": "22222222-2222-2222-2222-222222222222",
+      "quantity": 50,
+      "unit": 3
+    }
+  ]
+}
+
+### Get a recipe
+GET {{PrepApi_HostAddress}}/api/recipes/019697f8-4b17-7b26-9b48-9483954d6465
+Authorization: Bearer {{Bearer_Token}}
+
+### Update a recipe
+PUT {{PrepApi_HostAddress}}/api/recipes/019697f8-4b17-7b26-9b48-9483954d6465
+Content-Type: application/json
+Authorization: Bearer {{Bearer_Token}}
+
+{
+  "name": "Updated Fluffy Pancakes",
+  "description": "An updated version of the classic fluffy pancakes recipe.",
+  "prepTime": 12,
+  "cookTime": 18,
+  "yield": "Makes about 10 pancakes",
+  "steps": [
+    { "description": "Combine dry ingredients (flour, sugar, baking powder, salt) in a large bowl.", "order": 1 }
+  ],
+  "ingredients": [
+    {
+      "ingredientId": "11111111-1111-1111-1111-111111111111", 
+      "quantity": 600, 
+      "unit": 2 
+    }
+  ]
+}
+
+### Delete a recipe
+DELETE {{PrepApi_HostAddress}}/api/recipes/019692d4-4495-7ea1-83db-440b7aaa4ecf
+Authorization: Bearer {{Bearer_Token}}
