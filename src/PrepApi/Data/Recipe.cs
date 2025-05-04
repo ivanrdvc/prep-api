@@ -12,21 +12,14 @@ public class Recipe : Entity
     public required string StepsJson { get; set; }
 }
 
-
-public class Ingredient : Entity
-{
-    public required string Name { get;  set; }
-    public string? UserId { get; set; }
-}
-
 public class RecipeIngredient
 {
     public Guid RecipeId { get; set; }
-    public required Recipe Recipe { get;  set; }
-    public Guid IngredientId { get;  set; }
-    public Ingredient? Ingredient { get; set; } 
-    public double Quantity { get;  set; }
-    public Unit Unit { get;  set; }
+    public Recipe? Recipe { get; set; }
+    public Guid IngredientId { get; set; }
+    public Ingredient? Ingredient { get; set; }
+    public decimal Quantity { get; set; }
+    public Unit Unit { get; set; }
 }
 
 public enum Unit

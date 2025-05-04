@@ -19,7 +19,7 @@ public static class TestDataSeeder
         int? cookTime = null,
         string? yield = null,
         List<StepDto>? steps = null,
-        double defaultIngredientQuantity = 1,
+        decimal defaultIngredientQuantity = 1,
         Unit defaultIngredientUnit = Unit.Gram
     )
     {
@@ -48,7 +48,6 @@ public static class TestDataSeeder
         {
             recipe.RecipeIngredients.Add(new RecipeIngredient
             {
-                Recipe = recipe,
                 IngredientId = ingredient.Id,
                 Quantity = defaultIngredientQuantity,
                 Unit = defaultIngredientUnit

@@ -47,6 +47,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapRecipeEndpoints();
+app.MapPrepEndpoints();
 app.MapHealthChecks("/health");
 
 app.Run();

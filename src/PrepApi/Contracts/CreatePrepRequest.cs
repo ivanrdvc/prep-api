@@ -1,0 +1,59 @@
+﻿using FluentValidation;
+
+using PrepApi.Data;
+
+namespace PrepApi.Contracts;
+
+public record CreatePrepRequest
+{
+    public required Guid RecipeId { get; init; }
+    public string? SummaryNotes { get; init; }
+    public required int PrepTimeMinutes { get; init; }
+    public required int CookTimeMinutes { get; init; }
+    public required List<StepDto> Steps { get; init; } = [];
+    public required List<PrepIngredientInputDto> PrepIngredients { get; init; } = [];
+}
+
+public record PrepIngredientInputDto
+{
+    public Guid IngredientId { get; init; }
+    public decimal Quantity { get; init; }
+    public Unit Unit { get; init; }
+    public string? Notes { get; init; }
+}
+
+public class CreatePrepRequestValidator : AbstractValidator<CreatePrepRequest>
+{
+    public CreatePrepRequestValidator()
+    {
+        RuleFor(x => x.RecipeId)
+            .NotEmpty().WithMessage("Recipe ID is required.");
+
+        RuleFor(x => x.SummaryNotes)
+            .MaximumLength(2000);
+
+        RuleFor(x => x.PrepTimeMinutes)
+            .GreaterThanOrEqualTo(0).WithMessage("Preparation time cannot be negative.");
+
+        RuleFor(x => x.CookTimeMinutes)
+            .GreaterThanOrEqualTo(0).WithMessage("Cook time cannot be negative.");
+
+        RuleForEach(x => x.Steps).ChildRules(step =>
+        {
+            step.RuleFor(s => s.Description)
+                .NotEmpty()
+                .MaximumLength(256);
+        });
+
+        RuleFor(x => x.PrepIngredients)
+            .NotEmpty().WithMessage("At least one ingredient is required.");
+
+        RuleForEach(x => x.PrepIngredients).ChildRules(ingredient =>
+        {
+            ingredient.RuleFor(i => i.IngredientId).NotEmpty();
+            ingredient.RuleFor(i => i.Quantity).GreaterThan(0);
+            ingredient.RuleFor(i => i.Unit).IsInEnum();
+            ingredient.RuleFor(i => i.Notes).MaximumLength(500);
+        });
+    }
+}

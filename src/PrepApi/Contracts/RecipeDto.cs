@@ -47,7 +47,7 @@ public record IngredientDto
 {
     public required Guid IngredientId { get; init; }
     public required string Name { get; init; }
-    public required double Quantity { get; init; }
+    public required decimal Quantity { get; init; }
     public required Unit Unit { get; init; }
 }
 
