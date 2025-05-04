@@ -29,19 +29,17 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
-    app.MapOpenApi();
-    app.MapScalarApiReference();
-
-    // TODO remove after initial
-    using var scope = app.Services.CreateScope();
-    var dbContext = scope.ServiceProvider.GetRequiredService<PrepDb>();
-    await dbContext.Database.EnsureDeletedAsync();
-    await dbContext.Database.EnsureCreatedAsync();
 }
 else
 {
     app.UseExceptionHandler();
     app.UseHsts();
+}
+
+if (app.Configuration.GetValue<bool>("ApiDocsEnabled"))
+{
+    app.MapOpenApi().CacheOutput();
+    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();
