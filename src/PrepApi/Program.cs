@@ -4,6 +4,7 @@ using FluentValidation;
 
 using PrepApi;
 using PrepApi.Data;
+using PrepApi.Endpoints;
 
 using Scalar.AspNetCore;
 
@@ -29,6 +30,11 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
+    
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<PrepDb>();
+    // await dbContext.Database.EnsureDeletedAsync();
+    await dbContext.Database.EnsureCreatedAsync();
 }
 else
 {

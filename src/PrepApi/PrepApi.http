@@ -9,8 +9,8 @@ Authorization: Bearer {{Bearer_Token}}
 {
   "name": "Simple Recipe",
   "description": "Basic recipe description.",
-  "prepTime": 5,
-  "cookTime": 10,
+  "prepTimeMinutes": 5,
+  "cookTimeMinutes": 10,
   "yield": "8 servings",
   "steps": [
     { "description": "Mix dry ingredients.", "order": 1 },
@@ -36,16 +36,16 @@ GET {{PrepApi_HostAddress}}/api/recipes/01969d5a-89b5-78d6-822c-86a6fc53baba
 Authorization: Bearer {{Bearer_Token}}
 
 ### Update a recipe
-PUT {{PrepApi_HostAddress}}/api/recipes/01969d5a-89b5-78d6-822c-86a6fc53baba
+PUT {{PrepApi_HostAddress}}/api/recipes/0196a1ff-b622-7c7b-bb02-e8063eb7312f
 Content-Type: application/json
 Authorization: Bearer {{Bearer_Token}}
 
 {
   "name": "Updated Recipe",
   "description": "Updated recipe description.",
-  "prepTime": 8,
-  "cookTime": 12,
-  "yield": "6 servings",
+  "prepTimeMinutes": 1,
+  "cookTimeMinutes": 1,
+  "yield": "1 servings",
   "steps": [
     { "description": "Combine ingredients.", "order": 1 },
     { "description": "Mix thoroughly.", "order": 2 }
@@ -65,7 +65,7 @@ Authorization: Bearer {{Bearer_Token}}
 }
 
 ### Delete a recipe
-DELETE {{PrepApi_HostAddress}}/api/recipes/019692d4-4495-7ea1-83db-440b7aaa4ecf
+DELETE {{PrepApi_HostAddress}}/api/recipes/0196a205-6f27-70b1-adfc-92476f0f8bf3
 Authorization: Bearer {{Bearer_Token}}
 
 ### Create a Prep
@@ -102,3 +102,15 @@ Authorization: Bearer {{Bearer_Token}}
     }
   ]
 }
+
+### Delete a prep
+DELETE {{PrepApi_HostAddress}}/api/preps/0196a205-6f27-70b1-adfc-92476f0f8bf3
+Authorization: Bearer {{Bearer_Token}}
+
+### Get a prep
+GET {{PrepApi_HostAddress}}/api/preps/0196a20b-e844-7ee5-ad5f-8518f5a586f1
+Authorization: Bearer {{Bearer_Token}}
+
+### Get all preps (paginated and sorted)
+GET {{PrepApi_HostAddress}}/api/preps?pageSize=10&pageIndex=1&sortOrder=desc
+Authorization: Bearer {{Bearer_Token}}

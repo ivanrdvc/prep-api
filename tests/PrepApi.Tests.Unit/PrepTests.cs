@@ -3,7 +3,7 @@ using PrepApi.Data;
 
 namespace PrepApi.Tests.Unit;
 
-public class PrepTest
+public class PrepTests
 {
     private readonly Guid _recipeId = Guid.NewGuid();
     private readonly Guid _ingredientId1 = Guid.NewGuid();
@@ -202,8 +202,8 @@ public class PrepTest
             Name = "Base Recipe",
             UserId = _userId,
             Description = "Base Description",
-            PrepTime = 10,
-            CookTime = 20,
+            PrepTimeMinutes = 10,
+            CookTimeMinutes = 20,
             StepsJson = System.Text.Json.JsonSerializer.Serialize(_defaultSteps),
             RecipeIngredients = ingredients
         };

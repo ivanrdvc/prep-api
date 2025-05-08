@@ -208,8 +208,8 @@ public class PrepDb(DbContextOptions<PrepDb> options, UserContext userContext) :
                             Name = "Seeded Recipe",
                             UserId = "SeedUser",
                             Description = "Basic recipe description.",
-                            PrepTime = 5,
-                            CookTime = 10,
+                            PrepTimeMinutes = 5,
+                            CookTimeMinutes = 10,
                             Yield = "8 servings",
                             StepsJson = JsonSerializer.Serialize(steps),
                         };

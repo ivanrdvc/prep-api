@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using PrepApi.Contracts;
 using PrepApi.Data;
 
-namespace PrepApi;
+namespace PrepApi.Endpoints;
 
 public static class RecipeEndpoints
 {
@@ -75,8 +75,8 @@ public static class RecipeEndpoints
 
         recipe.Name = request.Name;
         recipe.Description = request.Description;
-        recipe.PrepTime = request.PrepTime;
-        recipe.CookTime = request.CookTime;
+        recipe.PrepTimeMinutes = request.PrepTimeMinutes;
+        recipe.CookTimeMinutes = request.CookTimeMinutes;
         recipe.Yield = request.Yield;
         recipe.StepsJson = JsonSerializer.Serialize(request.Steps);
 
@@ -141,8 +141,8 @@ public static class RecipeEndpoints
         {
             Name = request.Name,
             Description = request.Description,
-            PrepTime = request.PrepTime,
-            CookTime = request.CookTime,
+            PrepTimeMinutes = request.PrepTimeMinutes,
+            CookTimeMinutes = request.CookTimeMinutes,
             Yield = request.Yield,
             UserId = userContext.UserId,
             StepsJson = JsonSerializer.Serialize(request.Steps),

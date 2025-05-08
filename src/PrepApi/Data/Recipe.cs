@@ -5,8 +5,8 @@ public class Recipe : Entity
     public required string Name { get; set; }
     public required string UserId { get; set; }
     public required string Description { get; set; }
-    public int PrepTime { get; set; }
-    public int CookTime { get; set; }
+    public int PrepTimeMinutes { get; set; }
+    public int CookTimeMinutes { get; set; }
     public string? Yield { get; set; }
     public List<RecipeIngredient> RecipeIngredients { get; set; } = [];
     public required string StepsJson { get; set; }
