@@ -8,8 +8,8 @@ public record CreateRecipeRequest
 {
     public required string Name { get; init; }
     public required string Description { get; init; }
-    public required int PrepTime { get; init; }
-    public required int CookTime { get; init; }
+    public required int PrepTimeMinutes { get; init; }
+    public required int CookTimeMinutes { get; init; }
     public string? Yield { get; init; }
     public required List<StepDto> Steps { get; init; }
     public required List<RecipeIngredientInputDto> Ingredients { get; init; }
@@ -18,7 +18,7 @@ public record CreateRecipeRequest
 public record RecipeIngredientInputDto
 {
     public required Guid IngredientId { get; init; }
-    public required double Quantity { get; init; }
+    public required decimal Quantity { get; init; }
     public required Unit Unit { get; init; }
 }
 
@@ -34,10 +34,10 @@ public class CreateRecipeRequestValidator : AbstractValidator<CreateRecipeReques
             .NotEmpty()
             .MaximumLength(1000);
 
-        RuleFor(x => x.PrepTime)
+        RuleFor(x => x.PrepTimeMinutes)
             .GreaterThanOrEqualTo(0).WithMessage("Preparation time cannot be negative.");
 
-        RuleFor(x => x.CookTime)
+        RuleFor(x => x.CookTimeMinutes)
             .GreaterThanOrEqualTo(0).WithMessage("Cook time cannot be negative.");
 
         RuleFor(x => x.Yield)

@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using PrepApi.Contracts;
 using PrepApi.Data;
 
-namespace PrepApi;
+namespace PrepApi.Endpoints;
 
 public static class RecipeEndpoints
 {
@@ -57,8 +57,8 @@ public static class RecipeEndpoints
             return TypedResults.ValidationProblem(validationResult.ToDictionary());
         }
 
-        var (ingredientsValid, ingredientProblem) = await ValidateIngredientsExistAsync(db, request.Ingredients);
-        if (!ingredientsValid)
+        var ingredientProblem = await ValidateRecipeIngredientsAsync(db, request.Ingredients);
+        if (ingredientProblem != null)
         {
             return ingredientProblem!;
         }
@@ -75,17 +75,16 @@ public static class RecipeEndpoints
 
         recipe.Name = request.Name;
         recipe.Description = request.Description;
-        recipe.PrepTime = request.PrepTime;
-        recipe.CookTime = request.CookTime;
+        recipe.PrepTimeMinutes = request.PrepTimeMinutes;
+        recipe.CookTimeMinutes = request.CookTimeMinutes;
         recipe.Yield = request.Yield;
         recipe.StepsJson = JsonSerializer.Serialize(request.Steps);
-        
+
         recipe.RecipeIngredients.Clear();
         foreach (var ingredientDto in request.Ingredients)
         {
             recipe.RecipeIngredients.Add(new RecipeIngredient
             {
-                Recipe = recipe,
                 IngredientId = ingredientDto.IngredientId,
                 Quantity = ingredientDto.Quantity,
                 Unit = ingredientDto.Unit
@@ -102,8 +101,7 @@ public static class RecipeEndpoints
         PrepDb db,
         UserContext userContext)
     {
-        var recipe = await db.Recipes
-            .FirstOrDefaultAsync(r => r.Id == id && r.UserId == userContext.UserId);
+        var recipe = await db.Recipes.FirstOrDefaultAsync(r => r.Id == id && r.UserId == userContext.UserId);
 
         if (recipe is null)
         {
@@ -133,8 +131,8 @@ public static class RecipeEndpoints
             return TypedResults.ValidationProblem(validationResult.ToDictionary());
         }
 
-        var (ingredientsValid, ingredientProblem) = await ValidateIngredientsExistAsync(db, request.Ingredients);
-        if (!ingredientsValid)
+        var ingredientProblem = await ValidateRecipeIngredientsAsync(db, request.Ingredients);
+        if (ingredientProblem != null)
         {
             return ingredientProblem!;
         }
@@ -143,20 +141,18 @@ public static class RecipeEndpoints
         {
             Name = request.Name,
             Description = request.Description,
-            PrepTime = request.PrepTime,
-            CookTime = request.CookTime,
+            PrepTimeMinutes = request.PrepTimeMinutes,
+            CookTimeMinutes = request.CookTimeMinutes,
             Yield = request.Yield,
             UserId = userContext.UserId,
-            StepsJson = JsonSerializer.Serialize(request.Steps)
+            StepsJson = JsonSerializer.Serialize(request.Steps),
+            RecipeIngredients = request.Ingredients.Select(ingredientDto => new RecipeIngredient
+            {
+                IngredientId = ingredientDto.IngredientId,
+                Quantity = ingredientDto.Quantity,
+                Unit = ingredientDto.Unit
+            }).ToList()
         };
-
-        recipe.RecipeIngredients = request.Ingredients.Select(ingredientDto => new RecipeIngredient
-        {
-            Recipe = recipe,
-            IngredientId = ingredientDto.IngredientId,
-            Quantity = ingredientDto.Quantity,
-            Unit = ingredientDto.Unit
-        }).ToList();
 
         await db.Recipes.AddAsync(recipe);
         await db.SaveChangesAsync();
@@ -164,25 +160,28 @@ public static class RecipeEndpoints
         return TypedResults.Created($"/api/recipe/{recipe.Id}", recipe.Id);
     }
 
-    private static async Task<(bool IsValid, ValidationProblem? Problem)> ValidateIngredientsExistAsync(
+    private static async Task<ValidationProblem?> ValidateRecipeIngredientsAsync(
         PrepDb db,
         IEnumerable<RecipeIngredientInputDto> requestedIngredients)
     {
         var requestedIngredientIds = requestedIngredients.Select(i => i.IngredientId).Distinct().ToList();
+        if (requestedIngredientIds.Count == 0)
+        {
+            return null;
+        }
+
         var existingIngredientCount = await db.Ingredients
             .AsNoTracking()
             .CountAsync(ing => requestedIngredientIds.Contains(ing.Id));
 
         if (existingIngredientCount == requestedIngredientIds.Count)
         {
-            return (true, null);
+            return null;
         }
 
-        var problem = TypedResults.ValidationProblem(new Dictionary<string, string[]>
+        return TypedResults.ValidationProblem(new Dictionary<string, string[]>
         {
             { "Ingredients", ["One or more specified ingredients do not exist."] }
         });
-
-        return (false, problem);
     }
 }

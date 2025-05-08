@@ -7,11 +7,14 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{191ED420-0D6F-41E2-9B21-F5E10C9FD890}"
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
+		TODO.md = TODO.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{E35F7946-B93D-4870-BD53-74782B032A4A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PrepApi.Tests.Integration", "tests\PrepApi.Tests.Integration\PrepApi.Tests.Integration.csproj", "{A08F7239-01F8-4328-AB16-2BA71F04A2CE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PrepApi.Tests.Unit", "tests\PrepApi.Tests.Unit\PrepApi.Tests.Unit.csproj", "{41CAE196-811D-4E5F-9B72-A1BA06154B4F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,9 +30,14 @@ Global
 		{A08F7239-01F8-4328-AB16-2BA71F04A2CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A08F7239-01F8-4328-AB16-2BA71F04A2CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A08F7239-01F8-4328-AB16-2BA71F04A2CE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{41CAE196-811D-4E5F-9B72-A1BA06154B4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{41CAE196-811D-4E5F-9B72-A1BA06154B4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{41CAE196-811D-4E5F-9B72-A1BA06154B4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{41CAE196-811D-4E5F-9B72-A1BA06154B4F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{D555F7F9-F99C-46B7-A5B4-37338118FD2F} = {ADDF833D-F778-4347-8A36-C64804FEE53B}
 		{A08F7239-01F8-4328-AB16-2BA71F04A2CE} = {E35F7946-B93D-4870-BD53-74782B032A4A}
+		{41CAE196-811D-4E5F-9B72-A1BA06154B4F} = {E35F7946-B93D-4870-BD53-74782B032A4A}
 	EndGlobalSection
 EndGlobal
