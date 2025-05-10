@@ -12,6 +12,9 @@ public class PrepDb(DbContextOptions<PrepDb> options, UserContext userContext) :
     public DbSet<Ingredient> Ingredients { get; set; }
     public DbSet<RecipeIngredient> RecipeIngredients { get; set; }
     public DbSet<Prep> Preps { get; set; }
+    public DbSet<PrepIngredient> PrepsIngredients { get; set; }
+    public DbSet<Tag> Tags { get; set; } 
+    public DbSet<RecipeTag> RecipeTags { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -75,6 +78,32 @@ public class PrepDb(DbContextOptions<PrepDb> options, UserContext userContext) :
                 .HasConversion<string>()
                 .HasMaxLength(50)
                 .IsRequired();
+        });
+
+        modelBuilder.Entity<Tag>(entity =>
+        {
+            entity.Property(t => t.Name)
+                .IsRequired()
+                .HasMaxLength(50);
+            
+            entity.Property(t => t.UserId).IsRequired(); 
+            
+            entity.HasIndex(t => new { t.Name, t.UserId }).IsUnique();
+        });
+
+        modelBuilder.Entity<RecipeTag>(entity =>
+        {
+            entity.HasKey(rt => new { rt.RecipeId, rt.TagId });
+
+            entity.HasOne(rt => rt.Recipe)
+                .WithMany(r => r.RecipeTags)
+                .HasForeignKey(rt => rt.RecipeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(rt => rt.Tag)
+                .WithMany(t => t.RecipeTags)
+                .HasForeignKey(rt => rt.TagId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Ingredient>(entity => entity.Property(p => p.Name)

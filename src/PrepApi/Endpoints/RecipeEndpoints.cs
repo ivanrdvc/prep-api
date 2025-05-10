@@ -33,6 +33,8 @@ public static class RecipeEndpoints
         var recipe = await db.Recipes
             .Include(r => r.RecipeIngredients)
             .ThenInclude(ri => ri.Ingredient)
+            .Include(r => r.RecipeTags)
+            .ThenInclude(rt => rt.Tag) 
             .AsNoTracking()
             .FirstOrDefaultAsync(r => r.Id == id && r.UserId == userContext.UserId);
 
@@ -66,6 +68,7 @@ public static class RecipeEndpoints
         var recipe = await db.Recipes
             .Include(r => r.RecipeIngredients)
             .ThenInclude(ri => ri.Ingredient)
+            .Include(r => r.RecipeTags)
             .FirstOrDefaultAsync(r => r.Id == id && r.UserId == userContext.UserId);
 
         if (recipe is null)
@@ -79,17 +82,16 @@ public static class RecipeEndpoints
         recipe.CookTimeMinutes = request.CookTimeMinutes;
         recipe.Yield = request.Yield;
         recipe.StepsJson = JsonSerializer.Serialize(request.Steps);
-
+        
         recipe.RecipeIngredients.Clear();
-        foreach (var ingredientDto in request.Ingredients)
-        {
-            recipe.RecipeIngredients.Add(new RecipeIngredient
-            {
-                IngredientId = ingredientDto.IngredientId,
-                Quantity = ingredientDto.Quantity,
-                Unit = ingredientDto.Unit
-            });
-        }
+        recipe.RecipeIngredients = request.Ingredients.Select(i => new RecipeIngredient {
+            IngredientId = i.IngredientId,
+            Quantity = i.Quantity,
+            Unit = i.Unit
+        }).ToList();
+    
+        recipe.RecipeTags.Clear(); 
+        recipe.RecipeTags = await CreateRecipeTagsFromIdsAsync(db, request.TagIds, userContext.UserId!);
 
         await db.SaveChangesAsync();
 
@@ -151,13 +153,39 @@ public static class RecipeEndpoints
                 IngredientId = ingredientDto.IngredientId,
                 Quantity = ingredientDto.Quantity,
                 Unit = ingredientDto.Unit
-            }).ToList()
+            }).ToList(),
+            RecipeTags = await CreateRecipeTagsFromIdsAsync(db, request.TagIds, userContext.UserId)
         };
 
         await db.Recipes.AddAsync(recipe);
         await db.SaveChangesAsync();
 
         return TypedResults.Created($"/api/recipe/{recipe.Id}", recipe.Id);
+    }
+
+
+    private static async Task<List<RecipeTag>> CreateRecipeTagsFromIdsAsync(
+        PrepDb db,
+        List<Guid>? tagIds,
+        string userId)
+    {
+        if (tagIds == null || tagIds.Count == 0)
+        {
+            return [];
+        }
+
+        var distinctTagIds = tagIds.Distinct().ToList();
+        var validTagIds = await db.Tags
+            .Where(t => t.UserId == userId && distinctTagIds.Contains(t.Id))
+            .Select(t => t.Id)
+            .ToListAsync();
+
+        return validTagIds
+            .Select(tagId => new RecipeTag
+            {
+                TagId = tagId
+            })
+            .ToList();
     }
 
     private static async Task<ValidationProblem?> ValidateRecipeIngredientsAsync(

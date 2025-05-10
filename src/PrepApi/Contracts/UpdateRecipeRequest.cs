@@ -11,6 +11,7 @@ public record UpdateRecipeRequest
     public string? Yield { get; init; }
     public required List<StepDto> Steps { get; init; }
     public required List<RecipeIngredientInputDto> Ingredients { get; init; }
+    public List<Guid>? TagIds { get; init; }
 }
 
 public class UpdateRecipeRequestValidator : AbstractValidator<UpdateRecipeRequest>

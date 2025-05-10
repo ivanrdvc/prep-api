@@ -10,48 +10,43 @@ public class Prep : Entity
     public string? SummaryNotes { get; set; }
     public int? PrepTimeMinutes { get; set; }
     public int? CookTimeMinutes { get; set; }
-    public List<PrepIngredient> PrepIngredients { get; set; } = [];
+    public ICollection<PrepIngredient> PrepIngredients { get; set; } = [];
     public required string StepsJson { get; set; }
     public Guid? CreatedNewRecipeId { get; set; }
     public Recipe? CreatedNewRecipe { get; set; }
 
     public static List<PrepIngredient> CreatePrepIngredients(
-        IEnumerable<PrepIngredientInputDto> prepIngredients,
-        Recipe baseRecipe)
+        IEnumerable<PrepIngredientInputDto> inputs,
+        Recipe recipe)
     {
-        var baseRecipeIngredientsLookup = baseRecipe.RecipeIngredients.ToDictionary(ri => ri.IngredientId, ri => ri);
-        var prepIngredientsToSave = new List<PrepIngredient>();
+        var recipeLookup = recipe.RecipeIngredients.ToDictionary(ri => ri.IngredientId, ri => ri);
 
-        foreach (var ingredientInput in prepIngredients)
+        return inputs.Select(input =>
         {
-            var prepIngredient = new PrepIngredient
+            var prep = new PrepIngredient
             {
-                IngredientId = ingredientInput.IngredientId,
-                Quantity = ingredientInput.Quantity,
-                Unit = ingredientInput.Unit,
-                Notes = ingredientInput.Notes,
+                IngredientId = input.IngredientId,
+                Quantity = input.Quantity,
+                Unit = input.Unit,
+                Notes = input.Notes,
             };
 
-            if (baseRecipeIngredientsLookup.TryGetValue(ingredientInput.IngredientId, out var baseRecipeIngredient))
+            if (recipeLookup.TryGetValue(input.IngredientId, out var baseIngredient))
             {
-                // Found a match determine if kept or modified
-                var quantityMatch = baseRecipeIngredient.Quantity == ingredientInput.Quantity;
-                var unitMatch = baseRecipeIngredient.Unit == ingredientInput.Unit;
+                bool qtyMatch = baseIngredient.Quantity == input.Quantity;
+                bool unitMatch = baseIngredient.Unit == input.Unit;
 
-                prepIngredient.Status = (quantityMatch && unitMatch)
+                prep.Status = (qtyMatch && unitMatch)
                     ? PrepIngredientStatus.Kept
                     : PrepIngredientStatus.Modified;
             }
             else
             {
-                // No match found this ingredient was added
-                prepIngredient.Status = PrepIngredientStatus.Added;
+                prep.Status = PrepIngredientStatus.Added;
             }
 
-            prepIngredientsToSave.Add(prepIngredient);
-        }
-
-        return prepIngredientsToSave;
+            return prep;
+        }).ToList();
     }
 }
 

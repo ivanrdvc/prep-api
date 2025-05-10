@@ -8,8 +8,9 @@ public class Recipe : Entity
     public int PrepTimeMinutes { get; set; }
     public int CookTimeMinutes { get; set; }
     public string? Yield { get; set; }
-    public List<RecipeIngredient> RecipeIngredients { get; set; } = [];
+    public ICollection<RecipeIngredient> RecipeIngredients { get; set; } = [];
     public required string StepsJson { get; set; }
+    public ICollection<RecipeTag> RecipeTags { get; set; } = [];
 }
 
 public class RecipeIngredient

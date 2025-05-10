@@ -19,10 +19,12 @@ public class RecipeEndpointsTests(TestWebAppFactory factory) : IClassFixture<Tes
     private readonly TestSeeder _seeder = new(factory);
 
     private Dictionary<string, Ingredient> _ingredients = new();
+    private Dictionary<string, Tag> _tags = new();
 
     public async Task InitializeAsync()
     {
         _ingredients = await _seeder.SeedIngredientsAsync("Flour", "Sugar", "Milk", "Butter");
+        _tags = await _seeder.SeedTagsAsync(TestUserId, "Tag1", "Test Tag");
     }
 
     public Task DisposeAsync()
@@ -34,7 +36,9 @@ public class RecipeEndpointsTests(TestWebAppFactory factory) : IClassFixture<Tes
     public async Task GetRecipe_WhenRecipeExistsAndBelongsToUser_ReturnsOk()
     {
         // Arrange
-        var recipe = await _seeder.SeedRecipeAsync(ingredients: [(_ingredients["Flour"], 100, Unit.Gram)]);
+        var recipe = await _seeder.SeedRecipeAsync(
+            ingredients: [(_ingredients["Flour"], 100, Unit.Gram)],
+            tags: [_tags["Tag1"], _tags["Test Tag"]]);
 
         // Act
         var response = await _client.GetAsync($"/api/recipes/{recipe.Id}");
@@ -49,6 +53,7 @@ public class RecipeEndpointsTests(TestWebAppFactory factory) : IClassFixture<Tes
         Assert.Equal(recipe.PrepTimeMinutes, returnedRecipe.PrepTimeMinutes);
         Assert.Equal(recipe.CookTimeMinutes, returnedRecipe.CookTimeMinutes);
         Assert.Equal(recipe.Yield, returnedRecipe.Yield);
+        Assert.NotNull(returnedRecipe.Tags);
     }
 
     [Fact]
@@ -116,7 +121,8 @@ public class RecipeEndpointsTests(TestWebAppFactory factory) : IClassFixture<Tes
                     { IngredientId = _ingredients["Flour"].Id, Quantity = 100, Unit = Unit.Gram },
                 new RecipeIngredientInputDto
                     { IngredientId = _ingredients["Sugar"].Id, Quantity = 50, Unit = Unit.Gram }
-            ]
+            ],
+            TagIds = [_tags["Tag1"].Id, _tags["Test Tag"].Id]
         };
 
         // Act
@@ -132,6 +138,8 @@ public class RecipeEndpointsTests(TestWebAppFactory factory) : IClassFixture<Tes
         var dbContextAssert = assertScope.ServiceProvider.GetRequiredService<PrepDb>();
         var recipeInDb = await dbContextAssert.Recipes
             .Include(r => r.RecipeIngredients)
+            .Include(r => r.RecipeTags) 
+            .ThenInclude(rt => rt.Tag)
             .FirstOrDefaultAsync(r => r.Id == createdRecipeId);
 
         Assert.NotNull(recipeInDb);
@@ -156,6 +164,13 @@ public class RecipeEndpointsTests(TestWebAppFactory factory) : IClassFixture<Tes
         Assert.NotNull(flourIngredient);
         Assert.Equal(createRequest.Ingredients[0].Quantity, flourIngredient.Quantity);
         Assert.Equal(createRequest.Ingredients[0].Unit, flourIngredient.Unit);
+        
+        Assert.NotNull(recipeInDb.RecipeTags);
+        Assert.Equal(_tags.Count, recipeInDb.RecipeTags.Count);
+        foreach (var (_, tag) in _tags)
+        {
+            Assert.Contains(recipeInDb.RecipeTags, rt => rt.TagId == tag.Id && rt.Tag.UserId == TestUserId);
+        }
     }
 
     [Fact]
@@ -242,11 +257,15 @@ public class RecipeEndpointsTests(TestWebAppFactory factory) : IClassFixture<Tes
             cookTimeMinutes: 25,
             yield: "4 servings",
             steps: steps,
-            ingredients: [(flour, 200, Unit.Gram), (sugar, 100, Unit.Gram)]
+            ingredients: [(flour, 200, Unit.Gram), (sugar, 100, Unit.Gram)],
+            tags: [_tags["Tag1"]] 
         );
 
         var recipeIdToUpdate = initialRecipe.Id;
-
+        
+        var newTags = await _seeder.SeedTagsAsync(TestUserId, "NewTag");
+        var newTag = newTags["NewTag"];
+        
         var updateRequest = new UpdateRecipeRequest
         {
             Name = "Updated Test Recipe",
@@ -264,7 +283,8 @@ public class RecipeEndpointsTests(TestWebAppFactory factory) : IClassFixture<Tes
             [
                 new RecipeIngredientInputDto { IngredientId = flour.Id, Quantity = 300, Unit = Unit.Gram },
                 new RecipeIngredientInputDto { IngredientId = milk.Id, Quantity = 250, Unit = Unit.Milliliter }
-            ]
+            ],
+            TagIds = [newTag.Id]
         };
 
         // Act
@@ -277,6 +297,8 @@ public class RecipeEndpointsTests(TestWebAppFactory factory) : IClassFixture<Tes
         var dbContextAssert = assertScope.ServiceProvider.GetRequiredService<PrepDb>();
         var updatedRecipeInDb = await dbContextAssert.Recipes
             .Include(r => r.RecipeIngredients)
+            .Include(r => r.RecipeTags)
+            .ThenInclude(rt => rt.Tag)
             .AsNoTracking()
             .FirstOrDefaultAsync(r => r.Id == recipeIdToUpdate);
 
@@ -313,5 +335,10 @@ public class RecipeEndpointsTests(TestWebAppFactory factory) : IClassFixture<Tes
 
         var sugarIngredient = updatedRecipeInDb.RecipeIngredients.FirstOrDefault(ri => ri.IngredientId == sugar.Id);
         Assert.Null(sugarIngredient);
+        
+        Assert.NotNull(updatedRecipeInDb.RecipeTags);
+        Assert.Single(updatedRecipeInDb.RecipeTags);
+        Assert.Contains(updatedRecipeInDb.RecipeTags, rt => rt.TagId == newTag.Id && rt.Tag.UserId == TestUserId);
+        Assert.DoesNotContain(updatedRecipeInDb.RecipeTags, rt => rt.TagId == _tags["Tag1"].Id);
     }
 }

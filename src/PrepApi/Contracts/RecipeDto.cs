@@ -14,6 +14,7 @@ public record RecipeDto
     public string? Yield { get; init; }
     public required List<IngredientDto> Ingredients { get; init; }
     public required List<StepDto> Steps { get; init; }
+    public List<TagDto> Tags { get; set; } = [];
     public required DateTimeOffset CreatedAt { get; init; }
 
     public static RecipeDto FromRecipe(Recipe recipe)
@@ -37,6 +38,7 @@ public record RecipeDto
             PrepTimeMinutes = recipe.PrepTimeMinutes,
             CookTimeMinutes = recipe.CookTimeMinutes,
             Steps = steps,
+            Tags = recipe.RecipeTags.Select(rt => TagDto.FromTag(rt.Tag)).ToList(),
             Yield = recipe.Yield,
             CreatedAt = recipe.CreatedAt
         };

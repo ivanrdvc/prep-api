@@ -28,15 +28,16 @@ Authorization: Bearer {{Bearer_Token}}
       "quantity": 3,
       "unit": 2
     }
-  ]
+  ],
+  "tagIds": ["02ae13d8-da46-4176-a786-624bb488c7dc"]
 }
 
 ### Get a recipe
-GET {{PrepApi_HostAddress}}/api/recipes/01969d5a-89b5-78d6-822c-86a6fc53baba
+GET {{PrepApi_HostAddress}}/api/recipes/0196bbe2-c076-7f21-8716-80b4083756f6
 Authorization: Bearer {{Bearer_Token}}
 
 ### Update a recipe
-PUT {{PrepApi_HostAddress}}/api/recipes/0196a1ff-b622-7c7b-bb02-e8063eb7312f
+PUT {{PrepApi_HostAddress}}/api/recipes/0196bbe2-c076-7f21-8716-80b4083756f6
 Content-Type: application/json
 Authorization: Bearer {{Bearer_Token}}
 
@@ -61,7 +62,8 @@ Authorization: Bearer {{Bearer_Token}}
       "quantity": 4,
       "unit": 2
     }
-  ]
+  ],
+  "tagIds": []
 }
 
 ### Delete a recipe
