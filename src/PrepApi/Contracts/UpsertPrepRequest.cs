@@ -1,10 +1,10 @@
-﻿using FluentValidation;
+using FluentValidation;
 
 using PrepApi.Data;
 
 namespace PrepApi.Contracts;
 
-public record CreatePrepRequest
+public record UpsertPrepRequest
 {
     public required Guid RecipeId { get; init; }
     public string? SummaryNotes { get; init; }
@@ -22,9 +22,9 @@ public record PrepIngredientInputDto
     public string? Notes { get; init; }
 }
 
-public class CreatePrepRequestValidator : AbstractValidator<CreatePrepRequest>
+public class UpsertPrepRequestValidator : AbstractValidator<UpsertPrepRequest>
 {
-    public CreatePrepRequestValidator()
+    public UpsertPrepRequestValidator()
     {
         RuleFor(x => x.RecipeId)
             .NotEmpty().WithMessage("Recipe ID is required.");

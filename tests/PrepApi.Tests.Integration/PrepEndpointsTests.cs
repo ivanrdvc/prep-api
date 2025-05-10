@@ -33,30 +33,23 @@ public class PrepEndpointsTests(TestWebAppFactory factory) : IClassFixture<TestW
             ingredients: [(_ingredients["Flour"], 100, Unit.Gram)]
         );
 
-        var createPrepRequest = new CreatePrepRequest
+        var createRequest = new UpsertPrepRequest
         {
             RecipeId = baseRecipe.Id,
             SummaryNotes = "Test prep notes",
             PrepTimeMinutes = 15,
             CookTimeMinutes = 20,
-            Steps =
-            [
-                new StepDto { Order = 1, Description = "Test prep step" },
-            ],
-            PrepIngredients =
-            [
-                new()
-                {
-                    IngredientId = _ingredients["Flour"].Id, Quantity = 150, Unit = Unit.Gram,
-                    Notes = "Increased amount"
-                },
+            Steps = new List<StepDto> { new() { Order = 1, Description = "Test prep step" } },
+            PrepIngredients = new List<PrepIngredientInputDto>
+            {
+                new() { IngredientId = _ingredients["Flour"].Id, Quantity = 150, Unit = Unit.Gram, Notes = "Increased amount" },
                 new() { IngredientId = _ingredients["Sugar"].Id, Quantity = 50, Unit = Unit.Gram },
                 new() { IngredientId = _ingredients["Milk"].Id, Quantity = 100, Unit = Unit.Milliliter }
-            ]
+            }
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/preps", createPrepRequest);
+        var response = await _client.PostAsJsonAsync("/api/preps", createRequest);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -183,33 +176,27 @@ public class PrepEndpointsTests(TestWebAppFactory factory) : IClassFixture<TestW
             ]
         );
 
-        var updatePrepRequest = new UpdatePrepRequest
+        var updateRequest = new UpsertPrepRequest
         {
+            RecipeId = baseRecipe.Id,
             SummaryNotes = "Updated prep notes",
             PrepTimeMinutes = 20,
             CookTimeMinutes = 35,
-            Steps =
-            [
-                new StepDto { Order = 1, Description = "Updated step 1" },
-                new StepDto { Order = 2, Description = "Updated step 2" },
-                new StepDto { Order = 3, Description = "New step 3" }
-            ],
-            PrepIngredients =
-            [
-                new()
-                {
-                    IngredientId = _ingredients["Flour"].Id, Quantity = 150, Unit = Unit.Gram,
-                    Notes = "Increased amount"
-                },
-                new()
-                {
-                    IngredientId = _ingredients["Milk"].Id, Quantity = 200, Unit = Unit.Milliliter, Notes = "Added milk"
-                }
-            ]
+            Steps = new List<StepDto>
+            {
+                new() { Order = 1, Description = "Updated step 1" },
+                new() { Order = 2, Description = "Updated step 2" },
+                new() { Order = 3, Description = "New step 3" }
+            },
+            PrepIngredients = new List<PrepIngredientInputDto>
+            {
+                new() { IngredientId = _ingredients["Flour"].Id, Quantity = 150, Unit = Unit.Gram, Notes = "Increased amount" },
+                new() { IngredientId = _ingredients["Milk"].Id, Quantity = 200, Unit = Unit.Milliliter, Notes = "Added milk" }
+            }
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/api/preps/{originalPrep.Id}", updatePrepRequest);
+        var response = await _client.PutAsJsonAsync($"/api/preps/{originalPrep.Id}", updateRequest);
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);

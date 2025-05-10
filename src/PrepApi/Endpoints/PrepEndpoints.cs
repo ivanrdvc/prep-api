@@ -28,10 +28,10 @@ public static class PrepEndpoints
         [FromRoute]
         Guid id,
         [FromBody]
-        UpdatePrepRequest request,
+        UpsertPrepRequest request,
         PrepDb db,
         UserContext userContext,
-        IValidator<UpdatePrepRequest> validator)
+        IValidator<UpsertPrepRequest> validator)
     {
         var validationResult = await validator.ValidateAsync(request);
         if (!validationResult.IsValid)
@@ -109,10 +109,10 @@ public static class PrepEndpoints
     public static async Task<Results<Created<Guid>, NotFound<string>, ValidationProblem, UnauthorizedHttpResult>>
         CreatePrep(
             [FromBody]
-            CreatePrepRequest request,
+            UpsertPrepRequest request,
             PrepDb db,
             UserContext userContext,
-            IValidator<CreatePrepRequest> validator)
+            IValidator<UpsertPrepRequest> validator)
     {
         if (userContext.UserId is null)
         {

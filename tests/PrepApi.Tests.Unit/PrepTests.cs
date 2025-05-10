@@ -18,7 +18,7 @@ public class PrepTests
     {
         // Arrange
         var baseRecipe = CreateBaseRecipe([]);
-        var request = new CreatePrepRequest
+        var request = new UpsertPrepRequest
         {
             RecipeId = _recipeId,
             SummaryNotes = "Test notes",
@@ -36,10 +36,9 @@ public class PrepTests
             SummaryNotes = request.SummaryNotes,
             PrepTimeMinutes = request.PrepTimeMinutes,
             CookTimeMinutes = request.CookTimeMinutes,
-            StepsJson = System.Text.Json.JsonSerializer.Serialize(request.Steps)
+            StepsJson = System.Text.Json.JsonSerializer.Serialize(request.Steps),
+            PrepIngredients = Prep.CreatePrepIngredients(request.PrepIngredients, baseRecipe)
         };
-
-        prep.PrepIngredients = Prep.CreatePrepIngredients(request.PrepIngredients, baseRecipe);
 
         // Assert
         Assert.Equal(_recipeId, prep.RecipeId);

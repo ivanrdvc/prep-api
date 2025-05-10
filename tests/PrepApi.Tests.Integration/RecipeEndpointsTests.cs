@@ -103,7 +103,7 @@ public class RecipeEndpointsTests(TestWebAppFactory factory) : IClassFixture<Tes
     public async Task CreateRecipe_WithValidData_ReturnsCreated()
     {
         // Arrange
-        var createRequest = new CreateRecipeRequest
+        var createRequest = new UpsertRecipeRequest
         {
             Name = "Test Recipe",
             Description = "Test recipe description",
@@ -179,7 +179,7 @@ public class RecipeEndpointsTests(TestWebAppFactory factory) : IClassFixture<Tes
         // Arrange
         var nonExistentIngredientId = Guid.NewGuid();
 
-        var createRequest = new CreateRecipeRequest
+        var createRequest = new UpsertRecipeRequest
         {
             Name = "Test Recipe",
             Description = "Test recipe description",
@@ -266,7 +266,7 @@ public class RecipeEndpointsTests(TestWebAppFactory factory) : IClassFixture<Tes
         var newTags = await _seeder.SeedTagsAsync(TestUserId, "NewTag");
         var newTag = newTags["NewTag"];
         
-        var updateRequest = new UpdateRecipeRequest
+        var updateRequest = new UpsertRecipeRequest
         {
             Name = "Updated Test Recipe",
             Description = "Updated description",

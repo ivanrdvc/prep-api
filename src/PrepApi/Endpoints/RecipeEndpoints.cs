@@ -48,10 +48,10 @@ public static class RecipeEndpoints
 
     public static async Task<Results<NoContent, NotFound, ValidationProblem>> UpdateRecipe(
         [FromRoute] Guid id,
-        [FromBody] UpdateRecipeRequest request,
+        [FromBody] UpsertRecipeRequest request,
         PrepDb db,
         UserContext userContext,
-        IValidator<UpdateRecipeRequest> validator)
+        IValidator<UpsertRecipeRequest> validator)
     {
         var validationResult = await validator.ValidateAsync(request);
         if (!validationResult.IsValid)
@@ -117,10 +117,10 @@ public static class RecipeEndpoints
     }
 
     public static async Task<Results<Created<Guid>, ValidationProblem, UnauthorizedHttpResult>> CreateRecipe(
-        [FromBody] CreateRecipeRequest request,
+        [FromBody] UpsertRecipeRequest request,
         PrepDb db,
         UserContext userContext,
-        IValidator<CreateRecipeRequest> validator)
+        IValidator<UpsertRecipeRequest> validator)
     {
         if (userContext.UserId is null)
         {

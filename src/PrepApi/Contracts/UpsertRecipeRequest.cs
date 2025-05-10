@@ -1,8 +1,10 @@
-﻿using FluentValidation;
+using FluentValidation;
+
+using PrepApi.Data;
 
 namespace PrepApi.Contracts;
 
-public record UpdateRecipeRequest
+public record UpsertRecipeRequest
 {
     public required string Name { get; init; }
     public required string Description { get; init; }
@@ -14,9 +16,16 @@ public record UpdateRecipeRequest
     public List<Guid>? TagIds { get; init; }
 }
 
-public class UpdateRecipeRequestValidator : AbstractValidator<UpdateRecipeRequest>
+public record RecipeIngredientInputDto
 {
-    public UpdateRecipeRequestValidator()
+    public required Guid IngredientId { get; init; }
+    public required decimal Quantity { get; init; }
+    public required Unit Unit { get; init; }
+}
+
+public class UpsertRecipeRequestValidator : AbstractValidator<UpsertRecipeRequest>
+{
+    public UpsertRecipeRequestValidator()
     {
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Recipe name is required.")
