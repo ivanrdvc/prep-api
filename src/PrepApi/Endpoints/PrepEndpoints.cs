@@ -28,10 +28,10 @@ public static class PrepEndpoints
         [FromRoute]
         Guid id,
         [FromBody]
-        UpdatePrepRequest request,
+        UpsertPrepRequest request,
         PrepDb db,
-        UserContext userContext,
-        IValidator<UpdatePrepRequest> validator)
+        IUserContext userContext,
+        IValidator<UpsertPrepRequest> validator)
     {
         var validationResult = await validator.ValidateAsync(request);
         if (!validationResult.IsValid)
@@ -73,7 +73,7 @@ public static class PrepEndpoints
         [AsParameters]
         PaginationRequest request,
         PrepDb db,
-        UserContext userContext)
+        IUserContext userContext)
     {
         var query = db.Preps
             .AsNoTracking()
@@ -109,10 +109,10 @@ public static class PrepEndpoints
     public static async Task<Results<Created<Guid>, NotFound<string>, ValidationProblem, UnauthorizedHttpResult>>
         CreatePrep(
             [FromBody]
-            CreatePrepRequest request,
+            UpsertPrepRequest request,
             PrepDb db,
-            UserContext userContext,
-            IValidator<CreatePrepRequest> validator)
+            IUserContext userContext,
+            IValidator<UpsertPrepRequest> validator)
     {
         if (userContext.UserId is null)
         {
@@ -162,7 +162,7 @@ public static class PrepEndpoints
         [FromRoute]
         Guid id,
         PrepDb db,
-        UserContext userContext)
+        IUserContext userContext)
     {
         var prep = await db.Preps
             .Include(p => p.Recipe)
@@ -183,7 +183,7 @@ public static class PrepEndpoints
         [FromRoute]
         Guid id,
         PrepDb db,
-        UserContext userContext)
+        IUserContext userContext)
     {
         var prep = await db.Preps
             .FirstOrDefaultAsync(p => p.Id == id && p.UserId == userContext.UserId);

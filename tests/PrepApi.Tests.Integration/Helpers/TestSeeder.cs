@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 using PrepApi.Contracts;
@@ -34,7 +35,10 @@ public class TestSeeder(TestWebAppFactory factory)
         int cookTimeMinutes = 20,
         string? yield = null,
         List<StepDto>? steps = null,
-        List<(Ingredient Ingredient, decimal? Quantity, Unit? Unit)>? ingredients = null)
+        List<(Ingredient Ingredient, decimal? Quantity, Unit? Unit)>? ingredients = null,
+        List<Tag>? tags = null,
+        Guid? originalRecipeId = null,
+        bool isFavoriteVariant = false)
     {
         var recipe = new Recipe
         {
@@ -51,18 +55,23 @@ public class TestSeeder(TestWebAppFactory factory)
                 new() { Order = 2, Description = "Cook/assemble as needed." }
             }),
             CreatedBy = userId,
-            RecipeIngredients = new List<RecipeIngredient>()
+            OriginalRecipeId = originalRecipeId,
+            IsFavoriteVariant = isFavoriteVariant,
+            RecipeIngredients = ingredients?.Select(x => new RecipeIngredient
+            {
+                IngredientId = x.Ingredient.Id,
+                Quantity = x.Quantity ?? 1,
+                Unit = x.Unit ?? Unit.Gram
+            }).ToList() ?? []
         };
 
-        if (ingredients != null && ingredients.Count != 0)
+        if (tags?.Any() == true)
         {
-            foreach (var (ingredient, quantity, unit) in ingredients)
+            foreach (var tag in tags)
             {
-                recipe.RecipeIngredients.Add(new RecipeIngredient
-                {
-                    IngredientId = ingredient.Id,
-                    Quantity = quantity ?? 1,
-                    Unit = unit ?? Unit.Gram
+                recipe.RecipeTags.Add(new RecipeTag { 
+                    RecipeId = recipe.Id, 
+                    TagId = tag.Id 
                 });
             }
         }
@@ -96,24 +105,16 @@ public class TestSeeder(TestWebAppFactory factory)
             CookTimeMinutes = cookTimeMinutes,
             StepsJson = JsonSerializer.Serialize(prepSteps),
             CreatedAt = DateTimeOffset.UtcNow,
-            PrepIngredients = []
-        };
-
-        if (ingredients != null && ingredients.Count != 0)
-        {
-            foreach (var (ingredient, quantity, unit, notes, status) in ingredients)
+            PrepIngredients = ingredients?.Select(x => new PrepIngredient
             {
-                prep.PrepIngredients.Add(new PrepIngredient
-                {
-                    Id = Guid.NewGuid(),
-                    IngredientId = ingredient.Id,
-                    Quantity = quantity ?? 1,
-                    Unit = unit ?? Unit.Gram,
-                    Notes = notes,
-                    Status = status,
-                });
-            }
-        }
+                Id = Guid.NewGuid(),
+                IngredientId = x.Ingredient.Id,
+                Quantity = x.Quantity ?? 1,
+                Unit = x.Unit ?? Unit.Gram,
+                Notes = x.Notes,
+                Status = x.Status
+            }).ToList() ?? []
+        };
 
         await using var scope = factory.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<PrepDb>();
@@ -122,5 +123,39 @@ public class TestSeeder(TestWebAppFactory factory)
         await dbContext.SaveChangesAsync();
 
         return prep;
+    }
+
+    public async Task<Dictionary<string, Tag>> SeedTagsAsync(string userId, params string[] names)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<PrepDb>();
+
+        var result = new Dictionary<string, Tag>();
+    
+        foreach (var name in names)
+        {
+            var existingTag = await dbContext.Tags
+                .FirstOrDefaultAsync(t => t.UserId == userId && t.Name == name);
+            
+            if (existingTag != null)
+            {
+                result[name] = existingTag;
+            }
+            else
+            {
+                var newTag = new Tag
+                {
+                    Name = name,
+                    UserId = userId
+                };
+            
+                dbContext.Tags.Add(newTag);
+                await dbContext.SaveChangesAsync();
+            
+                result[name] = newTag;
+            }
+        }
+
+        return result;
     }
 }

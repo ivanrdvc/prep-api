@@ -21,6 +21,8 @@ public static class RecipeEndpoints
         api.MapGet("/{id:guid}", GetRecipe);
         api.MapDelete("/{id:guid}", DeleteRecipe);
         api.MapPut("/{id:guid}", UpdateRecipe);
+        api.MapPost("/{prepId:guid}/variants", CreateVariantFromPrep);
+        api.MapPut("/{id:guid}/favorite", SetFavoriteVariant);
 
         return api;
     }
@@ -28,11 +30,15 @@ public static class RecipeEndpoints
     public static async Task<Results<Ok<RecipeDto>, NotFound>> GetRecipe(
         [FromRoute] Guid id,
         PrepDb db,
-        UserContext userContext)
+        IUserContext userContext)
     {
         var recipe = await db.Recipes
             .Include(r => r.RecipeIngredients)
             .ThenInclude(ri => ri.Ingredient)
+            .Include(r => r.RecipeTags)
+            .ThenInclude(rt => rt.Tag)
+            .Include(r => r.OriginalRecipe)
+            .Include(r => r.Variants)
             .AsNoTracking()
             .FirstOrDefaultAsync(r => r.Id == id && r.UserId == userContext.UserId);
 
@@ -46,10 +52,10 @@ public static class RecipeEndpoints
 
     public static async Task<Results<NoContent, NotFound, ValidationProblem>> UpdateRecipe(
         [FromRoute] Guid id,
-        [FromBody] UpdateRecipeRequest request,
+        [FromBody] UpsertRecipeRequest request,
         PrepDb db,
-        UserContext userContext,
-        IValidator<UpdateRecipeRequest> validator)
+        IUserContext userContext,
+        IValidator<UpsertRecipeRequest> validator)
     {
         var validationResult = await validator.ValidateAsync(request);
         if (!validationResult.IsValid)
@@ -66,6 +72,7 @@ public static class RecipeEndpoints
         var recipe = await db.Recipes
             .Include(r => r.RecipeIngredients)
             .ThenInclude(ri => ri.Ingredient)
+            .Include(r => r.RecipeTags)
             .FirstOrDefaultAsync(r => r.Id == id && r.UserId == userContext.UserId);
 
         if (recipe is null)
@@ -80,16 +87,16 @@ public static class RecipeEndpoints
         recipe.Yield = request.Yield;
         recipe.StepsJson = JsonSerializer.Serialize(request.Steps);
 
-        recipe.RecipeIngredients.Clear();
-        foreach (var ingredientDto in request.Ingredients)
+ 
+        recipe.RecipeIngredients = request.Ingredients.Select(i => new RecipeIngredient
         {
-            recipe.RecipeIngredients.Add(new RecipeIngredient
-            {
-                IngredientId = ingredientDto.IngredientId,
-                Quantity = ingredientDto.Quantity,
-                Unit = ingredientDto.Unit
-            });
-        }
+            IngredientId = i.IngredientId,
+            Quantity = i.Quantity,
+            Unit = i.Unit
+        }).ToList();
+
+        recipe.RecipeTags.Clear();
+        recipe.RecipeTags = await CreateRecipeTagsFromIdsAsync(db, request.TagIds, userContext.UserId!);
 
         await db.SaveChangesAsync();
 
@@ -99,7 +106,7 @@ public static class RecipeEndpoints
     public static async Task<Results<NoContent, NotFound>> DeleteRecipe(
         [FromRoute] Guid id,
         PrepDb db,
-        UserContext userContext)
+        IUserContext userContext)
     {
         var recipe = await db.Recipes.FirstOrDefaultAsync(r => r.Id == id && r.UserId == userContext.UserId);
 
@@ -115,10 +122,10 @@ public static class RecipeEndpoints
     }
 
     public static async Task<Results<Created<Guid>, ValidationProblem, UnauthorizedHttpResult>> CreateRecipe(
-        [FromBody] CreateRecipeRequest request,
+        [FromBody] UpsertRecipeRequest request,
         PrepDb db,
-        UserContext userContext,
-        IValidator<CreateRecipeRequest> validator)
+        IUserContext userContext,
+        IValidator<UpsertRecipeRequest> validator)
     {
         if (userContext.UserId is null)
         {
@@ -151,13 +158,135 @@ public static class RecipeEndpoints
                 IngredientId = ingredientDto.IngredientId,
                 Quantity = ingredientDto.Quantity,
                 Unit = ingredientDto.Unit
-            }).ToList()
+            }).ToList(),
+            RecipeTags = await CreateRecipeTagsFromIdsAsync(db, request.TagIds, userContext.UserId)
         };
 
         await db.Recipes.AddAsync(recipe);
         await db.SaveChangesAsync();
 
         return TypedResults.Created($"/api/recipe/{recipe.Id}", recipe.Id);
+    }
+
+    public static async Task<Results<Created<Guid>, NotFound, ValidationProblem, UnauthorizedHttpResult>>
+        CreateVariantFromPrep(
+            [FromRoute] Guid prepId,
+            [FromBody] CreateVariantFromPrepRequest request,
+            PrepDb db,
+            IUserContext userContext)
+    {
+        if (userContext.UserId is null)
+        {
+            return TypedResults.Unauthorized();
+        }
+
+        var prep = await db.Preps
+            .Include(p => p.Recipe)
+            .ThenInclude(r => r.RecipeTags) 
+            .ThenInclude(rt => rt.Tag) 
+            .Include(p => p.PrepIngredients)
+            .ThenInclude(pi => pi.Ingredient)
+            .FirstOrDefaultAsync(p => p.Id == prepId && p.UserId == userContext.UserId); 
+
+        if (prep is null)
+        {
+            return TypedResults.NotFound();
+        }
+
+        var originalRecipe = prep.Recipe;
+        if (request.SetAsFavorite)
+        {
+            var existingFavorite = await db.Recipes
+                .Where(r => r.OriginalRecipeId == originalRecipe.Id && r.IsFavoriteVariant &&
+                            r.UserId == userContext.UserId)
+                .FirstOrDefaultAsync();
+            if (existingFavorite != null)
+            {
+                existingFavorite.IsFavoriteVariant = false;
+            }
+        }
+
+        var variant = new Recipe
+        {
+            Name = request.Name,
+            Description = originalRecipe.Description,
+            UserId = userContext.UserId,
+            PrepTimeMinutes = prep.PrepTimeMinutes ?? originalRecipe.PrepTimeMinutes,
+            CookTimeMinutes = prep.CookTimeMinutes ?? originalRecipe.CookTimeMinutes,
+            Yield = originalRecipe.Yield, // should start with original or new yield?
+            StepsJson = prep.StepsJson,
+            OriginalRecipeId = originalRecipe.Id,
+            IsFavoriteVariant = request.SetAsFavorite,
+            RecipeIngredients = prep.PrepIngredients.Select(pi => new RecipeIngredient
+            {
+                IngredientId = pi.IngredientId,
+                Quantity = pi.Quantity,
+                Unit = pi.Unit
+            }).ToList(),
+            RecipeTags = originalRecipe.RecipeTags.Select(rt => new RecipeTag
+            {
+                TagId = rt.TagId
+            }).ToList()
+        };
+
+        await db.Recipes.AddAsync(variant);
+
+        prep.CreatedNewRecipeId = variant.Id;
+
+        await db.SaveChangesAsync();
+
+        return TypedResults.Created($"/api/recipes/{variant.Id}", variant.Id);
+    }
+
+    public static async Task<Results<NoContent, NotFound, UnauthorizedHttpResult>> SetFavoriteVariant(
+        [FromRoute] Guid id,
+        PrepDb db,
+        IUserContext userContext)
+    {
+        var variant = await db.Recipes
+            .Include(r => r.OriginalRecipe)
+            .FirstOrDefaultAsync(r => r.Id == id && r.UserId == userContext.UserId);
+
+        if (variant?.OriginalRecipeId is null)
+        {
+            return TypedResults.NotFound();
+        }
+
+        var existingFavorite = await db.Recipes
+            .Where(r => r.OriginalRecipeId == variant.OriginalRecipeId && r.IsFavoriteVariant)
+            .FirstOrDefaultAsync();
+        if (existingFavorite != null)
+        {
+            existingFavorite.IsFavoriteVariant = false;
+        }
+
+        variant.IsFavoriteVariant = true;
+
+        await db.SaveChangesAsync();
+
+        return TypedResults.NoContent();
+    }
+
+    private static async Task<List<RecipeTag>> CreateRecipeTagsFromIdsAsync(
+        PrepDb db,
+        List<Guid>? tagIds,
+        string userId)
+    {
+        if (tagIds == null || tagIds.Count == 0)
+        {
+            return [];
+        }
+
+        var distinctTagIds = tagIds.Distinct().ToList();
+        var validTagIds = await db.Tags
+            .Where(t => t.UserId == userId && distinctTagIds.Contains(t.Id))
+            .Select(t => t.Id)
+            .ToListAsync();
+
+        return validTagIds.Select(tagId => new RecipeTag
+        {
+            TagId = tagId
+        }).ToList();
     }
 
     private static async Task<ValidationProblem?> ValidateRecipeIngredientsAsync(

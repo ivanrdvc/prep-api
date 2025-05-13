@@ -1,6 +1,10 @@
 @PrepApi_HostAddress = http://localhost:5053
 @Bearer_Token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6Iml2YW5yIiwic3ViIjoiaXZhbnIiLCJqdGkiOiJhMTg4OTUzZSIsImF1ZCI6InByZXAtYXBpIiwibmJmIjoxNzQ1NTc5MjAzLCJleHAiOjE3NTM0NDE2MDMsImlhdCI6MTc0NTU3OTIwNCwiaXNzIjoiZG90bmV0LXVzZXItand0cyJ9.M5TynhpTB2uyyIXE8jOpWWOhWurrGrJ2ovJX1zxwKD8
 
+###
+### Recipe Endpoints
+###
+
 ### Create a recipe
 POST {{PrepApi_HostAddress}}/api/recipes/
 Content-Type: application/json
@@ -28,15 +32,16 @@ Authorization: Bearer {{Bearer_Token}}
       "quantity": 3,
       "unit": 2
     }
-  ]
+  ],
+  "tagIds": ["02ae13d8-da46-4176-a786-624bb488c7dc"]
 }
 
 ### Get a recipe
-GET {{PrepApi_HostAddress}}/api/recipes/01969d5a-89b5-78d6-822c-86a6fc53baba
+GET {{PrepApi_HostAddress}}/api/recipes/0196bbe2-c076-7f21-8716-80b4083756f6
 Authorization: Bearer {{Bearer_Token}}
 
 ### Update a recipe
-PUT {{PrepApi_HostAddress}}/api/recipes/0196a1ff-b622-7c7b-bb02-e8063eb7312f
+PUT {{PrepApi_HostAddress}}/api/recipes/0196bbe2-c076-7f21-8716-80b4083756f6
 Content-Type: application/json
 Authorization: Bearer {{Bearer_Token}}
 
@@ -61,12 +66,31 @@ Authorization: Bearer {{Bearer_Token}}
       "quantity": 4,
       "unit": 2
     }
-  ]
+  ],
+  "tagIds": []
 }
 
 ### Delete a recipe
 DELETE {{PrepApi_HostAddress}}/api/recipes/0196a205-6f27-70b1-adfc-92476f0f8bf3
 Authorization: Bearer {{Bearer_Token}}
+
+### Create a variant from a prep
+POST {{PrepApi_HostAddress}}/api/recipes/0196c109-9e35-7345-ab89-40dc7b52eaa4/variants
+Content-Type: application/json
+Authorization: Bearer {{Bearer_Token}}
+
+{
+  "name": "My New Variant Recipe",
+  "setAsFavorite": true
+}
+
+### Set a recipe variant as favorite
+PUT {{PrepApi_HostAddress}}/api/recipes/55555555-5555-5555-5555-555555555555/favorite
+Authorization: Bearer {{Bearer_Token}}
+
+###
+### Prep Endpoints
+###
 
 ### Create a Prep
 POST {{PrepApi_HostAddress}}/api/preps/
@@ -144,3 +168,33 @@ Authorization: Bearer {{Bearer_Token}}
     }
   ]
 }
+
+###
+### Tag Endpoints
+###
+
+### Create a new tag
+POST {{PrepApi_HostAddress}}/api/tags
+Content-Type: application/json
+Authorization: Bearer {{Bearer_Token}}
+
+{
+  "name": "Quick  2"
+}
+
+### Get tags with search term
+GET {{PrepApi_HostAddress}}/api/tags?term=quick
+Authorization: Bearer {{Bearer_Token}}
+
+### Update an existing tag
+PUT {{PrepApi_HostAddress}}/api/tags/0196c01a-649e-7ceb-aa8a-aeb685bfa0d0
+Content-Type: application/json
+Authorization: Bearer {{Bearer_Token}}
+
+{
+  "name": "Very Quick Meafl"
+}
+
+### Delete a tag
+DELETE {{PrepApi_HostAddress}}/api/tags/0196c01a-649e-7ceb-aa8a-aeb685bfa0d0
+Authorization: Bearer {{Bearer_Token}}

@@ -1,10 +1,10 @@
-﻿using FluentValidation;
+using FluentValidation;
 
 using PrepApi.Data;
 
 namespace PrepApi.Contracts;
 
-public record CreateRecipeRequest
+public record UpsertRecipeRequest
 {
     public required string Name { get; init; }
     public required string Description { get; init; }
@@ -13,6 +13,7 @@ public record CreateRecipeRequest
     public string? Yield { get; init; }
     public required List<StepDto> Steps { get; init; }
     public required List<RecipeIngredientInputDto> Ingredients { get; init; }
+    public List<Guid>? TagIds { get; init; }
 }
 
 public record RecipeIngredientInputDto
@@ -22,9 +23,9 @@ public record RecipeIngredientInputDto
     public required Unit Unit { get; init; }
 }
 
-public class CreateRecipeRequestValidator : AbstractValidator<CreateRecipeRequest>
+public class UpsertRecipeRequestValidator : AbstractValidator<UpsertRecipeRequest>
 {
-    public CreateRecipeRequestValidator()
+    public UpsertRecipeRequestValidator()
     {
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Recipe name is required.")

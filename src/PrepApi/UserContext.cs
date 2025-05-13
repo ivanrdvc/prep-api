@@ -2,7 +2,13 @@
 
 namespace PrepApi;
 
-public class UserContext
+public interface IUserContext
+{
+    bool IsAuthenticated { get; }
+    string? UserId { get; }
+}
+
+public class UserContext : IUserContext
 {
     public bool IsAuthenticated { get; }
     public string? UserId { get; }

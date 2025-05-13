@@ -1,7 +1,7 @@
 ﻿using PrepApi.Contracts;
 using PrepApi.Data;
 
-namespace PrepApi.Tests.Unit;
+namespace PrepApi.Tests.Unit.Data;
 
 public class PrepTests
 {
@@ -9,62 +9,26 @@ public class PrepTests
     private readonly Guid _ingredientId1 = Guid.NewGuid();
     private readonly Guid _ingredientId2 = Guid.NewGuid();
     private readonly Guid _ingredientId3 = Guid.NewGuid();
-    private readonly string _userId = "test-user";
+    private const string UserId = "test-user-id";
 
     private readonly List<StepDto> _defaultSteps = [new() { Description = "Default step", Order = 1 }];
 
-    [Fact]
-    public void CreatePrep_ShouldSetPrepPropertiesCorrectly()
-    {
-        // Arrange
-        var baseRecipe = CreateBaseRecipe([]);
-        var request = new CreatePrepRequest
-        {
-            RecipeId = _recipeId,
-            SummaryNotes = "Test notes",
-            PrepTimeMinutes = 15,
-            CookTimeMinutes = 25,
-            PrepIngredients = [],
-            Steps = _defaultSteps
-        };
-
-        // Act
-        var prep = new Prep
-        {
-            RecipeId = _recipeId,
-            UserId = _userId,
-            SummaryNotes = request.SummaryNotes,
-            PrepTimeMinutes = request.PrepTimeMinutes,
-            CookTimeMinutes = request.CookTimeMinutes,
-            StepsJson = System.Text.Json.JsonSerializer.Serialize(request.Steps)
-        };
-
-        prep.PrepIngredients = Prep.CreatePrepIngredients(request.PrepIngredients, baseRecipe);
-
-        // Assert
-        Assert.Equal(_recipeId, prep.RecipeId);
-        Assert.Equal(_userId, prep.UserId);
-        Assert.Equal("Test notes", prep.SummaryNotes);
-        Assert.Equal(15, prep.PrepTimeMinutes);
-        Assert.Equal(25, prep.CookTimeMinutes);
-        Assert.Contains("Default step", prep.StepsJson);
-    }
 
     [Fact]
-    public void CreatePrepIngredients_ShouldMarkIngredientsAsKept()
+    public void CreatePrepIngredients_WhenIngredientsMatchBaseRecipe_ShouldMarkAllAsKept()
     {
         // Arrange
         var baseIngredients = new List<RecipeIngredient>
         {
-            new() { RecipeId = _recipeId, IngredientId = _ingredientId1, Quantity = 100, Unit = Data.Unit.Gram },
-            new() { RecipeId = _recipeId, IngredientId = _ingredientId2, Quantity = 2, Unit = Data.Unit.Whole }
+            new() { RecipeId = _recipeId, IngredientId = _ingredientId1, Quantity = 100, Unit = PrepApi.Data.Unit.Gram },
+            new() { RecipeId = _recipeId, IngredientId = _ingredientId2, Quantity = 2, Unit = PrepApi.Data.Unit.Whole }
         };
         var baseRecipe = CreateBaseRecipe(baseIngredients);
 
         var prepIngredients = new List<PrepIngredientInputDto>
         {
-            new() { IngredientId = _ingredientId1, Quantity = 100, Unit = Data.Unit.Gram },
-            new() { IngredientId = _ingredientId2, Quantity = 2, Unit = Data.Unit.Whole }
+            new() { IngredientId = _ingredientId1, Quantity = 100, Unit = PrepApi.Data.Unit.Gram },
+            new() { IngredientId = _ingredientId2, Quantity = 2, Unit = PrepApi.Data.Unit.Whole }
         };
 
         // Act
@@ -76,20 +40,20 @@ public class PrepTests
     }
 
     [Fact]
-    public void CreatePrepIngredients_ShouldMarkIngredientsAsModified()
+    public void CreatePrepIngredients_WhenIngredientsQuantityOrUnitDiffer_ShouldMarkAllAsModified()
     {
         // Arrange
         var baseIngredients = new List<RecipeIngredient>
         {
-            new() { RecipeId = _recipeId, IngredientId = _ingredientId1, Quantity = 100, Unit = Data.Unit.Gram },
-            new() { RecipeId = _recipeId, IngredientId = _ingredientId2, Quantity = 2, Unit = Data.Unit.Whole }
+            new() { RecipeId = _recipeId, IngredientId = _ingredientId1, Quantity = 100, Unit = PrepApi.Data.Unit.Gram },
+            new() { RecipeId = _recipeId, IngredientId = _ingredientId2, Quantity = 2, Unit = PrepApi.Data.Unit.Whole }
         };
         var baseRecipe = CreateBaseRecipe(baseIngredients);
 
         var prepIngredients = new List<PrepIngredientInputDto>
         {
-            new() { IngredientId = _ingredientId1, Quantity = 150, Unit = Data.Unit.Gram },
-            new() { IngredientId = _ingredientId2, Quantity = 2, Unit = Data.Unit.Kilogram }
+            new() { IngredientId = _ingredientId1, Quantity = 150, Unit = PrepApi.Data.Unit.Gram },
+            new() { IngredientId = _ingredientId2, Quantity = 2, Unit = PrepApi.Data.Unit.Kilogram }
         };
 
         // Act
@@ -101,15 +65,15 @@ public class PrepTests
     }
 
     [Fact]
-    public void CreatePrepIngredients_ShouldMarkIngredientsAsAdded()
+    public void CreatePrepIngredients_WhenIngredientsNotInBaseRecipe_ShouldMarkAllAsAdded()
     {
         // Arrange
         var baseRecipe = CreateBaseRecipe([]);
 
         var prepIngredients = new List<PrepIngredientInputDto>
         {
-            new() { IngredientId = _ingredientId1, Quantity = 50, Unit = Data.Unit.Milliliter },
-            new() { IngredientId = _ingredientId2, Quantity = 1, Unit = Data.Unit.Whole }
+            new() { IngredientId = _ingredientId1, Quantity = 50, Unit = PrepApi.Data.Unit.Milliliter },
+            new() { IngredientId = _ingredientId2, Quantity = 1, Unit = PrepApi.Data.Unit.Whole }
         };
 
         // Act
@@ -121,21 +85,21 @@ public class PrepTests
     }
 
     [Fact]
-    public void CreatePrepIngredients_ShouldHandleMixedIngredientStatuses()
+    public void CreatePrepIngredients_WithMixedIngredientChanges_ShouldAssignCorrectStatusToEach()
     {
         // Arrange
         var baseIngredients = new List<RecipeIngredient>
         {
-            new() { RecipeId = _recipeId, IngredientId = _ingredientId1, Quantity = 100, Unit = Data.Unit.Gram },
-            new() { RecipeId = _recipeId, IngredientId = _ingredientId2, Quantity = 2, Unit = Data.Unit.Whole }
+            new() { RecipeId = _recipeId, IngredientId = _ingredientId1, Quantity = 100, Unit = PrepApi.Data.Unit.Gram },
+            new() { RecipeId = _recipeId, IngredientId = _ingredientId2, Quantity = 2, Unit = PrepApi.Data.Unit.Whole }
         };
         var baseRecipe = CreateBaseRecipe(baseIngredients);
 
         var prepIngredients = new List<PrepIngredientInputDto>
         {
-            new() { IngredientId = _ingredientId1, Quantity = 100, Unit = Data.Unit.Gram },
-            new() { IngredientId = _ingredientId2, Quantity = 3, Unit = Data.Unit.Whole },
-            new() { IngredientId = _ingredientId3, Quantity = 500, Unit = Data.Unit.Milliliter }
+            new() { IngredientId = _ingredientId1, Quantity = 100, Unit = PrepApi.Data.Unit.Gram },
+            new() { IngredientId = _ingredientId2, Quantity = 3, Unit = PrepApi.Data.Unit.Whole },
+            new() { IngredientId = _ingredientId3, Quantity = 500, Unit = PrepApi.Data.Unit.Milliliter }
         };
 
         // Act
@@ -155,12 +119,12 @@ public class PrepTests
     }
 
     [Fact]
-    public void CreatePrepIngredients_ShouldHandleEmptyRequestIngredients()
+    public void CreatePrepIngredients_WithEmptyIngredientsList_ShouldReturnEmptyCollection()
     {
         // Arrange
         var baseIngredients = new List<RecipeIngredient>
         {
-            new() { RecipeId = _recipeId, IngredientId = _ingredientId1, Quantity = 100, Unit = Data.Unit.Gram }
+            new() { RecipeId = _recipeId, IngredientId = _ingredientId1, Quantity = 100, Unit = PrepApi.Data.Unit.Gram }
         };
         var baseRecipe = CreateBaseRecipe(baseIngredients);
 
@@ -179,7 +143,7 @@ public class PrepTests
         {
             Id = _recipeId,
             Name = "Base Recipe",
-            UserId = _userId,
+            UserId = UserId,
             Description = "Base Description",
             PrepTimeMinutes = 10,
             CookTimeMinutes = 20,

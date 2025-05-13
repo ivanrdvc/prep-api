@@ -22,7 +22,7 @@ builder.Services.AddDbContext<PrepDb>(options =>
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
-builder.Services.AddScoped<UserContext>();
+builder.Services.AddScoped<IUserContext, UserContext>();
 
 builder.Services.AddAuthentication().AddJwtBearer();
 builder.Services.AddAuthorization();
@@ -59,6 +59,7 @@ app.UseAuthorization();
 
 app.MapRecipeEndpoints();
 app.MapPrepEndpoints();
+app.MapTagEndpoints();
 app.MapHealthChecks("/health");
 
 app.Run();
