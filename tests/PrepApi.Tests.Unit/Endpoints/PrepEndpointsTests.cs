@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http.HttpResults;
+using FluentValidation;
 
 using NSubstitute;
 
@@ -13,11 +14,13 @@ public class PrepEndpointsTests
 {
     private readonly IUserContext _userContext;
     private readonly FakeDb _fakeDb;
+    private readonly IValidator<UpsertPrepRequest> _validator;
 
     public PrepEndpointsTests()
     {
         _userContext = TestUserContext.Authenticated();
         _fakeDb = new FakeDb(_userContext);
+        _validator = new UpsertPrepRequestValidator();
     }
 
     [Fact]
@@ -54,10 +57,9 @@ public class PrepEndpointsTests
         await using var context = _fakeDb.CreateDbContext();
         var recipe = await _fakeDb.SeedRecipeAsync(context);
         var request = _fakeDb.CreateUpsertPrepRequest(context, recipe.Id);
-        var validator = new UpsertPrepRequestValidator();
 
         // Act
-        var result = await PrepEndpoints.CreatePrep(request, context, _userContext, validator);
+        var result = await PrepEndpoints.CreatePrep(request, context, _userContext, _validator);
 
         // Assert
         Assert.IsType<Created<Guid>>(result.Result);
@@ -88,10 +90,8 @@ public class PrepEndpointsTests
             ]
         };
 
-        var validator = new UpsertPrepRequestValidator();
-
         // Act
-        var result = await PrepEndpoints.CreatePrep(invalidRequest, context, _userContext, validator);
+        var result = await PrepEndpoints.CreatePrep(invalidRequest, context, _userContext, _validator);
 
         // Assert
         Assert.IsType<ValidationProblem>(result.Result);
@@ -104,11 +104,10 @@ public class PrepEndpointsTests
         await using var context = _fakeDb.CreateDbContext();
         var recipe = await _fakeDb.SeedRecipeAsync(context);
         var request = _fakeDb.CreateUpsertPrepRequest(context, recipe.Id);
-        var validator = new UpsertPrepRequestValidator();
         var anonUserContext = TestUserContext.Anonymous();
 
         // Act
-        var result = await PrepEndpoints.CreatePrep(request, context, anonUserContext, validator);
+        var result = await PrepEndpoints.CreatePrep(request, context, anonUserContext, _validator);
 
         // Assert
         Assert.IsType<UnauthorizedHttpResult>(result.Result);
@@ -121,10 +120,9 @@ public class PrepEndpointsTests
         await using var context = _fakeDb.CreateDbContext();
         var prep = await _fakeDb.SeedPrepAsync(context);
         var request = _fakeDb.CreateUpsertPrepRequest(context, prep.RecipeId);
-        var validator = new UpsertPrepRequestValidator();
 
         // Act
-        var result = await PrepEndpoints.UpdatePrep(prep.Id, request, context, _userContext, validator);
+        var result = await PrepEndpoints.UpdatePrep(prep.Id, request, context, _userContext, _validator);
 
         // Assert
         Assert.IsType<NoContent>(result.Result);
@@ -137,10 +135,9 @@ public class PrepEndpointsTests
         await using var context = _fakeDb.CreateDbContext();
         var recipe = await _fakeDb.SeedRecipeAsync(context);
         var request = _fakeDb.CreateUpsertPrepRequest(context, recipe.Id);
-        var validator = new UpsertPrepRequestValidator();
 
         // Act
-        var result = await PrepEndpoints.UpdatePrep(Guid.NewGuid(), request, context, _userContext, validator);
+        var result = await PrepEndpoints.UpdatePrep(Guid.NewGuid(), request, context, _userContext, _validator);
 
         // Assert
         Assert.IsType<NotFound>(result.Result);
@@ -153,13 +150,12 @@ public class PrepEndpointsTests
         await using var context = _fakeDb.CreateDbContext();
         var prep = await _fakeDb.SeedPrepAsync(context);
         var request = _fakeDb.CreateUpsertPrepRequest(context, prep.RecipeId);
-        var validator = new UpsertPrepRequestValidator();
 
         var differentUserContext = Substitute.For<IUserContext>();
         differentUserContext.UserId.Returns(Guid.NewGuid().ToString());
 
         // Act
-        var result = await PrepEndpoints.UpdatePrep(prep.Id, request, context, differentUserContext, validator);
+        var result = await PrepEndpoints.UpdatePrep(prep.Id, request, context, differentUserContext, _validator);
 
         // Assert
         Assert.IsType<NotFound>(result.Result);
@@ -181,10 +177,8 @@ public class PrepEndpointsTests
             Unit = PrepApi.Data.Unit.Gram
         });
 
-        var validator = new UpsertPrepRequestValidator();
-
         // Act
-        var result = await PrepEndpoints.UpdatePrep(prep.Id, request, context, _userContext, validator);
+        var result = await PrepEndpoints.UpdatePrep(prep.Id, request, context, _userContext, _validator);
 
         // Assert
         Assert.IsType<ValidationProblem>(result.Result);

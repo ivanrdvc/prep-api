@@ -198,3 +198,43 @@ Authorization: Bearer {{Bearer_Token}}
 ### Delete a tag
 DELETE {{PrepApi_HostAddress}}/api/tags/0196c01a-649e-7ceb-aa8a-aeb685bfa0d0
 Authorization: Bearer {{Bearer_Token}}
+
+###
+### Prep Rating Endpoints
+###
+
+### Create a Prep Rating
+POST {{PrepApi_HostAddress}}/api/preps/0196d077-326a-7e60-a4c3-7a51548fa0c6/ratings
+Content-Type: application/json
+Authorization: Bearer {{Bearer_Token}}
+
+{
+  "overallRating": 1,
+  "liked": false,
+  "appearanceRating": 1,
+  "tasteRating": 1,
+  "textureRating": 1,
+  "whatWorkedWell": "1The recipe was easy to follow.",
+  "whatToChange": "1Could use a bit more seasoning next time.",
+  "additionalNotes": "1Made this for a dinner."
+}
+
+### Update a Prep Rating
+PUT {{PrepApi_HostAddress}}/api/preps/0196d077-326a-7e60-a4c3-7a51548fa0c6/ratings/0196d078-013a-7256-aa59-39f43bb1cf5d
+Content-Type: application/json
+Authorization: Bearer {{Bearer_Token}}
+
+{
+  "overallRating": 5,
+  "liked": true,
+  "appearanceRating": 5,
+  "tasteRating": 5,
+  "textureRating": 4,
+  "whatWorkedWell": "Perfect balance of flavors. Presentation was excellent.",
+  "whatToChange": "Maybe add a garnish for extra visual appeal.",
+  "additionalNotes": "This has become a family favorite after some tweaks."
+}
+
+### Get Prep Ratings
+GET {{PrepApi_HostAddress}}/api/preps/0196d077-326a-7e60-a4c3-7a51548fa0c6/ratings
+Authorization: Bearer {{Bearer_Token}}

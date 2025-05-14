@@ -87,15 +87,14 @@ public static class RecipeEndpoints
         recipe.Yield = request.Yield;
         recipe.StepsJson = JsonSerializer.Serialize(request.Steps);
 
- 
-        recipe.RecipeIngredients = request.Ingredients.Select(i => new RecipeIngredient
+
+        recipe.RecipeIngredients = [.. request.Ingredients.Select(i => new RecipeIngredient
         {
             IngredientId = i.IngredientId,
             Quantity = i.Quantity,
             Unit = i.Unit
-        }).ToList();
+        })];
 
-        recipe.RecipeTags.Clear();
         recipe.RecipeTags = await CreateRecipeTagsFromIdsAsync(db, request.TagIds, userContext.UserId!);
 
         await db.SaveChangesAsync();
@@ -182,11 +181,11 @@ public static class RecipeEndpoints
 
         var prep = await db.Preps
             .Include(p => p.Recipe)
-            .ThenInclude(r => r.RecipeTags) 
-            .ThenInclude(rt => rt.Tag) 
+            .ThenInclude(r => r.RecipeTags)
+            .ThenInclude(rt => rt.Tag)
             .Include(p => p.PrepIngredients)
             .ThenInclude(pi => pi.Ingredient)
-            .FirstOrDefaultAsync(p => p.Id == prepId && p.UserId == userContext.UserId); 
+            .FirstOrDefaultAsync(p => p.Id == prepId && p.UserId == userContext.UserId);
 
         if (prep is null)
         {

@@ -15,6 +15,7 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
     public DbSet<RecipeIngredient> RecipeIngredients { get; set; }
     public DbSet<Prep> Preps { get; set; }
     public DbSet<PrepIngredient> PrepIngredients { get; set; }
+    public DbSet<PrepRating> PrepRatings { get; set; }
     public DbSet<Tag> Tags { get; set; }
     public DbSet<RecipeTag> RecipeTags { get; set; }
 
@@ -171,6 +172,34 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
                 .HasMaxLength(50)
                 .IsRequired();
             entity.HasIndex(pi => pi.Status);
+        });
+        
+        modelBuilder.Entity<PrepRating>(entity =>
+        {
+            entity.HasOne(r => r.Prep)
+                .WithMany(p => p.Ratings)
+                .HasForeignKey(r => r.PrepId)
+                .OnDelete(DeleteBehavior.Cascade);
+        
+            entity.Property(r => r.UserId)
+                .IsRequired();
+            
+            entity.Property(r => r.OverallRating)
+                .HasDefaultValue(1)
+                .IsRequired();
+            
+            entity.Property(r => r.Liked).IsRequired();
+
+            entity.Property(r => r.WhatWorkedWell).HasMaxLength(1000);
+
+            entity.Property(r => r.WhatToChange).HasMaxLength(1000);
+
+            entity.Property(r => r.AdditionalNotes).HasMaxLength(1000);
+        
+            // Indexes for common queries
+            entity.HasIndex(r => r.PrepId);
+            entity.HasIndex(r => r.UserId);
+            entity.HasIndex(r => new { r.PrepId, r.UserId });
         });
     }
 
