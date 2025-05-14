@@ -1,7 +1,9 @@
 using FluentValidation;
+
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
 using PrepApi.Contracts;
 using PrepApi.Data;
 
@@ -14,7 +16,7 @@ public static class PrepRatingEndpoints
         app.MapPost("{prepId}/ratings", CreatePrepRating);
         app.MapPut("{prepId}/ratings/{id:guid}", UpdatePrepRating);
         app.MapGet("{prepId}/ratings", GetPrepRatings);
-        
+
         return app;
     }
 
@@ -36,11 +38,13 @@ public static class PrepRatingEndpoints
             return TypedResults.Unauthorized();
         }
 
-        var prep = await db.Preps.FirstOrDefaultAsync(x => x.Id == prepId && x.UserId == userContext.UserId);
-
-        if (prep is null)
+        var existingRating = await db.PrepRatings.FirstOrDefaultAsync(r => r.PrepId == prepId && r.UserId == userContext.UserId);
+        if (existingRating != null)
         {
-            return TypedResults.NotFound($"Prep with ID {prepId} not found.");
+            var errors = new Dictionary<string, string[]> {
+                { "PrepId", ["A rating for this prep by this user already exists."] }
+            };
+            return TypedResults.ValidationProblem(errors);
         }
 
         var rating = new PrepRating
@@ -60,7 +64,7 @@ public static class PrepRatingEndpoints
         await db.PrepRatings.AddAsync(rating);
         await db.SaveChangesAsync();
 
-        return TypedResults.Created($"/api/prep-ratings/{rating.Id}", rating.Id);
+        return TypedResults.Created($"/api/preps/{prepId}/ratings", rating.Id);
     }
 
     public static async Task<Results<NoContent, NotFound, UnauthorizedHttpResult, ValidationProblem>> UpdatePrepRating(
@@ -68,11 +72,13 @@ public static class PrepRatingEndpoints
         [FromRoute] Guid id,
         [FromBody] UpsertPrepRatingRequest request,
         PrepDb db,
-        IUserContext userContext)
+        IUserContext userContext,
+        IValidator<UpsertPrepRatingRequest> validator)
     {
-        if (userContext.UserId is null)
+        var validationResult = await validator.ValidateAsync(request);
+        if (!validationResult.IsValid)
         {
-            return TypedResults.Unauthorized();
+            return TypedResults.ValidationProblem(validationResult.ToDictionary());
         }
 
         var rating = await db.PrepRatings.FirstOrDefaultAsync(r =>

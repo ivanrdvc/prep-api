@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 
 using NSubstitute;
 
@@ -56,7 +57,7 @@ public class PrepEndpointsTests
         // Arrange
         await using var context = _fakeDb.CreateDbContext();
         var recipe = await _fakeDb.SeedRecipeAsync(context);
-        var request = _fakeDb.CreateUpsertPrepRequest(context, recipe.Id);
+        var request = CreateUpsertPrepRequest(context, recipe.Id);
 
         // Act
         var result = await PrepEndpoints.CreatePrep(request, context, _userContext, _validator);
@@ -103,7 +104,7 @@ public class PrepEndpointsTests
         // Arrange
         await using var context = _fakeDb.CreateDbContext();
         var recipe = await _fakeDb.SeedRecipeAsync(context);
-        var request = _fakeDb.CreateUpsertPrepRequest(context, recipe.Id);
+        var request = CreateUpsertPrepRequest(context, recipe.Id);
         var anonUserContext = TestUserContext.Anonymous();
 
         // Act
@@ -119,7 +120,7 @@ public class PrepEndpointsTests
         // Arrange
         await using var context = _fakeDb.CreateDbContext();
         var prep = await _fakeDb.SeedPrepAsync(context);
-        var request = _fakeDb.CreateUpsertPrepRequest(context, prep.RecipeId);
+        var request = CreateUpsertPrepRequest(context, prep.RecipeId);
 
         // Act
         var result = await PrepEndpoints.UpdatePrep(prep.Id, request, context, _userContext, _validator);
@@ -134,7 +135,7 @@ public class PrepEndpointsTests
         // Arrange
         await using var context = _fakeDb.CreateDbContext();
         var recipe = await _fakeDb.SeedRecipeAsync(context);
-        var request = _fakeDb.CreateUpsertPrepRequest(context, recipe.Id);
+        var request = CreateUpsertPrepRequest(context, recipe.Id);
 
         // Act
         var result = await PrepEndpoints.UpdatePrep(Guid.NewGuid(), request, context, _userContext, _validator);
@@ -149,7 +150,7 @@ public class PrepEndpointsTests
         // Arrange
         await using var context = _fakeDb.CreateDbContext();
         var prep = await _fakeDb.SeedPrepAsync(context);
-        var request = _fakeDb.CreateUpsertPrepRequest(context, prep.RecipeId);
+        var request = CreateUpsertPrepRequest(context, prep.RecipeId);
 
         var differentUserContext = Substitute.For<IUserContext>();
         differentUserContext.UserId.Returns(Guid.NewGuid().ToString());
@@ -168,7 +169,7 @@ public class PrepEndpointsTests
         await using var context = _fakeDb.CreateDbContext();
         var prep = await _fakeDb.SeedPrepAsync(context);
 
-        var request = _fakeDb.CreateUpsertPrepRequest(context, prep.RecipeId);
+        var request = CreateUpsertPrepRequest(context, prep.RecipeId);
 
         request.PrepIngredients.Add(new PrepIngredientInputDto
         {
@@ -278,5 +279,20 @@ public class PrepEndpointsTests
         // Assert
         var data = Assert.IsType<Ok<PaginatedItems<PrepSummaryDto>>>(result.Result).Value!.Data.ToList();
         Assert.Equal(preps[firstExpectedIndex].Id, data[0].Id);
+    }
+
+    private UpsertPrepRequest CreateUpsertPrepRequest(PrepDb context, Guid recipeId)
+    {
+        var recipe = context.Recipes.Include(r => r.RecipeIngredients).FirstOrDefault(r => r.Id == recipeId);
+        var ingredientId = recipe?.RecipeIngredients.FirstOrDefault()?.IngredientId ?? Guid.NewGuid();
+        return new UpsertPrepRequest
+        {
+            RecipeId = recipeId,
+            SummaryNotes = "Prep notes",
+            PrepTimeMinutes = 10,
+            CookTimeMinutes = 20,
+            Steps = [new() { Description = "Step 1", Order = 1 }],
+            PrepIngredients = [new() { IngredientId = ingredientId, Quantity = 100, Unit = PrepApi.Data.Unit.Gram }]
+        };
     }
 }

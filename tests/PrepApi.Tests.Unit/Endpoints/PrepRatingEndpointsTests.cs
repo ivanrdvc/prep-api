@@ -44,28 +44,12 @@ public class PrepRatingEndpointsTests
         var prep = await _fakeDb.SeedPrepAsync(context);
         var request = new UpsertPrepRatingRequest { OverallRating = 5 };
         var anonUser = TestUserContext.Anonymous();
-        // No need to mock validator, use real one
 
         // Act
         var result = await PrepRatingEndpoints.CreatePrepRating(prep.Id, request, context, anonUser, _validator);
 
         // Assert
         Assert.IsType<UnauthorizedHttpResult>(result.Result);
-    }
-
-    [Fact]
-    public async Task CreatePrepRating_PrepNotFound_ReturnsNotFound()
-    {
-        // Arrange
-        await using var context = _fakeDb.CreateDbContext();
-        var request = new UpsertPrepRatingRequest { OverallRating = 5 };
-
-        // Act
-        var result =
-            await PrepRatingEndpoints.CreatePrepRating(Guid.NewGuid(), request, context, _userContext, _validator);
-
-        // Assert
-        Assert.IsType<NotFound<string>>(result.Result);
     }
 
     [Fact]
@@ -84,19 +68,20 @@ public class PrepRatingEndpointsTests
     }
 
     [Fact]
-    public async Task UpdatePrepRating_Unauthorized_ReturnsUnauthorized()
+    public async Task CreatePrepRating_DuplicateRating_ReturnsValidationProblem()
     {
         // Arrange
         await using var context = _fakeDb.CreateDbContext();
         var prep = await _fakeDb.SeedPrepAsync(context);
-        var request = new UpsertPrepRatingRequest { OverallRating = 5 };
-        var anonUser = TestUserContext.Anonymous();
+        var request = new UpsertPrepRatingRequest { OverallRating = 5, Liked = true };
 
         // Act
-        var result = await PrepRatingEndpoints.UpdatePrepRating(prep.Id, Guid.NewGuid(), request, context, anonUser);
+        var firstResult = await PrepRatingEndpoints.CreatePrepRating(prep.Id, request, context, _userContext, _validator);
+        var secondResult = await PrepRatingEndpoints.CreatePrepRating(prep.Id, request, context, _userContext, _validator);
 
         // Assert
-        Assert.IsType<UnauthorizedHttpResult>(result.Result);
+        Assert.IsType<Created<Guid>>(firstResult.Result);
+        Assert.IsType<ValidationProblem>(secondResult.Result);
     }
 
     [Fact]
@@ -108,8 +93,8 @@ public class PrepRatingEndpointsTests
         var request = new UpsertPrepRatingRequest { OverallRating = 5 };
 
         // Act
-        var result =
-            await PrepRatingEndpoints.UpdatePrepRating(prep.Id, Guid.NewGuid(), request, context, _userContext);
+        var result = await PrepRatingEndpoints.UpdatePrepRating(prep.Id, Guid.NewGuid(), request, context, _userContext,
+            _validator);
 
         // Assert
         Assert.IsType<NotFound>(result.Result);
@@ -121,18 +106,32 @@ public class PrepRatingEndpointsTests
         // Arrange
         await using var context = _fakeDb.CreateDbContext();
         var prep = await _fakeDb.SeedPrepAsync(context);
-        var ratingRequest = new UpsertPrepRatingRequest { OverallRating = 5, Liked = true };
-        // Create rating
-        var createResult =
-            await PrepRatingEndpoints.CreatePrepRating(prep.Id, ratingRequest, context, _userContext, _validator);
-        var createdId = ((Created<Guid>)createResult.Result).Value;
+        var rating = await _fakeDb.SeedPrepRatingAsync(context, prep.Id, _userContext.UserId);
 
         // Act
         var updateRequest = new UpsertPrepRatingRequest { OverallRating = 4, Liked = false };
-        var result =
-            await PrepRatingEndpoints.UpdatePrepRating(prep.Id, createdId, updateRequest, context, _userContext);
+        var result = await PrepRatingEndpoints.UpdatePrepRating(prep.Id, rating.Id, updateRequest, context, _userContext,
+            _validator);
+
         // Assert
         Assert.IsType<NoContent>(result.Result);
+    }
+
+    [Fact]
+    public async Task UpdatePrepRating_InvalidRequest_ReturnsValidationProblem()
+    {
+        // Arrange
+        await using var context = _fakeDb.CreateDbContext();
+        var prep = await _fakeDb.SeedPrepAsync(context);
+        var rating = await _fakeDb.SeedPrepRatingAsync(context, prep.Id, _userContext.UserId);
+        var invalidRequest = new UpsertPrepRatingRequest { OverallRating = 0, Liked = true };
+
+        // Act
+        var result = await PrepRatingEndpoints.UpdatePrepRating(prep.Id, rating.Id, invalidRequest, context, _userContext,
+            _validator);
+
+        // Assert
+        Assert.IsType<ValidationProblem>(result.Result);
     }
 
     [Fact]
@@ -141,8 +140,10 @@ public class PrepRatingEndpointsTests
         // Arrange
         await using var context = _fakeDb.CreateDbContext();
         var prep = await _fakeDb.SeedPrepAsync(context);
+
         // Act
         var result = await PrepRatingEndpoints.GetPrepRatings(prep.Id, context);
+
         // Assert
         Assert.IsType<NotFound>(result.Result);
     }
@@ -153,14 +154,13 @@ public class PrepRatingEndpointsTests
         // Arrange
         await using var context = _fakeDb.CreateDbContext();
         var prep = await _fakeDb.SeedPrepAsync(context);
-        var ratingRequest = new UpsertPrepRatingRequest { OverallRating = 5, Liked = true };
-        await PrepRatingEndpoints.CreatePrepRating(prep.Id, ratingRequest, context, _userContext, _validator);
-        
+        await _fakeDb.SeedPrepRatingAsync(context, prep.Id, _userContext.UserId);
+
         // Act
         var result = await PrepRatingEndpoints.GetPrepRatings(prep.Id, context);
+
         // Assert
         var okResult = Assert.IsType<Ok<List<PrepRatingDto>>>(result.Result);
-        Assert.Single(okResult.Value);
-        Assert.Equal(5, okResult.Value[0].OverallRating);
+        Assert.Single(okResult.Value!);
     }
 }

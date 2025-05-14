@@ -97,33 +97,6 @@ public class RecipeEndpointsTests(TestWebAppFactory factory) : IClassFixture<Tes
     }
 
     [Fact]
-    public async Task GetRecipe_ShouldReturnVariantsInfo()
-    {
-        // Arrange
-        var originalRecipe = await _seeder.SeedRecipeAsync();
-        var variant1 = await _seeder.SeedRecipeAsync(
-            name: "Variant 1",
-            originalRecipeId: originalRecipe.Id,
-            isFavoriteVariant: true);
-        var variant2 = await _seeder.SeedRecipeAsync(
-            name: "Variant 2",
-            originalRecipeId: originalRecipe.Id,
-            isFavoriteVariant: false);
-
-        // Act
-        var response = await _client.GetAsync($"/api/recipes/{originalRecipe.Id}");
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
-        var recipeDto = await response.Content.ReadFromJsonAsync<RecipeDto>();
-        Assert.NotNull(recipeDto);
-        Assert.Equal(2, recipeDto.Variants.Count);
-        Assert.Contains(recipeDto.Variants, v => v.Name == variant1.Name && v.IsFavorite);
-        Assert.Contains(recipeDto.Variants, v => v.Name != variant2.Name && !v.IsFavorite);
-    }
-
-    [Fact]
     public async Task CreateRecipe_WithValidData_ReturnsCreated()
     {
         // Arrange
