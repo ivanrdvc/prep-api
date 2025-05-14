@@ -196,7 +196,6 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
 
             entity.Property(r => r.AdditionalNotes).HasMaxLength(1000);
         
-            // Indexes for common queries
             entity.HasIndex(r => r.PrepId);
             entity.HasIndex(r => r.UserId);
             entity.HasIndex(r => new { r.PrepId, r.UserId });

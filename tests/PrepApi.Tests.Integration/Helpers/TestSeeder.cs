@@ -42,7 +42,6 @@ public class TestSeeder(TestWebAppFactory factory)
     {
         var recipe = new Recipe
         {
-            Id = Guid.NewGuid(),
             Name = name,
             UserId = userId,
             Description = description ?? $"A test recipe for {name}.",
@@ -97,7 +96,6 @@ public class TestSeeder(TestWebAppFactory factory)
 
         var prep = new Prep
         {
-            Id = Guid.NewGuid(),
             RecipeId = recipe.Id,
             UserId = recipe.UserId,
             SummaryNotes = summaryNotes,

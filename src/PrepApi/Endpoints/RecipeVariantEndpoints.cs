@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
 using PrepApi.Contracts;
 using PrepApi.Data;
 
@@ -12,16 +13,15 @@ public static class RecipeVariantEndpoints
     {
         group.MapPost("{prepId:guid}/variants", CreateVariantFromPrep);
         group.MapPut("{id:guid}/favorite", SetFavoriteVariant);
-        
+
         return group;
     }
 
-    public static async Task<Results<Created<Guid>, NotFound, ValidationProblem, UnauthorizedHttpResult>>
-        CreateVariantFromPrep(
-            [FromRoute] Guid prepId,
-            [FromBody] CreateVariantFromPrepRequest request,
-            PrepDb db,
-            IUserContext userContext)
+    public static async Task<Results<Created<Guid>, NotFound, ValidationProblem, UnauthorizedHttpResult>> CreateVariantFromPrep(
+        [FromRoute] Guid prepId,
+        [FromBody] CreateVariantFromPrepRequest request,
+        PrepDb db,
+        IUserContext userContext)
     {
         if (userContext.UserId is null)
         {

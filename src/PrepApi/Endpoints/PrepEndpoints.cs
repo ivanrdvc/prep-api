@@ -15,7 +15,7 @@ public static class PrepEndpoints
 {
     public static IEndpointRouteBuilder MapPrepEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("api/preps").RequireAuthorization();;
+        var group = app.MapGroup("api/preps").RequireAuthorization();
 
         group.MapPost("/", CreatePrep);
         group.MapGet("recipe/{recipeId:guid}", GetPrepsByRecipe);
@@ -110,13 +110,12 @@ public static class PrepEndpoints
         return TypedResults.Ok(result);
     }
 
-    public static async Task<Results<Created<Guid>, NotFound<string>, ValidationProblem, UnauthorizedHttpResult>>
-        CreatePrep(
-            [FromBody]
-            UpsertPrepRequest request,
-            PrepDb db,
-            IUserContext userContext,
-            IValidator<UpsertPrepRequest> validator)
+    public static async Task<Results<Created<Guid>, NotFound<string>, ValidationProblem, UnauthorizedHttpResult>> CreatePrep(
+        [FromBody]
+        UpsertPrepRequest request,
+        PrepDb db,
+        IUserContext userContext,
+        IValidator<UpsertPrepRequest> validator)
     {
         if (userContext.UserId is null)
         {

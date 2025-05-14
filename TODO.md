@@ -1,11 +1,11 @@
 # TODOs
 
 ## Features
-- Rating
-- Ingredient Substitution Tracking
 - User
+- Photos
 
 ## Improve
 - Wrap step
 - Unit system
 - Ingredient
+- Yield issue
