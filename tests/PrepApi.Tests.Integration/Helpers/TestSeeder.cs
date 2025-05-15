@@ -68,9 +68,10 @@ public class TestSeeder(TestWebAppFactory factory)
         {
             foreach (var tag in tags)
             {
-                recipe.RecipeTags.Add(new RecipeTag { 
-                    RecipeId = recipe.Id, 
-                    TagId = tag.Id 
+                recipe.RecipeTags.Add(new RecipeTag
+                {
+                    RecipeId = recipe.Id,
+                    TagId = tag.Id
                 });
             }
         }
@@ -129,12 +130,12 @@ public class TestSeeder(TestWebAppFactory factory)
         var dbContext = scope.ServiceProvider.GetRequiredService<PrepDb>();
 
         var result = new Dictionary<string, Tag>();
-    
+
         foreach (var name in names)
         {
             var existingTag = await dbContext.Tags
                 .FirstOrDefaultAsync(t => t.UserId == userId && t.Name == name);
-            
+
             if (existingTag != null)
             {
                 result[name] = existingTag;
@@ -146,14 +147,28 @@ public class TestSeeder(TestWebAppFactory factory)
                     Name = name,
                     UserId = userId
                 };
-            
+
                 dbContext.Tags.Add(newTag);
                 await dbContext.SaveChangesAsync();
-            
+
                 result[name] = newTag;
             }
         }
 
         return result;
+    }
+
+    public async Task SeedDefaultRatingDimensionsAsync()
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<PrepDb>();
+        var defaultDimensions = new[]
+        {
+            new RatingDimension { Key = "taste", DisplayName = "Taste", SortOrder = 1 },
+            new RatingDimension { Key = "texture", DisplayName = "Texture", SortOrder = 2 },
+            new RatingDimension { Key = "appearance", DisplayName = "Appearance", SortOrder = 3 }
+        };
+        await dbContext.RatingDimensions.AddRangeAsync(defaultDimensions);
+        await dbContext.SaveChangesAsync();
     }
 }

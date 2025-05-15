@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 using FluentValidation;
 
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -20,12 +22,15 @@ public static class PrepRatingEndpoints
         return app;
     }
 
-    public static async Task<Results<Created<Guid>, NotFound<string>, UnauthorizedHttpResult, ValidationProblem>> CreatePrepRating(
-        [FromRoute] Guid prepId,
-        [FromBody] UpsertPrepRatingRequest request,
-        PrepDb db,
-        IUserContext userContext,
-        IValidator<UpsertPrepRatingRequest> validator)
+    public static async Task<Results<Created<Guid>, NotFound<string>, UnauthorizedHttpResult, ValidationProblem>>
+        CreatePrepRating(
+            [FromRoute]
+            Guid prepId,
+            [FromBody]
+            UpsertPrepRatingRequest request,
+            PrepDb db,
+            IUserContext userContext,
+            IValidator<UpsertPrepRatingRequest> validator)
     {
         var validationResult = await validator.ValidateAsync(request);
         if (!validationResult.IsValid)
@@ -41,24 +46,29 @@ public static class PrepRatingEndpoints
         var existingRating = await db.PrepRatings.FirstOrDefaultAsync(r => r.PrepId == prepId && r.UserId == userContext.UserId);
         if (existingRating != null)
         {
-            var errors = new Dictionary<string, string[]> {
+            var errors = new Dictionary<string, string[]>
+            {
                 { "PrepId", ["A rating for this prep by this user already exists."] }
             };
             return TypedResults.ValidationProblem(errors);
         }
 
+        var dimensionsValidationResult = await ValidateDimensions(request.Dimensions, db);
+        if (dimensionsValidationResult != null)
+        {
+            return dimensionsValidationResult;
+        }
+
         var rating = new PrepRating
         {
             PrepId = prepId,
-            UserId = userContext.UserId,
+            UserId = userContext.UserId!,
             Liked = request.Liked,
             OverallRating = request.OverallRating,
-            TasteRating = request.TasteRating,
-            TextureRating = request.TextureRating,
-            AppearanceRating = request.AppearanceRating,
-            AdditionalNotes = request.AdditionalNotes,
+            DimensionsJson = request.Dimensions.Count > 0 ? JsonSerializer.Serialize(request.Dimensions) : null,
             WhatWorkedWell = request.WhatWorkedWell,
-            WhatToChange = request.WhatToChange
+            WhatToChange = request.WhatToChange,
+            AdditionalNotes = request.AdditionalNotes
         };
 
         await db.PrepRatings.AddAsync(rating);
@@ -68,9 +78,12 @@ public static class PrepRatingEndpoints
     }
 
     public static async Task<Results<NoContent, NotFound, UnauthorizedHttpResult, ValidationProblem>> UpdatePrepRating(
-        [FromRoute] Guid prepId,
-        [FromRoute] Guid id,
-        [FromBody] UpsertPrepRatingRequest request,
+        [FromRoute]
+        Guid prepId,
+        [FromRoute]
+        Guid id,
+        [FromBody]
+        UpsertPrepRatingRequest request,
         PrepDb db,
         IUserContext userContext,
         IValidator<UpsertPrepRatingRequest> validator)
@@ -91,11 +104,15 @@ public static class PrepRatingEndpoints
             return TypedResults.NotFound();
         }
 
+        var dimensionsValidationResult = await ValidateDimensions(request.Dimensions, db);
+        if (dimensionsValidationResult != null)
+        {
+            return dimensionsValidationResult;
+        }
+
         rating.Liked = request.Liked;
         rating.OverallRating = request.OverallRating;
-        rating.TasteRating = request.TasteRating;
-        rating.TextureRating = request.TextureRating;
-        rating.AppearanceRating = request.AppearanceRating;
+        rating.DimensionsJson = request.Dimensions.Count > 0 ? JsonSerializer.Serialize(request.Dimensions) : null;
         rating.WhatWorkedWell = request.WhatWorkedWell;
         rating.WhatToChange = request.WhatToChange;
         rating.AdditionalNotes = request.AdditionalNotes;
@@ -105,30 +122,57 @@ public static class PrepRatingEndpoints
     }
 
     public static async Task<Results<Ok<List<PrepRatingDto>>, NotFound>> GetPrepRatings(
-        [FromRoute] Guid prepId,
+        [FromRoute]
+        Guid prepId,
         PrepDb db)
     {
         var ratings = await db.PrepRatings
             .AsNoTracking()
             .Where(r => r.PrepId == prepId)
             .OrderByDescending(r => r.CreatedAt)
-            .Select(r => new PrepRatingDto
-            {
-                Id = r.Id,
-                PrepId = r.PrepId,
-                UserId = r.UserId,
-                OverallRating = r.OverallRating,
-                Liked = r.Liked,
-                TasteRating = r.TasteRating,
-                TextureRating = r.TextureRating,
-                AppearanceRating = r.AppearanceRating,
-                WhatWorkedWell = r.WhatWorkedWell,
-                WhatToChange = r.WhatToChange,
-                AdditionalNotes = r.AdditionalNotes,
-                RatedAt = r.CreatedAt,
-            })
             .ToListAsync();
 
-        return ratings.Count == 0 ? TypedResults.NotFound() : TypedResults.Ok(ratings);
+        var ratingDtos = ratings.Select(r => new PrepRatingDto
+        {
+            Id = r.Id,
+            PrepId = r.PrepId,
+            UserId = r.UserId,
+            OverallRating = r.OverallRating,
+            Liked = r.Liked,
+            Dimensions = r.Dimensions,
+            WhatWorkedWell = r.WhatWorkedWell,
+            WhatToChange = r.WhatToChange,
+            AdditionalNotes = r.AdditionalNotes,
+            RatedAt = r.CreatedAt,
+        }).ToList();
+
+        return ratings.Count == 0 ? TypedResults.NotFound() : TypedResults.Ok(ratingDtos);
+    }
+
+    private static async Task<ValidationProblem?> ValidateDimensions(Dictionary<string, int> dimensions, PrepDb db)
+    {
+        if (dimensions.Count <= 0)
+        {
+            return null;
+        }
+
+        var knownDimensions = await db.RatingDimensions
+            .Select(d => d.Key)
+            .ToListAsync();
+
+        var invalidDimensions = dimensions.Keys
+            .Where(k => !knownDimensions.Contains(k))
+            .ToList();
+
+        if (invalidDimensions.Count > 0)
+        {
+            var errors = new Dictionary<string, string[]>
+            {
+                { "Dimensions", [string.Join(", ", invalidDimensions) + " are not valid rating dimensions."] }
+            };
+            return TypedResults.ValidationProblem(errors);
+        }
+
+        return null;
     }
 }

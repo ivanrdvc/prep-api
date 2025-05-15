@@ -45,7 +45,8 @@ public static class RecipeVariantEndpoints
         if (request.SetAsFavorite)
         {
             var existingFavorite = await db.Recipes
-                .Where(r => r.OriginalRecipeId == originalRecipe.Id && r.IsFavoriteVariant &&
+                .Where(r => r.OriginalRecipeId == originalRecipe.Id &&
+                            r.IsFavoriteVariant &&
                             r.UserId == userContext.UserId)
                 .FirstOrDefaultAsync();
             if (existingFavorite != null)
@@ -83,7 +84,7 @@ public static class RecipeVariantEndpoints
 
         await db.SaveChangesAsync();
 
-        return TypedResults.Created($"/api/recipes/{variant.Id}", variant.Id);
+        return TypedResults.Created($"/api/recipes/{prepId}/variants/{variant.Id}", variant.Id);
     }
 
     public static async Task<Results<NoContent, NotFound, UnauthorizedHttpResult>> SetFavoriteVariant(

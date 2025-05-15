@@ -4,11 +4,9 @@ namespace PrepApi.Contracts;
 
 public class UpsertPrepRatingRequest
 {
-    public int OverallRating { get; set; }
     public bool Liked { get; set; }
-    public int? AppearanceRating { get; set; }
-    public int? TasteRating { get; set; }
-    public int? TextureRating { get; set; }
+    public int OverallRating { get; set; }
+    public Dictionary<string, int> Dimensions { get; set; } = new();
     public string? WhatWorkedWell { get; set; }
     public string? WhatToChange { get; set; }
     public string? AdditionalNotes { get; set; }
@@ -21,9 +19,7 @@ public class PrepRatingDto
     public required string UserId { get; set; }
     public bool Liked { get; set; }
     public int OverallRating { get; set; }
-    public int? TasteRating { get; set; }
-    public int? TextureRating { get; set; }
-    public int? AppearanceRating { get; set; }
+    public Dictionary<string, int> Dimensions { get; set; } = new();
     public string? WhatWorkedWell { get; set; }
     public string? WhatToChange { get; set; }
     public string? AdditionalNotes { get; set; }
@@ -37,27 +33,6 @@ public class UpsertPrepRatingRequestValidator : AbstractValidator<UpsertPrepRati
         RuleFor(x => x.OverallRating)
             .InclusiveBetween(1, 5)
             .WithMessage("Overall rating must be between 1 and 5.");
-
-        When(x => x.AppearanceRating.HasValue, () =>
-        {
-            RuleFor(x => x.AppearanceRating!.Value)
-                .InclusiveBetween(1, 5)
-                .WithMessage("Appearance rating must be between 1 and 5.");
-        });
-
-        When(x => x.TasteRating.HasValue, () =>
-        {
-            RuleFor(x => x.TasteRating!.Value)
-                .InclusiveBetween(1, 5)
-                .WithMessage("Taste rating must be between 1 and 5.");
-        });
-
-        When(x => x.TextureRating.HasValue, () =>
-        {
-            RuleFor(x => x.TextureRating!.Value)
-                .InclusiveBetween(1, 5)
-                .WithMessage("Texture rating must be between 1 and 5.");
-        });
 
         RuleFor(x => x.WhatWorkedWell)
             .MaximumLength(1000)

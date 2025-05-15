@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Text.Json;
+
+using Microsoft.EntityFrameworkCore;
 
 using PrepApi.Data;
 using PrepApi.Contracts;
@@ -29,7 +31,7 @@ public class FakeDb(IUserContext userContext) : IDbContextFactory<PrepDb>
             Description = "Test Description",
             PrepTimeMinutes = 10,
             CookTimeMinutes = 20,
-            StepsJson = System.Text.Json.JsonSerializer.Serialize(new List<StepDto>
+            StepsJson = JsonSerializer.Serialize(new List<StepDto>
                 { new() { Description = "Step 1", Order = 1 } }),
             RecipeIngredients = new List<RecipeIngredient>
             {
@@ -61,7 +63,7 @@ public class FakeDb(IUserContext userContext) : IDbContextFactory<PrepDb>
             SummaryNotes = "Test Prep",
             PrepTimeMinutes = 5,
             CookTimeMinutes = 10,
-            StepsJson = System.Text.Json.JsonSerializer.Serialize(new List<StepDto>
+            StepsJson = JsonSerializer.Serialize(new List<StepDto>
                 { new() { Description = "Prep Step", Order = 1 } }),
             PrepIngredients = Prep.CreatePrepIngredients(
                 new List<PrepIngredientInputDto>
@@ -88,9 +90,7 @@ public class FakeDb(IUserContext userContext) : IDbContextFactory<PrepDb>
             UserId = userId ?? userContext.UserId ?? "test-user-id",
             Liked = liked,
             OverallRating = overallRating,
-            TasteRating = 5,
-            TextureRating = 5,
-            AppearanceRating = 5,
+            DimensionsJson = JsonSerializer.Serialize(new Dictionary<string, int> { { "taste", 5 }, { "texture", 5 }, { "appearance", 5 } }),
             WhatWorkedWell = "Good taste",
             WhatToChange = "Nothing",
             AdditionalNotes = "Great!"
@@ -99,22 +99,6 @@ public class FakeDb(IUserContext userContext) : IDbContextFactory<PrepDb>
         await context.SaveChangesAsync();
 
         return rating;
-    }
-
-    private UpsertPrepRequest CreateUpsertPrepRequest(PrepDb context, Guid recipeId)
-    {
-        var recipe = context.Recipes.Include(r => r.RecipeIngredients).FirstOrDefault(r => r.Id == recipeId);
-        var ingredientId = recipe?.RecipeIngredients.FirstOrDefault()?.IngredientId ?? Guid.NewGuid();
-
-        return new UpsertPrepRequest
-        {
-            RecipeId = recipeId,
-            SummaryNotes = "Prep notes",
-            PrepTimeMinutes = 10,
-            CookTimeMinutes = 20,
-            Steps = [new() { Description = "Step 1", Order = 1 }],
-            PrepIngredients = [new() { IngredientId = ingredientId, Quantity = 100, Unit = PrepApi.Data.Unit.Gram }]
-        };
     }
 
     public async Task<Recipe> SeedVariantRecipeAsync(PrepDb context, Guid originalRecipeId, string name, bool isFavoriteVariant)
@@ -143,5 +127,18 @@ public class FakeDb(IUserContext userContext) : IDbContextFactory<PrepDb>
         await context.SaveChangesAsync();
 
         return variant;
+    }
+
+    public async Task SeedDefaultRatingDimensionsAsync(PrepDb context)
+    {
+        var defaultDimensions = new[]
+        {
+            new RatingDimension { Key = "taste", DisplayName = "Taste", SortOrder = 1 },
+            new RatingDimension { Key = "texture", DisplayName = "Texture", SortOrder = 2 },
+            new RatingDimension { Key = "appearance", DisplayName = "Appearance", SortOrder = 3 }
+        };
+        
+        await context.RatingDimensions.AddRangeAsync(defaultDimensions);
+        await context.SaveChangesAsync();
     }
 }

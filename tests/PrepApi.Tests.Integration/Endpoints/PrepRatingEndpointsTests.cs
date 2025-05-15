@@ -15,6 +15,7 @@ public class PrepRatingEndpointsTests(TestWebAppFactory factory) : IClassFixture
 
     public async Task InitializeAsync()
     {
+        await _seeder.SeedDefaultRatingDimensionsAsync();
         _ingredients = await _seeder.SeedIngredientsAsync("Flour", "Sugar", "Milk", "Eggs");
     }
 
@@ -33,9 +34,7 @@ public class PrepRatingEndpointsTests(TestWebAppFactory factory) : IClassFixture
         {
             OverallRating = 4,
             Liked = true,
-            TasteRating = 4,
-            TextureRating = 5,
-            AppearanceRating = 4,
+            Dimensions = new Dictionary<string, int> { { "taste", 4 }, { "texture", 5 }, { "appearance", 4 } },
             WhatWorkedWell = "Easy to follow",
             WhatToChange = "Nothing",
             AdditionalNotes = "Great prep!"

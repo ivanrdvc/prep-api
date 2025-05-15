@@ -27,7 +27,7 @@ public class PrepRatingEndpointsTests
         // Arrange
         await using var context = _fakeDb.CreateDbContext();
         var prep = await _fakeDb.SeedPrepAsync(context);
-        var request = new UpsertPrepRatingRequest { OverallRating = 0 };
+        var request = new UpsertPrepRatingRequest { OverallRating = 0, Dimensions = new() };
 
         // Act
         var result = await PrepRatingEndpoints.CreatePrepRating(prep.Id, request, context, _userContext, _validator);
@@ -42,7 +42,7 @@ public class PrepRatingEndpointsTests
         // Arrange
         await using var context = _fakeDb.CreateDbContext();
         var prep = await _fakeDb.SeedPrepAsync(context);
-        var request = new UpsertPrepRatingRequest { OverallRating = 5 };
+        var request = new UpsertPrepRatingRequest { OverallRating = 5, Dimensions = new() };
         var anonUser = TestUserContext.Anonymous();
 
         // Act
@@ -57,8 +57,17 @@ public class PrepRatingEndpointsTests
     {
         // Arrange
         await using var context = _fakeDb.CreateDbContext();
+        await _fakeDb.SeedDefaultRatingDimensionsAsync(context);
         var prep = await _fakeDb.SeedPrepAsync(context);
-        var request = new UpsertPrepRatingRequest { OverallRating = 5, Liked = true };
+        var request = new UpsertPrepRatingRequest
+        {
+            OverallRating = 5,
+            Liked = true,
+            Dimensions = new Dictionary<string, int> { { "taste", 5 }, { "texture", 4 } },
+            WhatWorkedWell = "Great taste!",
+            WhatToChange = "None",
+            AdditionalNotes = "Would make again."
+        };
 
         // Act
         var result = await PrepRatingEndpoints.CreatePrepRating(prep.Id, request, context, _userContext, _validator);
@@ -73,7 +82,7 @@ public class PrepRatingEndpointsTests
         // Arrange
         await using var context = _fakeDb.CreateDbContext();
         var prep = await _fakeDb.SeedPrepAsync(context);
-        var request = new UpsertPrepRatingRequest { OverallRating = 5, Liked = true };
+        var request = new UpsertPrepRatingRequest { OverallRating = 5, Liked = true, Dimensions = new() };
 
         // Act
         var firstResult = await PrepRatingEndpoints.CreatePrepRating(prep.Id, request, context, _userContext, _validator);
@@ -85,12 +94,36 @@ public class PrepRatingEndpointsTests
     }
 
     [Fact]
+    public async Task CreatePrepRating_WithInvalidDimension_ReturnsValidationProblem()
+    {
+        // Arrange
+        await using var context = _fakeDb.CreateDbContext();
+        await _fakeDb.SeedDefaultRatingDimensionsAsync(context);
+        var prep = await _fakeDb.SeedPrepAsync(context);
+        var request = new UpsertPrepRatingRequest
+        {
+            OverallRating = 5,
+            Liked = true,
+            Dimensions = new Dictionary<string, int> { { "invalid_dim", 3 } },
+            WhatWorkedWell = "Test",
+            WhatToChange = "Test",
+            AdditionalNotes = "Test"
+        };
+
+        // Act
+        var result = await PrepRatingEndpoints.CreatePrepRating(prep.Id, request, context, _userContext, _validator);
+
+        // Assert
+        Assert.IsType<ValidationProblem>(result.Result);
+    }
+
+    [Fact]
     public async Task UpdatePrepRating_NotFound_ReturnsNotFound()
     {
         // Arrange
         await using var context = _fakeDb.CreateDbContext();
         var prep = await _fakeDb.SeedPrepAsync(context);
-        var request = new UpsertPrepRatingRequest { OverallRating = 5 };
+        var request = new UpsertPrepRatingRequest { OverallRating = 5, Dimensions = new() };
 
         // Act
         var result = await PrepRatingEndpoints.UpdatePrepRating(prep.Id, Guid.NewGuid(), request, context, _userContext,
@@ -105,11 +138,20 @@ public class PrepRatingEndpointsTests
     {
         // Arrange
         await using var context = _fakeDb.CreateDbContext();
+        await _fakeDb.SeedDefaultRatingDimensionsAsync(context);
         var prep = await _fakeDb.SeedPrepAsync(context);
         var rating = await _fakeDb.SeedPrepRatingAsync(context, prep.Id, _userContext.UserId);
 
         // Act
-        var updateRequest = new UpsertPrepRatingRequest { OverallRating = 4, Liked = false };
+        var updateRequest = new UpsertPrepRatingRequest
+        {
+            OverallRating = 4,
+            Liked = false,
+            Dimensions = new Dictionary<string, int> { { "appearance", 3 } },
+            WhatWorkedWell = "Nice look",
+            WhatToChange = "Improve texture",
+            AdditionalNotes = "Test update."
+        };
         var result = await PrepRatingEndpoints.UpdatePrepRating(prep.Id, rating.Id, updateRequest, context, _userContext,
             _validator);
 
@@ -124,7 +166,7 @@ public class PrepRatingEndpointsTests
         await using var context = _fakeDb.CreateDbContext();
         var prep = await _fakeDb.SeedPrepAsync(context);
         var rating = await _fakeDb.SeedPrepRatingAsync(context, prep.Id, _userContext.UserId);
-        var invalidRequest = new UpsertPrepRatingRequest { OverallRating = 0, Liked = true };
+        var invalidRequest = new UpsertPrepRatingRequest { OverallRating = 0, Liked = true, Dimensions = new() };
 
         // Act
         var result = await PrepRatingEndpoints.UpdatePrepRating(prep.Id, rating.Id, invalidRequest, context, _userContext,
