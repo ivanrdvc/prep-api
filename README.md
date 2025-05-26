@@ -13,6 +13,3 @@ dotnet user-jwts create --audience prep-api
 ```
 docker run --name prep_db -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=prep_db -p 5432:5432 -d postgres
 ```
-
-http://localhost:5053/scalar </br>
-https://prep-api.azurewebsites.net/scalar

@@ -1,6 +1,6 @@
-﻿using PrepApi.Data;
+﻿using System.Text.Json;
 
-using System.Text.Json;
+using PrepApi.Data;
 
 namespace PrepApi.Contracts;
 
@@ -30,7 +30,7 @@ public record RecipeDto
             Quantity = ri.Quantity,
             Unit = ri.Unit
         }).ToList();
-        
+
         var steps = JsonSerializer.Deserialize<List<StepDto>>(recipe.StepsJson) ?? [];
 
         return new RecipeDto

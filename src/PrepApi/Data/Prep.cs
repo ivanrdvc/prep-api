@@ -14,6 +14,7 @@ public class Prep : Entity
     public required string StepsJson { get; set; }
     public Guid? CreatedNewRecipeId { get; set; }
     public Recipe? CreatedNewRecipe { get; set; }
+    public ICollection<PrepRating> Ratings { get; set; } = [];
 
     public static List<PrepIngredient> CreatePrepIngredients(
         IEnumerable<PrepIngredientInputDto> inputs,

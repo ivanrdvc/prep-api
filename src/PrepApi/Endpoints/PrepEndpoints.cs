@@ -15,11 +15,15 @@ public static class PrepEndpoints
 {
     public static IEndpointRouteBuilder MapPrepEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapPost("api/preps", CreatePrep);
-        app.MapGet("api/preps/recipe/{recipeId:guid}", GetPrepsByRecipe);
-        app.MapGet("api/preps/{id:guid}", GetPrep);
-        app.MapDelete("api/preps/{id:guid}", DeletePrep);
-        app.MapPut("api/preps/{id:guid}", UpdatePrep);
+        var group = app.MapGroup("api/preps").RequireAuthorization();
+
+        group.MapPost("/", CreatePrep);
+        group.MapGet("recipe/{recipeId:guid}", GetPrepsByRecipe);
+        group.MapGet("{id:guid}", GetPrep);
+        group.MapDelete("{id:guid}", DeletePrep);
+        group.MapPut("{id:guid}", UpdatePrep);
+
+        group.MapPrepRatingEndpoints();
 
         return app;
     }
@@ -87,12 +91,12 @@ public static class PrepEndpoints
         var totalItems = await query.CountAsync();
 
         var itemsOnPage = await query.Select(p => new PrepSummaryDto
-            {
-                Id = p.Id,
-                BaseRecipeName = p.Recipe.Name,
-                SummaryNotes = p.SummaryNotes,
-                PreparedAt = p.CreatedAt
-            })
+        {
+            Id = p.Id,
+            BaseRecipeName = p.Recipe.Name,
+            SummaryNotes = p.SummaryNotes,
+            PreparedAt = p.CreatedAt
+        })
             .Skip(request.PageIndex * request.PageSize)
             .Take(request.PageSize)
             .ToListAsync();
@@ -106,13 +110,12 @@ public static class PrepEndpoints
         return TypedResults.Ok(result);
     }
 
-    public static async Task<Results<Created<Guid>, NotFound<string>, ValidationProblem, UnauthorizedHttpResult>>
-        CreatePrep(
-            [FromBody]
-            UpsertPrepRequest request,
-            PrepDb db,
-            IUserContext userContext,
-            IValidator<UpsertPrepRequest> validator)
+    public static async Task<Results<Created<Guid>, NotFound<string>, ValidationProblem, UnauthorizedHttpResult>> CreatePrep(
+        [FromBody]
+        UpsertPrepRequest request,
+        PrepDb db,
+        IUserContext userContext,
+        IValidator<UpsertPrepRequest> validator)
     {
         if (userContext.UserId is null)
         {

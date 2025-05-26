@@ -8,9 +8,9 @@ using PrepApi.Contracts;
 using PrepApi.Data;
 using PrepApi.Tests.Integration.Helpers;
 
-namespace PrepApi.Tests.Integration.Endpoints;
+namespace PrepApi.Tests.Integration;
 
-public class VariantEndpointsTests(TestWebAppFactory factory) : IClassFixture<TestWebAppFactory>, IAsyncLifetime
+public class RecipeVariantBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebAppFactory>, IAsyncLifetime
 {
     private readonly HttpClient _client = factory.CreateClient();
     private readonly TestSeeder _seeder = new(factory);
@@ -20,7 +20,7 @@ public class VariantEndpointsTests(TestWebAppFactory factory) : IClassFixture<Te
     public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
-    public async Task CreateVariantFromPrep_ShouldCreateNewRecipe()
+    public async Task UserCreatesVariantFromPrep()
     {
         // Arrange
         var recipe = await _seeder.SeedRecipeAsync();
@@ -55,7 +55,7 @@ public class VariantEndpointsTests(TestWebAppFactory factory) : IClassFixture<Te
     }
 
     [Fact]
-    public async Task SetFavoriteVariant_ShouldUpdateFavoriteStatus()
+    public async Task UserSetsFavoriteVariant()
     {
         // Arrange
         var originalRecipe = await _seeder.SeedRecipeAsync();

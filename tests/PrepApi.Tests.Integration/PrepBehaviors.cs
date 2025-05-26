@@ -5,9 +5,9 @@ using PrepApi.Contracts;
 using PrepApi.Data;
 using PrepApi.Tests.Integration.Helpers;
 
-namespace PrepApi.Tests.Integration.Endpoints;
+namespace PrepApi.Tests.Integration;
 
-public class PrepEndpointsTests(TestWebAppFactory factory) : IClassFixture<TestWebAppFactory>, IAsyncLifetime
+public class PrepBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebAppFactory>, IAsyncLifetime
 {
     private readonly HttpClient _client = factory.CreateClient();
     private readonly TestSeeder _seeder = new(factory);
@@ -22,7 +22,7 @@ public class PrepEndpointsTests(TestWebAppFactory factory) : IClassFixture<TestW
     public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
-    public async Task CreatePrep_WithValidData_ReturnsCreated()
+    public async Task UserCreatesPrep()
     {
         // Arrange
         var baseRecipe = await _seeder.SeedRecipeAsync(
@@ -36,9 +36,9 @@ public class PrepEndpointsTests(TestWebAppFactory factory) : IClassFixture<TestW
             SummaryNotes = "Test prep notes",
             PrepTimeMinutes = 15,
             CookTimeMinutes = 20,
-            Steps = new List<StepDto> { new() { Order = 1, Description = "Test prep step" } },
-            PrepIngredients = new List<PrepIngredientInputDto>
-            {
+            Steps = [new() { Order = 1, Description = "Test prep step" }],
+            PrepIngredients =
+            [
                 new()
                 {
                     IngredientId = _ingredients["Flour"].Id, Quantity = 150, Unit = Unit.Gram,
@@ -46,7 +46,7 @@ public class PrepEndpointsTests(TestWebAppFactory factory) : IClassFixture<TestW
                 },
                 new() { IngredientId = _ingredients["Sugar"].Id, Quantity = 50, Unit = Unit.Gram },
                 new() { IngredientId = _ingredients["Milk"].Id, Quantity = 100, Unit = Unit.Milliliter }
-            }
+            ]
         };
 
         // Act
@@ -59,7 +59,7 @@ public class PrepEndpointsTests(TestWebAppFactory factory) : IClassFixture<TestW
     }
 
     [Fact]
-    public async Task GetPrep_ExistingPrepForUser_ReturnsOkWithPrepDto()
+    public async Task UserViewsOwnPrepDetails()
     {
         // Arrange
         var recipe = await _seeder.SeedRecipeAsync(
@@ -92,7 +92,7 @@ public class PrepEndpointsTests(TestWebAppFactory factory) : IClassFixture<TestW
     }
 
     [Fact]
-    public async Task DeletePrep_ExistingPrepForUser_ReturnsNoContentAndDeletesPrep()
+    public async Task UserDeletesOwnPrep()
     {
         // Arrange
         var recipe = await _seeder.SeedRecipeAsync(ingredients: [(_ingredients["Flour"], 100, Unit.Gram)]);
@@ -111,7 +111,7 @@ public class PrepEndpointsTests(TestWebAppFactory factory) : IClassFixture<TestW
     }
 
     [Fact]
-    public async Task GetPrepsByRecipe_ExistingRecipeWithPreps_ReturnsOkWithPaginatedPreps()
+    public async Task UserViewsPaginatedPrepsForRecipe()
     {
         // Arrange
         var recipe = await _seeder.SeedRecipeAsync(
@@ -148,7 +148,7 @@ public class PrepEndpointsTests(TestWebAppFactory factory) : IClassFixture<TestW
     }
 
     [Fact]
-    public async Task UpdatePrep_WithValidData_ReturnsNoContentAndUpdatesPrep()
+    public async Task UserUpdatesOwnPrep()
     {
         // Arrange
         var baseRecipe = await _seeder.SeedRecipeAsync(

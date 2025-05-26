@@ -15,6 +15,7 @@ public class Recipe : Entity
     public Recipe? OriginalRecipe { get; set; }
     public ICollection<Recipe> Variants { get; set; } = [];
     public bool IsFavoriteVariant { get; set; }
+    public ICollection<Prep> Preps { get; private set; } = [];
 }
 
 public class RecipeIngredient

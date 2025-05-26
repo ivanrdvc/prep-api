@@ -1,0 +1,34 @@
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json;
+
+namespace PrepApi.Data;
+
+public class PrepRating : Entity
+{
+    public Guid PrepId { get; set; }
+    public Prep Prep { get; set; } = null!;
+    public required string UserId { get; set; }
+    public bool Liked { get; set; }
+    public int OverallRating { get; set; } = 1;
+    public string? DimensionsJson { get; set; }
+    public string? WhatWorkedWell { get; set; }
+    public string? WhatToChange { get; set; }
+    public string? AdditionalNotes { get; set; }
+
+    [NotMapped]
+    public Dictionary<string, int> Dimensions
+    {
+        get => string.IsNullOrEmpty(DimensionsJson)
+            ? new()
+            : JsonSerializer.Deserialize<Dictionary<string, int>>(DimensionsJson) ?? new();
+        set => DimensionsJson = value.Count > 0 ? JsonSerializer.Serialize(value) : null;
+    }
+}
+
+public class RatingDimension : Entity
+{
+    public required string Key { get; set; }
+    public required string DisplayName { get; set; }
+    public string? Description { get; set; }
+    public int SortOrder { get; set; }
+}

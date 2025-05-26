@@ -10,9 +10,9 @@ using PrepApi.Contracts;
 using PrepApi.Data;
 using PrepApi.Tests.Integration.Helpers;
 
-namespace PrepApi.Tests.Integration.Endpoints;
+namespace PrepApi.Tests.Integration;
 
-public class RecipeEndpointsTests(TestWebAppFactory factory) : IClassFixture<TestWebAppFactory>, IAsyncLifetime
+public class RecipeBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebAppFactory>, IAsyncLifetime
 {
     private readonly HttpClient _client = factory.CreateClient();
     private const string TestUserId = TestAuthenticationHandler.TestUserId;
@@ -30,7 +30,7 @@ public class RecipeEndpointsTests(TestWebAppFactory factory) : IClassFixture<Tes
     public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
-    public async Task GetRecipe_WhenRecipeExistsAndBelongsToUser_ReturnsOk()
+    public async Task UserViewsOwnRecipeDetails()
     {
         // Arrange
         var recipe = await _seeder.SeedRecipeAsync(
@@ -54,7 +54,7 @@ public class RecipeEndpointsTests(TestWebAppFactory factory) : IClassFixture<Tes
     }
 
     [Fact]
-    public async Task GetRecipe_WhenRecipeDoesNotExist_ReturnsNotFound()
+    public async Task UserCannotViewRecipeThatDoesNotExist()
     {
         // Arrange
         var nonExistentId = Guid.NewGuid();
@@ -67,7 +67,7 @@ public class RecipeEndpointsTests(TestWebAppFactory factory) : IClassFixture<Tes
     }
 
     [Fact]
-    public async Task GetRecipe_WhenRecipeExistsButBelongsToDifferentUser_ReturnsNotFound()
+    public async Task UserCannotViewRecipeOwnedByAnotherUser()
     {
         // Arrange
         const string otherUserId = "other-user-id-abc";
@@ -81,7 +81,7 @@ public class RecipeEndpointsTests(TestWebAppFactory factory) : IClassFixture<Tes
     }
 
     [Fact]
-    public async Task GetRecipe_WhenUserIsNotAuthenticated_ReturnsUnauthorized()
+    public async Task UserCannotViewRecipeWhenNotAuthenticated()
     {
         // Arrange
         var recipe = await _seeder.SeedRecipeAsync(
@@ -97,34 +97,7 @@ public class RecipeEndpointsTests(TestWebAppFactory factory) : IClassFixture<Tes
     }
 
     [Fact]
-    public async Task GetRecipe_ShouldReturnVariantsInfo()
-    {
-        // Arrange
-        var originalRecipe = await _seeder.SeedRecipeAsync();
-        var variant1 = await _seeder.SeedRecipeAsync(
-            name: "Variant 1",
-            originalRecipeId: originalRecipe.Id,
-            isFavoriteVariant: true);
-        var variant2 = await _seeder.SeedRecipeAsync(
-            name: "Variant 2",
-            originalRecipeId: originalRecipe.Id,
-            isFavoriteVariant: false);
-
-        // Act
-        var response = await _client.GetAsync($"/api/recipes/{originalRecipe.Id}");
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
-        var recipeDto = await response.Content.ReadFromJsonAsync<RecipeDto>();
-        Assert.NotNull(recipeDto);
-        Assert.Equal(2, recipeDto.Variants.Count);
-        Assert.Contains(recipeDto.Variants, v => v.Name == variant1.Name && v.IsFavorite);
-        Assert.Contains(recipeDto.Variants, v => v.Name != variant2.Name && !v.IsFavorite);
-    }
-
-    [Fact]
-    public async Task CreateRecipe_WithValidData_ReturnsCreated()
+    public async Task UserCreatesRecipe()
     {
         // Arrange
         var createRequest = new UpsertRecipeRequest
@@ -198,7 +171,7 @@ public class RecipeEndpointsTests(TestWebAppFactory factory) : IClassFixture<Tes
     }
 
     [Fact]
-    public async Task CreateRecipe_WithNonExistentIngredientId_ReturnsBadRequest()
+    public async Task UserCannotCreateRecipeWithNonExistentIngredient()
     {
         // Arrange
         var nonExistentIngredientId = Guid.NewGuid();
@@ -234,7 +207,7 @@ public class RecipeEndpointsTests(TestWebAppFactory factory) : IClassFixture<Tes
     }
 
     [Fact]
-    public async Task DeleteRecipe_WhenRecipeExistsAndBelongsToUser_DeletesRecipe()
+    public async Task UserDeletesOwnRecipe()
     {
         // Arrange
         var recipeToDelete = await _seeder.SeedRecipeAsync();
@@ -260,7 +233,7 @@ public class RecipeEndpointsTests(TestWebAppFactory factory) : IClassFixture<Tes
     }
 
     [Fact]
-    public async Task UpdateRecipe_WithValidData_ReturnsNoContentAndUpdatesRecipe()
+    public async Task UserUpdatesOwnRecipe()
     {
         // Arrange
         var flour = _ingredients["Flour"];

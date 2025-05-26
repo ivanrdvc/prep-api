@@ -8,15 +8,16 @@ namespace PrepApi.Data;
 
 public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) : DbContext(options)
 {
-    private readonly IUserContext userContext = userContext;
-
     public DbSet<Recipe> Recipes { get; set; }
     public DbSet<Ingredient> Ingredients { get; set; }
     public DbSet<RecipeIngredient> RecipeIngredients { get; set; }
     public DbSet<Prep> Preps { get; set; }
     public DbSet<PrepIngredient> PrepIngredients { get; set; }
+    public DbSet<PrepRating> PrepRatings { get; set; }
+    public DbSet<RatingDimension> RatingDimensions { get; set; }
     public DbSet<Tag> Tags { get; set; }
     public DbSet<RecipeTag> RecipeTags { get; set; }
+    public DbSet<RecipeInsight> RecipeInsights { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -32,15 +33,13 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
                 .HasMaxLength(1000)
                 .IsRequired();
 
-            entity.Property(p => p.Yield)
-                .HasMaxLength(256);
+            entity.Property(p => p.Yield).HasMaxLength(256);
 
             entity.Property(p => p.StepsJson)
                 .IsRequired()
                 .HasColumnType("jsonb");
 
-            entity.Property(p => p.UserId)
-                .IsRequired();
+            entity.Property(p => p.UserId).IsRequired();
 
             entity.HasIndex(r => r.UserId);
 
@@ -50,9 +49,8 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
                 .OnDelete(DeleteBehavior.Restrict)
                 .IsRequired(false);
 
-            entity.Property(r => r.IsFavoriteVariant)
-                .HasDefaultValue(false);
-            
+            entity.Property(r => r.IsFavoriteVariant).HasDefaultValue(false);
+
             entity.HasMany<Prep>()
                 .WithOne(p => p.Recipe)
                 .HasForeignKey(p => p.RecipeId)
@@ -124,21 +122,18 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
         modelBuilder.Entity<Prep>(entity =>
         {
             entity.HasOne(p => p.Recipe)
-                .WithMany()
+                .WithMany(r => r.Preps)
                 .HasForeignKey(p => p.RecipeId)
-                .IsRequired()
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
-            entity.Property(p => p.UserId)
-                .IsRequired();
+            entity.Property(p => p.UserId).IsRequired();
             entity.HasIndex(p => p.UserId);
 
             entity.Property(p => p.StepsJson)
                 .IsRequired()
                 .HasColumnType("jsonb");
 
-            entity.Property(p => p.SummaryNotes)
-                .HasMaxLength(2000);
+            entity.Property(p => p.SummaryNotes).HasMaxLength(2000);
         });
 
         modelBuilder.Entity<PrepIngredient>(entity =>
@@ -163,14 +158,89 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
                 .HasMaxLength(50)
                 .IsRequired();
 
-            entity.Property(pi => pi.Notes)
-                .HasMaxLength(500);
+            entity.Property(pi => pi.Notes).HasMaxLength(500);
 
             entity.Property(pi => pi.Status)
                 .HasConversion<string>()
                 .HasMaxLength(50)
                 .IsRequired();
-            entity.HasIndex(pi => pi.Status);
+        });
+
+        modelBuilder.Entity<PrepRating>(entity =>
+        {
+            entity.HasOne(r => r.Prep)
+                .WithMany(p => p.Ratings)
+                .HasForeignKey(r => r.PrepId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(r => r.UserId).IsRequired();
+
+            entity.Property(r => r.OverallRating)
+                .HasDefaultValue(1)
+                .IsRequired();
+
+            entity.Property(r => r.Liked).IsRequired();
+
+            entity.Property(r => r.DimensionsJson)
+                .HasColumnType("jsonb")
+                .IsRequired(false);
+
+            entity.Property(r => r.WhatWorkedWell).HasMaxLength(1000);
+
+            entity.Property(r => r.WhatToChange).HasMaxLength(1000);
+
+            entity.Property(r => r.AdditionalNotes).HasMaxLength(1000);
+
+            entity.HasIndex(r => r.PrepId);
+            entity.HasIndex(r => r.UserId);
+            entity.HasIndex(r => new { r.PrepId, r.UserId }).IsUnique();
+        });
+
+        modelBuilder.Entity<RatingDimension>(entity =>
+        {
+            entity.Property(d => d.Key)
+                .HasMaxLength(50)
+                .IsRequired();
+
+            entity.Property(d => d.DisplayName)
+                .HasMaxLength(100)
+                .IsRequired();
+
+            entity.Property(d => d.Description)
+                .HasMaxLength(500);
+
+            entity.Property(d => d.SortOrder)
+                .HasDefaultValue(100);
+        });
+
+        modelBuilder.Entity<RecipeInsight>(entity =>
+        {
+            entity.HasOne(ri => ri.Recipe)
+                .WithOne()
+                .HasForeignKey<RecipeInsight>(ri => ri.RecipeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(ri => ri.AverageOverallRating)
+                .HasPrecision(3, 2)
+                .IsRequired();
+
+            entity.Property(ri => ri.TotalRatings)
+                .HasDefaultValue(0)
+                .IsRequired();
+
+            entity.Property(ri => ri.TotalPreparations)
+                .HasDefaultValue(0)
+                .IsRequired();
+
+            entity.Property(ri => ri.DimensionAveragesJson)
+                .HasColumnType("jsonb")
+                .IsRequired(false);
+
+            entity.Property(ri => ri.RatingTrend)
+                .HasPrecision(3, 2)
+                .IsRequired(false);
+
+            entity.HasIndex(ri => ri.RecipeId).IsUnique();
         });
     }
 
@@ -183,7 +253,7 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
                 {
                     if (await prepDbContext.Recipes.AnyAsync(cancellationToken))
                     {
-                        return; 
+                        return;
                     }
 
                     var flourId = new Guid("11111111-1111-1111-1111-111111111111");
@@ -235,13 +305,13 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
                     // Seed RecipeIngredients
                     prepDbContext.RecipeIngredients.AddRange(
                         new RecipeIngredient
-                            { RecipeId = recipeId, IngredientId = flourId, Quantity = 2, Unit = Unit.Whole },
+                        { RecipeId = recipeId, IngredientId = flourId, Quantity = 2, Unit = Unit.Whole },
                         new RecipeIngredient
-                            { RecipeId = recipeId, IngredientId = butterId, Quantity = 3, Unit = Unit.Gram },
+                        { RecipeId = recipeId, IngredientId = butterId, Quantity = 3, Unit = Unit.Gram },
                         new RecipeIngredient
-                            { RecipeId = recipeId, IngredientId = sugarId, Quantity = 4, Unit = Unit.Kilogram },
+                        { RecipeId = recipeId, IngredientId = sugarId, Quantity = 4, Unit = Unit.Kilogram },
                         new RecipeIngredient
-                            { RecipeId = recipeId, IngredientId = saltId, Quantity = 0.5m, Unit = Unit.Milliliter }
+                        { RecipeId = recipeId, IngredientId = saltId, Quantity = 0.5m, Unit = Unit.Milliliter }
                     );
 
                     // Seed Recipe Tags
@@ -312,6 +382,29 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
                             Status = PrepIngredientStatus.Kept
                         }
                     );
+
+                    // Seed  Rating Dimensions
+                    prepDbContext.RatingDimensions.AddRange(new RatingDimension
+                    {
+                        Key = "taste",
+                        DisplayName = "Taste",
+                        Description = "How good did the recipe taste?",
+                        SortOrder = 10,
+                    },
+                        new RatingDimension
+                        {
+                            Key = "texture",
+                            DisplayName = "Texture",
+                            Description = "How was the texture and consistency?",
+                            SortOrder = 20,
+                        },
+                        new RatingDimension
+                        {
+                            Key = "appearance",
+                            DisplayName = "Appearance",
+                            Description = "How did the final dish look?",
+                            SortOrder = 30,
+                        });
 
                     await prepDbContext.SaveChangesAsync(cancellationToken);
                 }

@@ -1,6 +1,6 @@
-using Microsoft.EntityFrameworkCore;
-
 using FluentValidation;
+
+using Microsoft.EntityFrameworkCore;
 
 using PrepApi;
 using PrepApi.Data;
@@ -35,7 +35,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
-    
+
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<PrepDb>();
     // await dbContext.Database.EnsureDeletedAsync();

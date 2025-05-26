@@ -1,0 +1,106 @@
+using FluentValidation;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
+using PrepApi.Contracts;
+using PrepApi.Data;
+using PrepApi.Endpoints;
+using PrepApi.Tests.Unit.Helpers;
+using System;
+using System.Threading.Tasks;
+using Xunit;
+
+namespace PrepApi.Tests.Unit.Endpoints;
+
+public class RecipeVariantEndpointsTests
+{
+    private readonly IUserContext _userContext;
+    private readonly FakeDb _fakeDb;
+
+    public RecipeVariantEndpointsTests()
+    {
+        _userContext = TestUserContext.Authenticated();
+        _fakeDb = new FakeDb(_userContext);
+    }
+
+    [Fact]
+    public async Task CreateVariantFromPrep_Unauthorized_ReturnsUnauthorized()
+    {
+        // Arrange
+        await using var context = _fakeDb.CreateDbContext();
+        var recipe = await _fakeDb.SeedRecipeAsync(context);
+        var prep = await _fakeDb.SeedPrepAsync(context, recipe.Id);
+        var request = new CreateVariantFromPrepRequest { Name = "Variant", SetAsFavorite = false };
+        var anonUser = TestUserContext.Anonymous();
+
+        // Act
+        var result = await RecipeVariantEndpoints.CreateVariantFromPrep(prep.Id, request, context, anonUser);
+
+        // Assert
+        Assert.IsType<UnauthorizedHttpResult>(result.Result);
+    }
+
+    [Fact]
+    public async Task CreateVariantFromPrep_PrepNotFound_ReturnsNotFound()
+    {
+        // Arrange
+        await using var context = _fakeDb.CreateDbContext();
+        var request = new CreateVariantFromPrepRequest { Name = "Variant", SetAsFavorite = false };
+
+        // Act
+        var result = await RecipeVariantEndpoints.CreateVariantFromPrep(Guid.NewGuid(), request, context, _userContext);
+
+        // Assert
+        Assert.IsType<NotFound>(result.Result);
+    }
+
+    [Fact]
+    public async Task CreateVariantFromPrep_ValidRequest_ReturnsCreated()
+    {
+        // Arrange
+        await using var context = _fakeDb.CreateDbContext();
+        var recipe = await _fakeDb.SeedRecipeAsync(context);
+        var prep = await _fakeDb.SeedPrepAsync(context, recipe.Id);
+        var request = new CreateVariantFromPrepRequest { Name = "Variant", SetAsFavorite = true };
+
+        // Act
+        var result = await RecipeVariantEndpoints.CreateVariantFromPrep(prep.Id, request, context, _userContext);
+
+        // Assert
+        Assert.IsType<Created<Guid>>(result.Result);
+    }
+
+    [Fact]
+    public async Task SetFavoriteVariant_VariantNotFound_ReturnsNotFound()
+    {
+        // Arrange
+        await using var context = _fakeDb.CreateDbContext();
+
+        // Act
+        var result = await RecipeVariantEndpoints.SetFavoriteVariant(Guid.NewGuid(), context, _userContext);
+
+        // Assert
+        Assert.IsType<NotFound>(result.Result);
+    }
+
+    [Fact]
+    public async Task SetFavoriteVariant_ValidRequest_UpdatesFavorite()
+    {
+        // Arrange
+        await using var context = _fakeDb.CreateDbContext();
+        var recipe = await _fakeDb.SeedRecipeAsync(context);
+        var variant1 = await _fakeDb.SeedVariantRecipeAsync(context, recipe.Id, "Variant 1", true);
+        var variant2 = await _fakeDb.SeedVariantRecipeAsync(context, recipe.Id, "Variant 2", false);
+
+        // Act
+        var result = await RecipeVariantEndpoints.SetFavoriteVariant(variant2.Id, context, _userContext);
+
+        // Assert
+        Assert.IsType<NoContent>(result.Result);
+        var updated1 = await context.Recipes.FindAsync(variant1.Id);
+        var updated2 = await context.Recipes.FindAsync(variant2.Id);
+        Assert.NotNull(updated1);
+        Assert.NotNull(updated2);
+        Assert.False(updated1!.IsFavoriteVariant);
+        Assert.True(updated2!.IsFavoriteVariant);
+    }
+}

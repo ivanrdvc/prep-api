@@ -1,5 +1,5 @@
 @PrepApi_HostAddress = http://localhost:5053
-@Bearer_Token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6Iml2YW5yIiwic3ViIjoiaXZhbnIiLCJqdGkiOiJhMTg4OTUzZSIsImF1ZCI6InByZXAtYXBpIiwibmJmIjoxNzQ1NTc5MjAzLCJleHAiOjE3NTM0NDE2MDMsImlhdCI6MTc0NTU3OTIwNCwiaXNzIjoiZG90bmV0LXVzZXItand0cyJ9.M5TynhpTB2uyyIXE8jOpWWOhWurrGrJ2ovJX1zxwKD8
+@Bearer_Token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6Ikl2YW4iLCJzdWIiOiJJdmFuIiwianRpIjoiZWEzNjVhZTUiLCJhdWQiOiJwcmVwLWFwaSIsIm5iZiI6MTc0NzI1NDA0OSwiZXhwIjoxNzU1MjAyODQ5LCJpYXQiOjE3NDcyNTQwNDksImlzcyI6ImRvdG5ldC11c2VyLWp3dHMifQ.m6Kqr4KfiAsKxySqjcfRD9QZnvKXeIzIUL-kNKbCPYM
 
 ###
 ### Recipe Endpoints
@@ -197,4 +197,52 @@ Authorization: Bearer {{Bearer_Token}}
 
 ### Delete a tag
 DELETE {{PrepApi_HostAddress}}/api/tags/0196c01a-649e-7ceb-aa8a-aeb685bfa0d0
+Authorization: Bearer {{Bearer_Token}}
+
+###
+### Prep Rating Endpoints
+###
+
+### Create a Prep Rating
+POST {{PrepApi_HostAddress}}/api/preps/0196d077-326a-7e60-a4c3-7a51548fa0c6/ratings
+Content-Type: application/json
+Authorization: Bearer {{Bearer_Token}}
+
+{
+  "overallRating": 5,
+  "liked": true,
+  "dimensions": {
+    "appearance": 5,
+    "taste": 5,
+    "texture": 4
+  },
+  "whatWorkedWell": "Perfect balance of flavors. Presentation was excellent.",
+  "whatToChange": "Maybe add a garnish for extra visual appeal.",
+  "additionalNotes": "This has become a family favorite after some tweaks."
+}
+
+### Update a Prep Rating
+PUT {{PrepApi_HostAddress}}/api/preps/0196d077-326a-7e60-a4c3-7a51548fa0c6/ratings/0196d078-013a-7256-aa59-39f43bb1cf5d
+Content-Type: application/json
+Authorization: Bearer {{Bearer_Token}}
+
+{
+  "overallRating": 4,
+  "liked": false,
+  "dimensions": {
+    "appearance": 3,
+    "taste": 4,
+    "texture": 2
+  },
+  "whatWorkedWell": "The recipe was easy to follow.",
+  "whatToChange": "Could use a bit more seasoning next time.",
+  "additionalNotes": "Made this for a dinner."
+}
+
+### Get Prep Ratings
+GET {{PrepApi_HostAddress}}/api/preps/0196d077-326a-7e60-a4c3-7a51548fa0c6/ratings
+Authorization: Bearer {{Bearer_Token}}
+
+### Calculate Insights
+POST {{PrepApi_HostAddress}}/api/preps/0196e038-1d9f-777f-a509-208941af1719/calculate-insights
 Authorization: Bearer {{Bearer_Token}}
