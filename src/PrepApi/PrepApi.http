@@ -98,7 +98,7 @@ Content-Type: application/json
 Authorization: Bearer {{Bearer_Token}}
 
 {
-  "recipeId": "55555555-5555-5555-5555-555555555555",
+  "recipeId": "0197232e-d0fe-78d1-9793-1cf185041b18",
   "summaryNotes": "Changed ingredients.",
   "prepTimeMinutes": 12,
   "cookTimeMinutes": 18,

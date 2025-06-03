@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 using PrepApi.Data;
+using PrepApi.Shared;
 
 using Testcontainers.PostgreSql;
 

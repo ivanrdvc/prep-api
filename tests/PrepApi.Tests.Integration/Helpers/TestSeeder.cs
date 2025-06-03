@@ -3,8 +3,14 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-using PrepApi.Contracts;
 using PrepApi.Data;
+using PrepApi.Preps.Entities;
+using PrepApi.Recipes.Entities;
+using PrepApi.Shared.Dtos;
+using PrepApi.Shared.Entities;
+
+using Recipe = PrepApi.Recipes.Entities.Recipe;
+using RecipeIngredient = PrepApi.Recipes.Entities.RecipeIngredient;
 
 namespace PrepApi.Tests.Integration.Helpers;
 

@@ -1,8 +1,10 @@
 using System.Net;
 using System.Net.Http.Json;
 
-using PrepApi.Contracts;
-using PrepApi.Data;
+using PrepApi.Preps;
+using PrepApi.Preps.Requests;
+using PrepApi.Recipes.Entities;
+using PrepApi.Shared.Entities;
 using PrepApi.Tests.Integration.Helpers;
 
 namespace PrepApi.Tests.Integration;

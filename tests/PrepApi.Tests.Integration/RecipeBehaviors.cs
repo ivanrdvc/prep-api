@@ -6,8 +6,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-using PrepApi.Contracts;
 using PrepApi.Data;
+using PrepApi.Recipes;
+using PrepApi.Recipes.Entities;
+using PrepApi.Recipes.Requests;
+using PrepApi.Shared.Dtos;
+using PrepApi.Shared.Entities;
 using PrepApi.Tests.Integration.Helpers;
 
 namespace PrepApi.Tests.Integration;

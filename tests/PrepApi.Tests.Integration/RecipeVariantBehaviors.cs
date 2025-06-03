@@ -4,8 +4,8 @@ using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
-using PrepApi.Contracts;
 using PrepApi.Data;
+using PrepApi.Recipes.Requests;
 using PrepApi.Tests.Integration.Helpers;
 
 namespace PrepApi.Tests.Integration;

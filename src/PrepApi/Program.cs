@@ -4,31 +4,31 @@ using Microsoft.EntityFrameworkCore;
 
 using PrepApi;
 using PrepApi.Data;
-using PrepApi.Endpoints;
 using PrepApi.Extensions;
+using PrepApi.Preps;
+using PrepApi.Recipes;
+using PrepApi.Shared.Queue;
 
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddOpenApi(options =>
-{
-    options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
-});
+builder.AddAppServices();
 
+builder.Services.AddOpenApi(options => options.AddDocumentTransformer<BearerSecuritySchemeTransformer>());
 builder.Services.AddProblemDetails();
-builder.Services.AddDbContext<PrepDb>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
+builder.Services.AddDbContext<PrepDb>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
-builder.Services.AddScoped<IUserContext, UserContext>();
 
 builder.Services.AddAuthentication().AddJwtBearer();
 builder.Services.AddAuthorization();
 
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<PrepDb>("Database");
+
+builder.Services.AddSingleton<ITaskQueue, InMemoryTaskQueue>();
+builder.Services.AddHostedService<TaskProcessor>();
 
 var app = builder.Build();
 

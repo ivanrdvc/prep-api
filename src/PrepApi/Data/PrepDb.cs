@@ -2,7 +2,10 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using PrepApi.Contracts;
+using PrepApi.Preps.Entities;
+using PrepApi.Recipes.Entities;
+using PrepApi.Shared.Dtos;
+using PrepApi.Shared.Entities;
 
 namespace PrepApi.Data;
 
@@ -132,6 +135,8 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
             entity.Property(p => p.StepsJson)
                 .IsRequired()
                 .HasColumnType("jsonb");
+
+            entity.Property(p => p.ChangeSummary).HasMaxLength(2000);
 
             entity.Property(p => p.SummaryNotes).HasMaxLength(2000);
         });
