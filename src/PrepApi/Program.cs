@@ -1,8 +1,11 @@
+using System.Security.Claims;
+
 using FluentValidation;
 
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
-using PrepApi;
 using PrepApi.Data;
 using PrepApi.Extensions;
 using PrepApi.Preps;
@@ -15,17 +18,33 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddAppServices();
 
+builder.Services.AddDefaultCorsPolicy(builder.Configuration);
+
 builder.Services.AddOpenApi(options => options.AddDocumentTransformer<BearerSecuritySchemeTransformer>());
+
 builder.Services.AddProblemDetails();
-builder.Services.AddDbContext<PrepDb>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddDbContext<PrepDb>(
+    options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 builder.Services.AddHttpContextAccessor();
+
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
-builder.Services.AddAuthentication().AddJwtBearer();
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = $"https://{builder.Configuration["Auth0:Domain"]}/";
+        options.Audience = builder.Configuration["Auth0:Audience"];
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            NameClaimType = ClaimTypes.NameIdentifier
+        };
+    });
+
 builder.Services.AddAuthorization();
 
-builder.Services.AddHealthChecks()
-    .AddDbContextCheck<PrepDb>("Database");
+builder.Services.AddHealthChecks().AddDbContextCheck<PrepDb>("Database");
 
 builder.Services.AddSingleton<ITaskQueue, InMemoryTaskQueue>();
 builder.Services.AddHostedService<TaskProcessor>();
@@ -53,6 +72,7 @@ if (app.Configuration.GetValue<bool>("ApiDocsEnabled"))
     app.MapScalarApiReference();
 }
 
+app.UseCors();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
