@@ -5,6 +5,8 @@ using Azure.AI.OpenAI;
 using Microsoft.Extensions.AI;
 
 using PrepApi.Preps;
+using PrepApi.Shared.Queue;
+using PrepApi.Shared.Services;
 
 namespace PrepApi.Extensions;
 
@@ -12,11 +14,16 @@ public static class Extensions
 {
     public static void AddAppServices(this IHostApplicationBuilder builder)
     {
+        builder.Services.AddAzureOpenAiServices(builder.Configuration);
+
         builder.Services.AddScoped<PrepService>();
 
         builder.Services.AddScoped<IUserContext, UserContext>();
-
-        builder.Services.AddAzureOpenAiServices(builder.Configuration);
+        
+        builder.Services.AddSingleton<ITaskQueue, InMemoryTaskQueue>();
+        
+        builder.Services.AddHostedService<SupabaseKeepAliveService>();
+        builder.Services.AddHostedService<TaskProcessor>();
     }
 
     private static void AddAzureOpenAiServices(this IServiceCollection services, IConfiguration configuration)

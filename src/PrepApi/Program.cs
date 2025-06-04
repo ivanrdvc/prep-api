@@ -1,5 +1,7 @@
 using System.Security.Claims;
 
+using Azure.Monitor.OpenTelemetry.AspNetCore;
+
 using FluentValidation;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -10,14 +12,14 @@ using PrepApi.Data;
 using PrepApi.Extensions;
 using PrepApi.Preps;
 using PrepApi.Recipes;
-using PrepApi.Shared.Queue;
-using PrepApi.Shared.Services;
 
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddAppServices();
+
+builder.Services.AddOpenTelemetry().UseAzureMonitor();
 
 builder.Services.AddDefaultCorsPolicy(builder.Configuration);
 
@@ -46,10 +48,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 builder.Services.AddHealthChecks().AddDbContextCheck<PrepDb>("Database");
-
-builder.Services.AddHostedService<SupabaseKeepAliveService>();
-builder.Services.AddSingleton<ITaskQueue, InMemoryTaskQueue>();
-builder.Services.AddHostedService<TaskProcessor>();
 
 var app = builder.Build();
 
