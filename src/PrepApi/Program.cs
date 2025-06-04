@@ -11,6 +11,7 @@ using PrepApi.Extensions;
 using PrepApi.Preps;
 using PrepApi.Recipes;
 using PrepApi.Shared.Queue;
+using PrepApi.Shared.Services;
 
 using Scalar.AspNetCore;
 
@@ -46,6 +47,7 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddHealthChecks().AddDbContextCheck<PrepDb>("Database");
 
+builder.Services.AddHostedService<SupabaseKeepAliveService>();
 builder.Services.AddSingleton<ITaskQueue, InMemoryTaskQueue>();
 builder.Services.AddHostedService<TaskProcessor>();
 
