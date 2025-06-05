@@ -19,7 +19,7 @@ namespace PrepApi.Tests.Integration;
 public class RecipeBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebAppFactory>, IAsyncLifetime
 {
     private readonly HttpClient _client = factory.CreateClient();
-    private const string TestUserId = TestAuthenticationHandler.TestUserId;
+    private const string TestUserId = TestConstants.TestUserId;
     private readonly TestSeeder _seeder = new(factory);
 
     private Dictionary<string, Ingredient> _ingredients = new();
@@ -75,6 +75,7 @@ public class RecipeBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebA
     {
         // Arrange
         const string otherUserId = "other-user-id-abc";
+        await _seeder.SeedTestUserAsync(otherUserId, "other@example.com", "Other User");
         var recipeForOtherUser = await _seeder.SeedRecipeAsync(userId: otherUserId);
 
         // Act
@@ -187,16 +188,11 @@ public class RecipeBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebA
             PrepTimeMinutes = 5,
             CookTimeMinutes = 15,
             Yield = "2 servings",
-            Steps =
-            [
-                new StepDto { Order = 1, Description = "Test step 1" }
-            ],
+            Steps = [new StepDto { Order = 1, Description = "Test step 1" }],
             Ingredients =
             [
-                new RecipeIngredientInputDto
-                    { IngredientId = _ingredients["Flour"].Id, Quantity = 50, Unit = Unit.Gram },
-                new RecipeIngredientInputDto
-                    { IngredientId = nonExistentIngredientId, Quantity = 100, Unit = Unit.Gram }
+                new RecipeIngredientInputDto { IngredientId = _ingredients["Flour"].Id, Quantity = 50, Unit = Unit.Gram },
+                new RecipeIngredientInputDto { IngredientId = nonExistentIngredientId, Quantity = 100, Unit = Unit.Gram }
             ]
         };
 

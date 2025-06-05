@@ -19,7 +19,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddAppServices();
 
-builder.Services.AddOpenTelemetry().UseAzureMonitor();
+
+if (!builder.Environment.IsEnvironment("Development"))
+{
+    builder.Services.AddOpenTelemetry().UseAzureMonitor();
+}
 
 builder.Services.AddDefaultCorsPolicy(builder.Configuration);
 
@@ -27,8 +31,8 @@ builder.Services.AddOpenApi(options => options.AddDocumentTransformer<BearerSecu
 
 builder.Services.AddProblemDetails();
 
-builder.Services.AddDbContext<PrepDb>(
-    options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<PrepDb>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddHttpContextAccessor();
 

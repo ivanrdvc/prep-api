@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using PrepApi.Data;
 using PrepApi.Preps;
 using PrepApi.Preps.Entities;
-using PrepApi.Preps.Requests;
 using PrepApi.Recipes.Entities;
 using PrepApi.Shared.Dtos;
 using PrepApi.Shared.Entities;
@@ -36,8 +35,7 @@ public class FakeDb(IUserContext userContext) : IDbContextFactory<PrepDb>
             Description = "Test Description",
             PrepTimeMinutes = 10,
             CookTimeMinutes = 20,
-            StepsJson = JsonSerializer.Serialize(new List<StepDto>
-                { new() { Description = "Step 1", Order = 1 } }),
+            StepsJson = JsonSerializer.Serialize(new List<StepDto> { new() { Description = "Step 1", Order = 1 } }),
             RecipeIngredients = new List<RecipeIngredient>
             {
                 new()
@@ -69,8 +67,7 @@ public class FakeDb(IUserContext userContext) : IDbContextFactory<PrepDb>
             SummaryNotes = "Test Prep",
             PrepTimeMinutes = 5,
             CookTimeMinutes = 10,
-            StepsJson = JsonSerializer.Serialize(new List<StepDto>
-                { new() { Description = "Prep Step", Order = 1 } }),
+            StepsJson = JsonSerializer.Serialize(new List<StepDto> { new() { Description = "Prep Step", Order = 1 } }),
             PrepIngredients = prepService.CreateIngredients(
                 new List<PrepIngredientInputDto>
                 {

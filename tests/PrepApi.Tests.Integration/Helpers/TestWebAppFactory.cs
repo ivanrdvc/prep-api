@@ -10,7 +10,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 using PrepApi.Data;
-using PrepApi.Shared;
 
 using Testcontainers.PostgreSql;
 
@@ -48,7 +47,7 @@ public class TestWebAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
     protected override void ConfigureClient(HttpClient client)
     {
         client.DefaultRequestHeaders.Add(TestAuthenticationHandler.AuthenticationHeaderName,
-            TestAuthenticationHandler.TestUserId);
+            TestConstants.TestUserId);
 
         base.ConfigureClient(client);
     }
@@ -76,6 +75,9 @@ public class TestWebAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
         using var scope = Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<PrepDb>();
         await dbContext.Database.EnsureCreatedAsync();
+        
+        var seeder = new TestSeeder(this);
+        await seeder.SeedTestUserAsync(TestConstants.TestUserId, "test@example.com", "Test User", "Test", "User");
     }
 
     public new async Task DisposeAsync()
@@ -91,7 +93,6 @@ public class TestAuthenticationHandler(
     : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
 {
     public const string TestScheme = "TestScheme";
-    public const string TestUserId = "TestUserId";
     public const string AuthenticationHeaderName = "X-Test-User-Id";
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
@@ -101,7 +102,7 @@ public class TestAuthenticationHandler(
             return Task.FromResult(AuthenticateResult.NoResult());
         }
 
-        var userId = userIdValues.FirstOrDefault() ?? TestUserId;
+        var userId = userIdValues.FirstOrDefault() ?? TestConstants.TestUserId;
         var claims = new[]
         {
             new Claim(ClaimTypes.NameIdentifier, userId)

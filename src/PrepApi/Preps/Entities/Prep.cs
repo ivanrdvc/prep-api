@@ -9,6 +9,7 @@ public class Prep : Entity
     public Guid RecipeId { get; set; }
     public Recipe Recipe { get; set; } = null!;
     public required string UserId { get; set; }
+    public User User { get; set; } = null!;
     public string? SummaryNotes { get; set; }
     public int? PrepTimeMinutes { get; set; }
     public int? CookTimeMinutes { get; set; }

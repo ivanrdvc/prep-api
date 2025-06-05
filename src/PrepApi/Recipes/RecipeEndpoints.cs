@@ -30,8 +30,7 @@ public static class RecipeEndpoints
     }
 
     public static async Task<Results<Ok<RecipeDto>, NotFound>> GetRecipe(
-        [FromRoute]
-        Guid id,
+        [FromRoute] Guid id,
         PrepDb db,
         IUserContext userContext)
     {
@@ -54,10 +53,8 @@ public static class RecipeEndpoints
     }
 
     public static async Task<Results<NoContent, NotFound, ValidationProblem>> UpdateRecipe(
-        [FromRoute]
-        Guid id,
-        [FromBody]
-        UpsertRecipeRequest request,
+        [FromRoute] Guid id,
+        [FromBody] UpsertRecipeRequest request,
         PrepDb db,
         IUserContext userContext,
         IValidator<UpsertRecipeRequest> validator)
@@ -110,8 +107,7 @@ public static class RecipeEndpoints
     }
 
     public static async Task<Results<NoContent, NotFound>> DeleteRecipe(
-        [FromRoute]
-        Guid id,
+        [FromRoute] Guid id,
         PrepDb db,
         IUserContext userContext)
     {
@@ -129,8 +125,7 @@ public static class RecipeEndpoints
     }
 
     public static async Task<Results<Created<Guid>, ValidationProblem, UnauthorizedHttpResult>> CreateRecipe(
-        [FromBody]
-        UpsertRecipeRequest request,
+        [FromBody] UpsertRecipeRequest request,
         PrepDb db,
         IUserContext userContext,
         IValidator<UpsertRecipeRequest> validator)
@@ -177,10 +172,8 @@ public static class RecipeEndpoints
     }
 
     public static async Task<Results<Created<Guid>, NotFound, ValidationProblem, UnauthorizedHttpResult>> CreateVariantFromPrep(
-        [FromRoute]
-        Guid prepId,
-        [FromBody]
-        CreateVariantFromPrepRequest request,
+        [FromRoute] Guid prepId,
+        [FromBody] CreateVariantFromPrepRequest request,
         PrepDb db,
         IUserContext userContext)
     {
@@ -249,8 +242,7 @@ public static class RecipeEndpoints
     }
 
     public static async Task<Results<NoContent, NotFound, UnauthorizedHttpResult>> SetFavoriteVariant(
-        [FromRoute]
-        Guid id,
+        [FromRoute] Guid id,
         PrepDb db,
         IUserContext userContext)
     {

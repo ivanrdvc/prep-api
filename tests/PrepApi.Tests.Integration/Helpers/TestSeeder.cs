@@ -16,6 +16,35 @@ namespace PrepApi.Tests.Integration.Helpers;
 
 public class TestSeeder(TestWebAppFactory factory)
 {
+    public async Task<User> SeedTestUserAsync(
+        string userId,
+        string email,
+        string displayName,
+        string? firstName = null,
+        string? lastName = null,
+        PreferredUnits preferredUnits = PreferredUnits.Metric)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<PrepDb>();
+
+        var user = new User
+        {
+            Id = userId,
+            Email = email,
+            DisplayName = displayName,
+            FirstName = firstName,
+            LastName = lastName,
+            PreferredUnits = preferredUnits,
+            CreatedAt = DateTimeOffset.UtcNow,
+            CreatedBy = "TestSystem"
+        };
+
+        await dbContext.Users.AddAsync(user);
+        await dbContext.SaveChangesAsync();
+
+        return user;
+    }
+
     public async Task<Dictionary<string, Ingredient>> SeedIngredientsAsync(params string[] names)
     {
         var ingredients = names.Select(name => new Ingredient
@@ -34,9 +63,9 @@ public class TestSeeder(TestWebAppFactory factory)
     }
 
     public async Task<Recipe> SeedRecipeAsync(
+        string userId = TestConstants.TestUserId,
         string name = "Test Recipe",
         string? description = null,
-        string userId = TestAuthenticationHandler.TestUserId,
         int prepTimeMinutes = 10,
         int cookTimeMinutes = 20,
         string? yield = null,
@@ -112,7 +141,6 @@ public class TestSeeder(TestWebAppFactory factory)
             CreatedAt = DateTimeOffset.UtcNow,
             PrepIngredients = ingredients?.Select(x => new PrepIngredient
             {
-                Id = Guid.NewGuid(),
                 IngredientId = x.Ingredient.Id,
                 Quantity = x.Quantity ?? 1,
                 Unit = x.Unit ?? Unit.Gram,
@@ -136,9 +164,11 @@ public class TestSeeder(TestWebAppFactory factory)
         var dbContext = scope.ServiceProvider.GetRequiredService<PrepDb>();
 
         var result = new Dictionary<string, Tag>();
+        var tagsToAdd = new List<Tag>();
 
         foreach (var name in names)
         {
+            // Check if tag already exists to avoid duplicates
             var existingTag = await dbContext.Tags
                 .FirstOrDefaultAsync(t => t.UserId == userId && t.Name == name);
 
@@ -153,13 +183,18 @@ public class TestSeeder(TestWebAppFactory factory)
                     Name = name,
                     UserId = userId
                 };
-
-                dbContext.Tags.Add(newTag);
-                await dbContext.SaveChangesAsync();
-
+                tagsToAdd.Add(newTag);
                 result[name] = newTag;
             }
         }
+
+        if (tagsToAdd.Count == 0)
+        {
+            return result;
+        }
+
+        await dbContext.Tags.AddRangeAsync(tagsToAdd);
+        await dbContext.SaveChangesAsync();
 
         return result;
     }
