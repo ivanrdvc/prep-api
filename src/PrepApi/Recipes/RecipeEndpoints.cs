@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using PrepApi.Data;
 using PrepApi.Recipes.Entities;
 using PrepApi.Recipes.Requests;
+using PrepApi.Shared.Services;
 
 namespace PrepApi.Recipes;
 
@@ -16,17 +17,19 @@ public static class RecipeEndpoints
 {
     public static IEndpointRouteBuilder MapRecipeEndpoints(this IEndpointRouteBuilder app)
     {
-        var api = app.MapGroup("api/recipes").RequireAuthorization();
+        var group = app.MapGroup("api/recipes")
+            .WithTags("Recipes")
+            .RequireAuthorization();
 
-        api.MapPost("/", CreateRecipe);
-        api.MapGet("/{id:guid}", GetRecipe);
-        api.MapDelete("/{id:guid}", DeleteRecipe);
-        api.MapPut("/{id:guid}", UpdateRecipe);
+        group.MapPost("/", CreateRecipe);
+        group.MapGet("/{id:guid}", GetRecipe);
+        group.MapDelete("/{id:guid}", DeleteRecipe);
+        group.MapPut("/{id:guid}", UpdateRecipe);
 
-        api.MapPost("{prepId:guid}/variants", CreateVariantFromPrep);
-        api.MapPut("{id:guid}/favorite", SetFavoriteVariant);
+        group.MapPost("{prepId:guid}/variants", CreateVariantFromPrep);
+        group.MapPut("{id:guid}/favorite", SetFavoriteVariant);
 
-        return api;
+        return group;
     }
 
     public static async Task<Results<Ok<RecipeDto>, NotFound>> GetRecipe(
@@ -42,7 +45,8 @@ public static class RecipeEndpoints
             .Include(r => r.OriginalRecipe)
             .Include(r => r.Variants)
             .AsNoTracking()
-            .FirstOrDefaultAsync(r => r.Id == id && r.UserId == userContext.UserId);
+            .AsSplitQuery()
+            .FirstOrDefaultAsync(r => r.Id == id && r.UserId == userContext.InternalId);
 
         if (recipe is null)
         {
@@ -75,7 +79,8 @@ public static class RecipeEndpoints
             .Include(r => r.RecipeIngredients)
             .ThenInclude(ri => ri.Ingredient)
             .Include(r => r.RecipeTags)
-            .FirstOrDefaultAsync(r => r.Id == id && r.UserId == userContext.UserId);
+            .AsSplitQuery()
+            .FirstOrDefaultAsync(r => r.Id == id && r.UserId == userContext.InternalId);
 
         if (recipe is null)
         {
@@ -99,7 +104,7 @@ public static class RecipeEndpoints
             })
         ];
 
-        recipe.RecipeTags = await CreateRecipeTagsFromIdsAsync(db, request.TagIds, userContext.UserId!);
+        recipe.RecipeTags = await CreateRecipeTagsFromIdsAsync(db, request.TagIds, userContext.InternalId!.Value);
 
         await db.SaveChangesAsync();
 
@@ -111,7 +116,7 @@ public static class RecipeEndpoints
         PrepDb db,
         IUserContext userContext)
     {
-        var recipe = await db.Recipes.FirstOrDefaultAsync(r => r.Id == id && r.UserId == userContext.UserId);
+        var recipe = await db.Recipes.FirstOrDefaultAsync(r => r.Id == id && r.UserId == userContext.InternalId);
 
         if (recipe is null)
         {
@@ -124,17 +129,12 @@ public static class RecipeEndpoints
         return TypedResults.NoContent();
     }
 
-    public static async Task<Results<Created<Guid>, ValidationProblem, UnauthorizedHttpResult>> CreateRecipe(
+    public static async Task<Results<Created<Guid>, ValidationProblem>> CreateRecipe(
         [FromBody] UpsertRecipeRequest request,
         PrepDb db,
         IUserContext userContext,
         IValidator<UpsertRecipeRequest> validator)
     {
-        if (userContext.UserId is null)
-        {
-            return TypedResults.Unauthorized();
-        }
-
         var validationResult = await validator.ValidateAsync(request);
         if (!validationResult.IsValid)
         {
@@ -154,7 +154,7 @@ public static class RecipeEndpoints
             PrepTimeMinutes = request.PrepTimeMinutes,
             CookTimeMinutes = request.CookTimeMinutes,
             Yield = request.Yield,
-            UserId = userContext.UserId,
+            UserId = userContext.InternalId!.Value,
             StepsJson = JsonSerializer.Serialize(request.Steps),
             RecipeIngredients = request.Ingredients.Select(ingredientDto => new RecipeIngredient
             {
@@ -162,7 +162,7 @@ public static class RecipeEndpoints
                 Quantity = ingredientDto.Quantity,
                 Unit = ingredientDto.Unit
             }).ToList(),
-            RecipeTags = await CreateRecipeTagsFromIdsAsync(db, request.TagIds, userContext.UserId)
+            RecipeTags = await CreateRecipeTagsFromIdsAsync(db, request.TagIds, userContext.InternalId.Value)
         };
 
         await db.Recipes.AddAsync(recipe);
@@ -171,24 +171,19 @@ public static class RecipeEndpoints
         return TypedResults.Created($"/api/recipe/{recipe.Id}", recipe.Id);
     }
 
-    public static async Task<Results<Created<Guid>, NotFound, ValidationProblem, UnauthorizedHttpResult>> CreateVariantFromPrep(
+    public static async Task<Results<Created<Guid>, NotFound, ValidationProblem>> CreateVariantFromPrep(
         [FromRoute] Guid prepId,
         [FromBody] CreateVariantFromPrepRequest request,
         PrepDb db,
         IUserContext userContext)
     {
-        if (userContext.UserId is null)
-        {
-            return TypedResults.Unauthorized();
-        }
-
         var prep = await db.Preps
             .Include(p => p.Recipe)
             .ThenInclude(r => r.RecipeTags)
             .ThenInclude(rt => rt.Tag)
             .Include(p => p.PrepIngredients)
             .ThenInclude(pi => pi.Ingredient)
-            .FirstOrDefaultAsync(p => p.Id == prepId && p.UserId == userContext.UserId);
+            .FirstOrDefaultAsync(p => p.Id == prepId && p.UserId == userContext.InternalId);
 
         if (prep is null)
         {
@@ -201,7 +196,7 @@ public static class RecipeEndpoints
             var existingFavorite = await db.Recipes
                 .Where(r => r.OriginalRecipeId == originalRecipe.Id &&
                             r.IsFavoriteVariant &&
-                            r.UserId == userContext.UserId)
+                            r.UserId == userContext.InternalId)
                 .FirstOrDefaultAsync();
             if (existingFavorite != null)
             {
@@ -213,7 +208,7 @@ public static class RecipeEndpoints
         {
             Name = request.Name,
             Description = originalRecipe.Description,
-            UserId = userContext.UserId,
+            UserId = userContext.InternalId!.Value,
             PrepTimeMinutes = prep.PrepTimeMinutes ?? originalRecipe.PrepTimeMinutes,
             CookTimeMinutes = prep.CookTimeMinutes ?? originalRecipe.CookTimeMinutes,
             Yield = originalRecipe.Yield, // should start with original or new yield?
@@ -248,7 +243,7 @@ public static class RecipeEndpoints
     {
         var variant = await db.Recipes
             .Include(r => r.OriginalRecipe)
-            .FirstOrDefaultAsync(r => r.Id == id && r.UserId == userContext.UserId);
+            .FirstOrDefaultAsync(r => r.Id == id && r.UserId == userContext.InternalId);
 
         if (variant?.OriginalRecipeId is null)
         {
@@ -273,7 +268,7 @@ public static class RecipeEndpoints
     private static async Task<List<RecipeTag>> CreateRecipeTagsFromIdsAsync(
         PrepDb db,
         List<Guid>? tagIds,
-        string userId)
+        Guid userId)
     {
         if (tagIds == null || tagIds.Count == 0)
         {

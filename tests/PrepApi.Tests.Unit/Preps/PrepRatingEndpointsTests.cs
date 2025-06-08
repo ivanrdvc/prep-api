@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 
 using PrepApi.Preps;
 using PrepApi.Preps.Requests;
+using PrepApi.Shared.Services;
 using PrepApi.Tests.Unit.Helpers;
 
 namespace PrepApi.Tests.Unit.Preps;
@@ -124,7 +125,7 @@ public class PrepRatingEndpointsTests
         await using var context = _fakeDb.CreateDbContext();
         await _fakeDb.SeedDefaultRatingDimensionsAsync(context);
         var prep = await _fakeDb.SeedPrepAsync(context);
-        var rating = await _fakeDb.SeedPrepRatingAsync(context, prep.Id, _userContext.UserId);
+        var rating = await _fakeDb.SeedPrepRatingAsync(context, prep.Id, _userContext.ExternalId);
 
         // Act
         var updateRequest = new UpsertPrepRatingRequest
@@ -149,7 +150,7 @@ public class PrepRatingEndpointsTests
         // Arrange
         await using var context = _fakeDb.CreateDbContext();
         var prep = await _fakeDb.SeedPrepAsync(context);
-        var rating = await _fakeDb.SeedPrepRatingAsync(context, prep.Id, _userContext.UserId);
+        var rating = await _fakeDb.SeedPrepRatingAsync(context, prep.Id, _userContext.ExternalId);
         var invalidRequest = new UpsertPrepRatingRequest { OverallRating = 0, Liked = true, Dimensions = new() };
 
         // Act
@@ -180,7 +181,7 @@ public class PrepRatingEndpointsTests
         // Arrange
         await using var context = _fakeDb.CreateDbContext();
         var prep = await _fakeDb.SeedPrepAsync(context);
-        await _fakeDb.SeedPrepRatingAsync(context, prep.Id, _userContext.UserId);
+        await _fakeDb.SeedPrepRatingAsync(context, prep.Id, _userContext.ExternalId);
 
         // Act
         var result = await PrepRatingEndpoints.GetPrepRatings(prep.Id, context);

@@ -77,7 +77,7 @@ public class TestWebAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
         await dbContext.Database.EnsureCreatedAsync();
         
         var seeder = new TestSeeder(this);
-        await seeder.SeedTestUserAsync(TestConstants.TestUserId, "test@example.com", "Test User", "Test", "User");
+        await seeder.SeedTestUserAsync(TestConstants.TestUserId, "test@example.com", "Test", "User");
     }
 
     public new async Task DisposeAsync()

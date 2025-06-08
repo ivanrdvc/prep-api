@@ -8,6 +8,7 @@ using PrepApi.Preps.Entities;
 using PrepApi.Recipes.Entities;
 using PrepApi.Shared.Dtos;
 using PrepApi.Shared.Entities;
+using PrepApi.Users;
 
 using Recipe = PrepApi.Recipes.Entities.Recipe;
 using RecipeIngredient = PrepApi.Recipes.Entities.RecipeIngredient;
@@ -19,7 +20,6 @@ public class TestSeeder(TestWebAppFactory factory)
     public async Task<User> SeedTestUserAsync(
         string userId,
         string email,
-        string displayName,
         string? firstName = null,
         string? lastName = null,
         PreferredUnits preferredUnits = PreferredUnits.Metric)
@@ -29,9 +29,8 @@ public class TestSeeder(TestWebAppFactory factory)
 
         var user = new User
         {
-            Id = userId,
+            ExternalId = userId,
             Email = email,
-            DisplayName = displayName,
             FirstName = firstName,
             LastName = lastName,
             PreferredUnits = preferredUnits,

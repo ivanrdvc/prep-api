@@ -12,6 +12,7 @@ using PrepApi.Preps.Requests;
 using PrepApi.Recipes.Entities;
 using PrepApi.Shared.Entities;
 using PrepApi.Shared.Requests;
+using PrepApi.Shared.Services;
 
 namespace PrepApi.Preps;
 
@@ -19,7 +20,9 @@ public static class PrepEndpoints
 {
     public static IEndpointRouteBuilder MapPrepEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("api/preps").RequireAuthorization();
+        var group = app.MapGroup("api/preps")
+            .WithTags("Preps")
+            .RequireAuthorization();
 
         group.MapPost("/", CreatePrep);
         group.MapPut("{id:guid}", UpdatePrep);
@@ -32,18 +35,13 @@ public static class PrepEndpoints
         return app;
     }
 
-    public static async Task<Results<Created<Guid>, NotFound<string>, ValidationProblem, UnauthorizedHttpResult>> CreatePrep(
+    public static async Task<Results<Created<Guid>, NotFound<string>, ValidationProblem>> CreatePrep(
         UpsertPrepRequest request,
         PrepDb db,
         IUserContext userContext,
         PrepService prepService,
         IValidator<UpsertPrepRequest> validator)
     {
-        if (userContext.UserId is null)
-        {
-            return TypedResults.Unauthorized();
-        }
-
         var validationResult = await validator.ValidateAsync(request);
         if (!validationResult.IsValid)
         {
@@ -71,7 +69,7 @@ public static class PrepEndpoints
         var prep = new Prep
         {
             RecipeId = recipe.Id,
-            UserId = userContext.UserId,
+            UserId = userContext.InternalId!.Value,
             SummaryNotes = request.SummaryNotes,
             PrepTimeMinutes = request.PrepTimeMinutes,
             CookTimeMinutes = request.CookTimeMinutes,
@@ -88,8 +86,8 @@ public static class PrepEndpoints
     }
 
     public static async Task<Results<NoContent, NotFound, ValidationProblem>> UpdatePrep(
-        Guid id,
-        UpsertPrepRequest request,
+        [FromRoute] Guid id,
+        [FromBody] UpsertPrepRequest request,
         PrepDb db,
         IUserContext userContext,
         PrepService prepService,
@@ -105,14 +103,15 @@ public static class PrepEndpoints
             .Include(p => p.PrepIngredients)
             .Include(p => p.Recipe)
             .ThenInclude(r => r.RecipeIngredients)
-            .FirstOrDefaultAsync(p => p.Id == id && p.UserId == userContext.UserId);
+            .FirstOrDefaultAsync(p => p.Id == id && p.UserId == userContext.InternalId);
 
         if (prep is null)
         {
             return TypedResults.NotFound();
         }
 
-        var (ingredients, ingredientValidationError) = await LoadAndValidateIngredientsAsync(db, request.PrepIngredients, prep.Recipe);
+        var (ingredients, ingredientValidationError) =
+            await LoadAndValidateIngredientsAsync(db, request.PrepIngredients, prep.Recipe);
         if (ingredientValidationError != null)
         {
             return ingredientValidationError;
@@ -132,16 +131,14 @@ public static class PrepEndpoints
     }
 
     public static async Task<Results<Ok<PaginatedItems<PrepSummaryDto>>, ValidationProblem>> GetPrepsByRecipe(
-        [FromRoute]
-        Guid recipeId,
-        [AsParameters]
-        PaginationRequest request,
+        [FromRoute] Guid recipeId,
+        [AsParameters] PaginationRequest request,
         PrepDb db,
         IUserContext userContext)
     {
         var query = db.Preps
             .AsNoTracking()
-            .Where(p => p.UserId == userContext.UserId)
+            .Where(p => p.UserId == userContext.InternalId)
             .Where(p => p.RecipeId == recipeId);
 
         query = request.SortOrder == SortOrder.asc
@@ -171,8 +168,7 @@ public static class PrepEndpoints
     }
 
     public static async Task<Results<Ok<PrepDto>, NotFound>> GetPrep(
-        [FromRoute]
-        Guid id,
+        [FromRoute] Guid id,
         PrepDb db,
         IUserContext userContext)
     {
@@ -181,7 +177,7 @@ public static class PrepEndpoints
             .Include(p => p.PrepIngredients)
             .ThenInclude(pi => pi.Ingredient)
             .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == id && p.UserId == userContext.UserId);
+            .FirstOrDefaultAsync(p => p.Id == id && p.UserId == userContext.InternalId);
 
         if (prep is null)
         {
@@ -192,13 +188,12 @@ public static class PrepEndpoints
     }
 
     public static async Task<Results<NoContent, NotFound>> DeletePrep(
-        [FromRoute]
-        Guid id,
+        [FromRoute] Guid id,
         PrepDb db,
         IUserContext userContext)
     {
         var prep = await db.Preps
-            .FirstOrDefaultAsync(p => p.Id == id && p.UserId == userContext.UserId);
+            .FirstOrDefaultAsync(p => p.Id == id && p.UserId == userContext.InternalId);
 
         if (prep is null)
         {

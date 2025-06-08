@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 
 using PrepApi.Recipes;
 using PrepApi.Recipes.Requests;
+using PrepApi.Shared.Services;
 using PrepApi.Tests.Unit.Helpers;
 
 namespace PrepApi.Tests.Unit.Recipes;
@@ -15,23 +16,6 @@ public class RecipeEndpointsTests
     {
         _userContext = TestUserContext.Authenticated();
         _fakeDb = new FakeDb(_userContext);
-    }
-
-    [Fact]
-    public async Task CreateVariantFromPrep_Unauthorized_ReturnsUnauthorized()
-    {
-        // Arrange
-        await using var context = _fakeDb.CreateDbContext();
-        var recipe = await _fakeDb.SeedRecipeAsync(context);
-        var prep = await _fakeDb.SeedPrepAsync(context, recipe.Id);
-        var request = new CreateVariantFromPrepRequest { Name = "Variant", SetAsFavorite = false };
-        var anonUser = TestUserContext.Anonymous();
-
-        // Act
-        var result = await RecipeEndpoints.CreateVariantFromPrep(prep.Id, request, context, anonUser);
-
-        // Assert
-        Assert.IsType<UnauthorizedHttpResult>(result.Result);
     }
 
     [Fact]

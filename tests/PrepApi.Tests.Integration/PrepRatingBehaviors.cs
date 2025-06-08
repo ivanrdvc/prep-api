@@ -1,9 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 
-using PrepApi.Preps;
 using PrepApi.Preps.Requests;
-using PrepApi.Recipes.Entities;
 using PrepApi.Shared.Entities;
 using PrepApi.Tests.Integration.Helpers;
 

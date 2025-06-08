@@ -1,6 +1,7 @@
 ﻿using PrepApi.Data;
 using PrepApi.Recipes.Entities;
 using PrepApi.Shared.Entities;
+using PrepApi.Users;
 
 namespace PrepApi.Preps.Entities;
 
@@ -8,7 +9,7 @@ public class Prep : Entity
 {
     public Guid RecipeId { get; set; }
     public Recipe Recipe { get; set; } = null!;
-    public required string UserId { get; set; }
+    public Guid UserId { get; set; }
     public User User { get; set; } = null!;
     public string? SummaryNotes { get; set; }
     public int? PrepTimeMinutes { get; set; }

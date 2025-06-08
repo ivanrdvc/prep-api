@@ -8,6 +8,7 @@ using PrepApi.Preps.Entities;
 using PrepApi.Recipes.Entities;
 using PrepApi.Shared.Dtos;
 using PrepApi.Shared.Entities;
+using PrepApi.Shared.Services;
 
 namespace PrepApi.Tests.Unit.Helpers;
 
@@ -31,7 +32,7 @@ public class FakeDb(IUserContext userContext) : IDbContextFactory<PrepDb>
         var recipe = new Recipe
         {
             Name = "Test Recipe",
-            UserId = userContext.UserId ?? "test-user-id",
+            UserId = userContext.ExternalId ?? "test-user-id",
             Description = "Test Description",
             PrepTimeMinutes = 10,
             CookTimeMinutes = 20,
@@ -63,7 +64,7 @@ public class FakeDb(IUserContext userContext) : IDbContextFactory<PrepDb>
         {
             RecipeId = recipe.Id,
             Recipe = recipe,
-            UserId = userContext.UserId ?? "test-user-id",
+            UserId = userContext.ExternalId ?? "test-user-id",
             SummaryNotes = "Test Prep",
             PrepTimeMinutes = 5,
             CookTimeMinutes = 10,
@@ -91,7 +92,7 @@ public class FakeDb(IUserContext userContext) : IDbContextFactory<PrepDb>
         var rating = new PrepRating
         {
             PrepId = prepId,
-            UserId = userId ?? userContext.UserId ?? "test-user-id",
+            UserId = userId ?? userContext.ExternalId ?? "test-user-id",
             Liked = liked,
             OverallRating = overallRating,
             DimensionsJson = JsonSerializer.Serialize(new Dictionary<string, int>
@@ -113,7 +114,7 @@ public class FakeDb(IUserContext userContext) : IDbContextFactory<PrepDb>
         var variant = new Recipe
         {
             Name = name,
-            UserId = userContext.UserId ?? "test-user-id",
+            UserId = userContext.ExternalId ?? "test-user-id",
             Description = "desc",
             PrepTimeMinutes = 10,
             CookTimeMinutes = 20,

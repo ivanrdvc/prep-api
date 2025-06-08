@@ -12,13 +12,14 @@ using PrepApi.Data;
 using PrepApi.Extensions;
 using PrepApi.Preps;
 using PrepApi.Recipes;
+using PrepApi.Shared.Services;
+using PrepApi.Users;
 
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddAppServices();
-
 
 if (!builder.Environment.IsEnvironment("Development"))
 {
@@ -27,14 +28,15 @@ if (!builder.Environment.IsEnvironment("Development"))
 
 builder.Services.AddDefaultCorsPolicy(builder.Configuration);
 
-builder.Services.AddOpenApi(options => options.AddDocumentTransformer<BearerSecuritySchemeTransformer>());
-
+builder.Services.AddOpenApi(options => options.AddBearerTokenAuthentication());
 builder.Services.AddProblemDetails();
 
 builder.Services.AddDbContext<PrepDb>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddCurrentUser();
 
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
@@ -61,7 +63,7 @@ if (app.Environment.IsDevelopment())
 
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<PrepDb>();
-    // await dbContext.Database.EnsureDeletedAsync();
+    await dbContext.Database.EnsureDeletedAsync();
     await dbContext.Database.EnsureCreatedAsync();
 }
 else
@@ -82,8 +84,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapRecipeEndpoints();
-app.MapPrepEndpoints();
 app.MapTagEndpoints();
+app.MapPrepEndpoints();
+app.MapUserEndpoints();
 app.MapHealthChecks("/health");
 
 app.Run();

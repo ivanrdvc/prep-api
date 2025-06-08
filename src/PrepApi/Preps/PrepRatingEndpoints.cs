@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using PrepApi.Data;
 using PrepApi.Preps.Entities;
 using PrepApi.Preps.Requests;
-using PrepApi.Shared;
 using PrepApi.Shared.Services;
 
 namespace PrepApi.Preps;
@@ -15,9 +14,13 @@ public static class PrepRatingEndpoints
 {
     public static IEndpointRouteBuilder MapPrepRatingEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapPost("{prepId}/ratings", CreatePrepRating);
-        app.MapPut("{prepId}/ratings/{id:guid}", UpdatePrepRating);
-        app.MapGet("{prepId}/ratings", GetPrepRatings);
+        var group = app.MapGroup("{prepId:guid}/ratings")
+            .RequireAuthorization()
+            .WithTags("Prep Ratings");
+
+        group.MapPost("/", CreatePrepRating);
+        group.MapPut("/{id:guid}", UpdatePrepRating);
+        group.MapGet("/", GetPrepRatings);
 
         return app;
     }
@@ -42,7 +45,7 @@ public static class PrepRatingEndpoints
             {
                 p.Id,
                 p.RecipeId,
-                ExistingRating = p.Ratings.FirstOrDefault(r => r.UserId == userContext.UserId)
+                ExistingRating = p.Ratings.FirstOrDefault(r => r.UserId == userContext.InternalId)
             })
             .AsNoTracking()
             .FirstOrDefaultAsync();
@@ -70,7 +73,7 @@ public static class PrepRatingEndpoints
         var rating = new PrepRating
         {
             PrepId = prepId,
-            UserId = userContext.UserId!,
+            UserId = userContext.InternalId!.Value,
             Liked = request.Liked,
             OverallRating = request.OverallRating,
             Dimensions = request.Dimensions,
@@ -103,7 +106,7 @@ public static class PrepRatingEndpoints
         }
 
         var ratingInfo = await db.PrepRatings
-            .Where(r => r.Id == id && r.PrepId == prepId && r.UserId == userContext.UserId)
+            .Where(r => r.Id == id && r.PrepId == prepId && r.UserId == userContext.InternalId)
             .Select(r => new
             {
                 Rating = r,

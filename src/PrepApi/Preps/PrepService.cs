@@ -7,16 +7,16 @@ namespace PrepApi.Preps;
 public class PrepService
 {
     /// <summary>
-    /// Gets a summary of changes made compared to the original recipe.
+    /// Gets a summary of changes made compared to the recipe.
     /// </summary>
-    public string GetChangeSummary(Prep prep, Recipe originalRecipe, Dictionary<Guid, Ingredient> ingredients)
+    public string GetChangeSummary(Prep prep, Recipe recipe, Dictionary<Guid, Ingredient> ingredients)
     {
         var changes = new List<string>();
 
-        var ingredientChanges = AnalyzeIngredientChanges(prep.PrepIngredients, originalRecipe.RecipeIngredients, ingredients);
+        var ingredientChanges = AnalyzeIngredientChanges(prep.PrepIngredients, recipe.RecipeIngredients, ingredients);
         changes.AddRange(ingredientChanges);
 
-        var timingChange = AnalyzeTimingChanges(prep, originalRecipe);
+        var timingChange = AnalyzeTimingChanges(prep, recipe);
         if (!string.IsNullOrEmpty(timingChange))
         {
             changes.Add(timingChange);

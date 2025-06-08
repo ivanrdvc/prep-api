@@ -75,7 +75,7 @@ public class RecipeBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebA
     {
         // Arrange
         const string otherUserId = "other-user-id-abc";
-        await _seeder.SeedTestUserAsync(otherUserId, "other@example.com", "Other User");
+        await _seeder.SeedTestUserAsync(otherUserId, "other@example.com");
         var recipeForOtherUser = await _seeder.SeedRecipeAsync(userId: otherUserId);
 
         // Act

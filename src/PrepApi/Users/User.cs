@@ -1,14 +1,11 @@
 ﻿using PrepApi.Data;
-using PrepApi.Preps.Entities;
-using PrepApi.Recipes.Entities;
 
-namespace PrepApi.Shared.Entities;
+namespace PrepApi.Users;
 
 public class User : Entity
 {
-    public new required string Id { get; set; }
-    public required string Email { get; set; }
-    public required string DisplayName { get; set; }
+    public new required string ExternalId { get; set; }
+    public string? Email { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
     public PreferredUnits PreferredUnits { get; set; } = PreferredUnits.Metric;

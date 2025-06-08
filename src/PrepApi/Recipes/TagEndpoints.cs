@@ -7,8 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using PrepApi.Data;
 using PrepApi.Recipes.Entities;
 using PrepApi.Recipes.Requests;
-using PrepApi.Shared;
-using PrepApi.Shared.Entities;
+using PrepApi.Shared.Services;
 
 namespace PrepApi.Recipes;
 
@@ -16,14 +15,16 @@ public static class TagEndpoints
 {
     public static IEndpointRouteBuilder MapTagEndpoints(this IEndpointRouteBuilder app)
     {
-        var api = app.MapGroup("api/tags").RequireAuthorization();
+        var group = app.MapGroup("api/tags")
+            .WithTags("Tags")
+            .RequireAuthorization();
 
-        api.MapPost("/", CreateTag);
-        api.MapGet("/", GetTags);
-        api.MapPut("/{id:guid}", UpdateTag);
-        api.MapDelete("/{id:guid}", DeleteTag);
+        group.MapPost("/", CreateTag);
+        group.MapGet("/", GetTags);
+        group.MapPut("/{id:guid}", UpdateTag);
+        group.MapDelete("/{id:guid}", DeleteTag);
 
-        return api;
+        return group;
     }
 
     private static async Task<Results<Created<TagDto>, ValidationProblem>> CreateTag(
@@ -33,18 +34,13 @@ public static class TagEndpoints
         IUserContext userContext,
         IValidator<UpsertTagRequest> validator)
     {
-        if (userContext.UserId is null)
-        {
-            TypedResults.Unauthorized();
-        }
-
         var validationResult = await validator.ValidateAsync(request);
         if (!validationResult.IsValid)
         {
             return TypedResults.ValidationProblem(validationResult.ToDictionary());
         }
 
-        var validationProblem = await CheckForDuplicateTag(db, request.Name, userContext.UserId!);
+        var validationProblem = await CheckForDuplicateTag(db, request.Name, userContext.InternalId!.Value);
         if (validationProblem is not null)
         {
             return validationProblem;
@@ -53,7 +49,7 @@ public static class TagEndpoints
         var tag = new Tag
         {
             Name = request.Name,
-            UserId = userContext.UserId!
+            UserId = userContext.InternalId!.Value
         };
 
         await db.Tags.AddAsync(tag);
@@ -63,14 +59,13 @@ public static class TagEndpoints
     }
 
     private static async Task<Ok<List<TagDto>>> GetTags(
-        [FromQuery]
-        string? term,
+        [FromQuery] string? term,
         PrepDb db,
         IUserContext userContext)
     {
         var query = db.Tags
             .AsNoTracking()
-            .Where(t => t.UserId == userContext.UserId);
+            .Where(t => t.UserId == userContext.InternalId);
 
         if (!string.IsNullOrWhiteSpace(term))
         {
@@ -85,10 +80,8 @@ public static class TagEndpoints
     }
 
     private static async Task<Results<NoContent, NotFound, ValidationProblem>> UpdateTag(
-        [FromRoute]
-        Guid id,
-        [FromBody]
-        UpsertTagRequest request,
+        [FromRoute] Guid id,
+        [FromBody] UpsertTagRequest request,
         PrepDb db,
         IUserContext userContext,
         IValidator<UpsertTagRequest> validator)
@@ -100,14 +93,14 @@ public static class TagEndpoints
         }
 
         var tag = await db.Tags
-            .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userContext.UserId);
+            .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userContext.InternalId);
 
         if (tag is null)
         {
             return TypedResults.NotFound();
         }
 
-        var validationProblem = await CheckForDuplicateTag(db, request.Name, userContext.UserId!, id);
+        var validationProblem = await CheckForDuplicateTag(db, request.Name, userContext.InternalId!.Value, id);
         if (validationProblem is not null)
         {
             return validationProblem;
@@ -120,13 +113,12 @@ public static class TagEndpoints
     }
 
     private static async Task<Results<NoContent, NotFound>> DeleteTag(
-        [FromRoute]
-        Guid id,
+        [FromRoute] Guid id,
         PrepDb db,
         IUserContext userContext)
     {
         var tag = await db.Tags
-            .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userContext.UserId);
+            .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userContext.InternalId);
 
         if (tag is null)
         {
@@ -142,7 +134,7 @@ public static class TagEndpoints
     private static async Task<ValidationProblem?> CheckForDuplicateTag(
         PrepDb db,
         string tagName,
-        string userId,
+        Guid userId,
         Guid? excludeId = null)
     {
         var query = db.Tags

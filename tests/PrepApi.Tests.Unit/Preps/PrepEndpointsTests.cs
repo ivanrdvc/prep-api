@@ -11,6 +11,7 @@ using PrepApi.Preps.Entities;
 using PrepApi.Preps.Requests;
 using PrepApi.Shared.Dtos;
 using PrepApi.Shared.Requests;
+using PrepApi.Shared.Services;
 using PrepApi.Tests.Unit.Helpers;
 
 namespace PrepApi.Tests.Unit.Preps;
@@ -105,22 +106,6 @@ public class PrepEndpointsTests
     }
 
     [Fact]
-    public async Task CreatePrep_NoUser_ReturnsUnauthorized()
-    {
-        // Arrange
-        await using var context = _fakeDb.CreateDbContext();
-        var recipe = await _fakeDb.SeedRecipeAsync(context);
-        var request = CreateUpsertPrepRequest(context, recipe.Id);
-        var anonUserContext = TestUserContext.Anonymous();
-
-        // Act
-        var result = await PrepEndpoints.CreatePrep(request, context, anonUserContext, _prepService, _validator);
-
-        // Assert
-        Assert.IsType<UnauthorizedHttpResult>(result.Result);
-    }
-
-    [Fact]
     public async Task UpdatePrep_Exists_ReturnsNoContent()
     {
         // Arrange
@@ -159,7 +144,7 @@ public class PrepEndpointsTests
         var request = CreateUpsertPrepRequest(context, prep.RecipeId);
 
         var differentUserContext = Substitute.For<IUserContext>();
-        differentUserContext.UserId.Returns(Guid.NewGuid().ToString());
+        differentUserContext.ExternalId.Returns(Guid.NewGuid().ToString());
 
         // Act
         var result = await PrepEndpoints.UpdatePrep(prep.Id, request, context, differentUserContext, _prepService, _validator);

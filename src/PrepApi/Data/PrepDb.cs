@@ -6,6 +6,8 @@ using PrepApi.Preps.Entities;
 using PrepApi.Recipes.Entities;
 using PrepApi.Shared.Dtos;
 using PrepApi.Shared.Entities;
+using PrepApi.Shared.Services;
+using PrepApi.Users;
 
 namespace PrepApi.Data;
 
@@ -29,25 +31,17 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(u => u.Id);
-
-            entity.Property(u => u.Id)
+            entity.Property(u => u.ExternalId)
                 .HasMaxLength(256)
                 .IsRequired();
+            
+            entity.HasIndex(u => u.ExternalId).IsUnique();
+            
+            entity.Property(u => u.Email).HasMaxLength(256);
+            
+            entity.Property(u => u.FirstName).HasMaxLength(256);
 
-            entity.Property(u => u.Email)
-                .HasMaxLength(256)
-                .IsRequired();
-
-            entity.Property(u => u.DisplayName)
-                .HasMaxLength(256)
-                .IsRequired();
-
-            entity.Property(u => u.FirstName)
-                .HasMaxLength(256);
-
-            entity.Property(u => u.LastName)
-                .HasMaxLength(256);
+            entity.Property(u => u.LastName).HasMaxLength(256);
 
             entity.Property(u => u.PreferredUnits)
                 .HasConversion<string>()
@@ -329,11 +323,22 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
                         new Ingredient { Id = sugarId, Name = "Sugar" },
                         new Ingredient { Id = saltId, Name = "Salt" }
                     );
-
+                    
+                    // Seed User
+                    var seedUser = new User
+                    {
+                        ExternalId = "SeedUser",
+                        Email = "seed@example.com",
+                        FirstName = "Seed",
+                        LastName = "User",
+                        PreferredUnits = PreferredUnits.Metric,
+                    };
+                    prepDbContext.Users.Add(seedUser);
+                    
                     // Seed Tags
                     prepDbContext.Tags.AddRange(
-                        new Tag { Id = sweetTagId, Name = "Sweet", UserId = "SeedUser" },
-                        new Tag { Id = basicTagId, Name = "Basic", UserId = "SeedUser" }
+                        new Tag { Id = sweetTagId, Name = "Sweet", UserId = seedUser.Id },
+                        new Tag { Id = basicTagId, Name = "Basic", UserId = seedUser.Id }
                     );
 
                     var recipeSteps = new List<StepDto>
@@ -343,26 +348,12 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
                         new() { Order = 3, Description = "Cook until done." }
                     };
 
-                    // Seed User
-                    var seedUser = new User
-                    {
-                        Id = "SeedUser",
-                        Email = "seed@example.com",
-                        DisplayName = "Seed User",
-                        FirstName = "Seed",
-                        LastName = "User",
-                        PreferredUnits = PreferredUnits.Metric,
-                        CreatedAt = DateTimeOffset.UtcNow,
-                        CreatedBy = "System",
-                    };
-                    prepDbContext.Users.Add(seedUser);
-
                     // Seed Recipe
                     var recipe = new Recipe
                     {
                         Id = recipeId,
                         Name = "Seeded Recipe",
-                        UserId = "SeedUser",
+                        UserId = seedUser.Id,
                         Description = "Basic recipe description.",
                         PrepTimeMinutes = 5,
                         CookTimeMinutes = 10,
@@ -402,7 +393,7 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
                     {
                         Id = prepId,
                         RecipeId = recipeId,
-                        UserId = "SeedUser",
+                        UserId = seedUser.Id,
                         SummaryNotes = "Made this with a bit more butter than called for.",
                         PrepTimeMinutes = 7,
                         CookTimeMinutes = 12,
@@ -482,8 +473,8 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new())
     {
-        var timestamp = DateTime.UtcNow;
-        var userId = userContext.UserId ?? "system";
+        var timestamp = DateTimeOffset.UtcNow;;
+        var userId = userContext.ExternalId ?? "system";
 
         foreach (var entry in ChangeTracker.Entries<Entity>())
         {
