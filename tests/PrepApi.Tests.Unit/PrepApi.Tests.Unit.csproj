@@ -22,6 +22,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\src\PrepApi\PrepApi.csproj" />
+      <ProjectReference Include="..\PrepApi.Tests.Integration\PrepApi.Tests.Integration.csproj" />
     </ItemGroup>
 
 </Project>

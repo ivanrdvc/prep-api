@@ -10,7 +10,6 @@ using PrepApi.Data;
 using PrepApi.Preps.Entities;
 using PrepApi.Preps.Requests;
 using PrepApi.Recipes.Entities;
-using PrepApi.Shared.Entities;
 using PrepApi.Shared.Requests;
 using PrepApi.Shared.Services;
 

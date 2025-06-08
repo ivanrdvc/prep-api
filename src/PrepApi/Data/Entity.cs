@@ -2,9 +2,9 @@
 
 public class Entity
 {
-    public Guid Id { get; set; }
+    public Guid Id { get; init; }
     public DateTimeOffset CreatedAt { get; set; }
-    public string CreatedBy { get; set; } = null!;
+    public Guid CreatedBy { get; set; }
     public DateTimeOffset? UpdatedAt { get; set; }
-    public string? UpdatedBy { get; set; }
+    public Guid UpdatedBy { get; set; }
 }

@@ -1,11 +1,11 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
 
+using PrepApi.Data;
 using PrepApi.Preps;
 using PrepApi.Preps.Entities;
 using PrepApi.Preps.Requests;
 using PrepApi.Shared.Dtos;
-using PrepApi.Shared.Entities;
 using PrepApi.Shared.Requests;
 using PrepApi.Tests.Integration.Helpers;
 
@@ -14,13 +14,13 @@ namespace PrepApi.Tests.Integration;
 public class PrepBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebAppFactory>, IAsyncLifetime
 {
     private readonly HttpClient _client = factory.CreateClient();
-    private readonly TestSeeder _seeder = new(factory);
 
     private Dictionary<string, Ingredient> _ingredients = new();
 
     public async Task InitializeAsync()
     {
-        _ingredients = await _seeder.SeedIngredientsAsync("Flour", "Sugar", "Milk", "Eggs");
+        await using var context = await factory.CreateScopedDbContextAsync();
+        _ingredients = await context.SeedIngredientsAsync("Flour", "Sugar", "Milk", "Eggs");
     }
 
     public Task DisposeAsync() => Task.CompletedTask;
@@ -29,7 +29,8 @@ public class PrepBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebApp
     public async Task UserCreatesPrep()
     {
         // Arrange
-        var baseRecipe = await _seeder.SeedRecipeAsync(
+        await using var context = await factory.CreateScopedDbContextAsync();
+        var baseRecipe = await context.SeedRecipeAsync(
             name: "Simple Recipe",
             ingredients: [(_ingredients["Flour"], 100, Unit.Gram)]
         );
@@ -66,12 +67,13 @@ public class PrepBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebApp
     public async Task UserViewsOwnPrepDetails()
     {
         // Arrange
-        var recipe = await _seeder.SeedRecipeAsync(
+        await using var context = await factory.CreateScopedDbContextAsync();
+        var recipe = await context.SeedRecipeAsync(
             name: "Test Recipe",
             ingredients: [(_ingredients["Eggs"], 2, Unit.Whole)]
         );
 
-        var seededPrep = await _seeder.SeedPrepAsync(
+        var seededPrep = await context.SeedPrepAsync(
             recipe,
             summaryNotes: "Test prep notes",
             steps:
@@ -99,9 +101,10 @@ public class PrepBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebApp
     public async Task UserDeletesOwnPrep()
     {
         // Arrange
-        var recipe = await _seeder.SeedRecipeAsync(ingredients: [(_ingredients["Flour"], 100, Unit.Gram)]);
+        await using var context = await factory.CreateScopedDbContextAsync();
+        var recipe = await context.SeedRecipeAsync(ingredients: [(_ingredients["Flour"], 100, Unit.Gram)]);
 
-        var seededPrep = await _seeder.SeedPrepAsync(
+        var seededPrep = await context.SeedPrepAsync(
             recipe,
             summaryNotes: "Test prep to delete"
         );
@@ -118,14 +121,12 @@ public class PrepBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebApp
     public async Task UserViewsPaginatedPrepsForRecipe()
     {
         // Arrange
-        var recipe = await _seeder.SeedRecipeAsync(
-            name: "Recipe with Multiple Preps",
-            ingredients: [(_ingredients["Flour"], 100, Unit.Gram)]
-        );
+        await using var context = await factory.CreateScopedDbContextAsync();
+        var recipe = await context.SeedRecipeAsync(name: "Recipe with Multiple Preps");
 
-        await _seeder.SeedPrepAsync(recipe, summaryNotes: "First prep notes");
-        await _seeder.SeedPrepAsync(recipe, summaryNotes: "Second prep notes");
-        await _seeder.SeedPrepAsync(recipe, summaryNotes: "Third prep notes");
+        await context.SeedPrepAsync(recipe, summaryNotes: "First prep notes");
+        await context.SeedPrepAsync(recipe, summaryNotes: "Second prep notes");
+        await context.SeedPrepAsync(recipe, summaryNotes: "Third prep notes");
 
         // Act
         var response = await _client.GetAsync($"/api/preps/recipe/{recipe.Id}?pageSize=2&pageIndex=0");
@@ -155,7 +156,8 @@ public class PrepBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebApp
     public async Task UserUpdatesOwnPrep()
     {
         // Arrange
-        var baseRecipe = await _seeder.SeedRecipeAsync(
+        await using var context = await factory.CreateScopedDbContextAsync();
+        var baseRecipe = await context.SeedRecipeAsync(
             name: "Recipe to Update",
             ingredients:
             [
@@ -164,7 +166,7 @@ public class PrepBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebApp
             ]
         );
 
-        var originalPrep = await _seeder.SeedPrepAsync(
+        var originalPrep = await context.SeedPrepAsync(
             baseRecipe,
             summaryNotes: "Original prep notes",
             prepTimeMinutes: 15,

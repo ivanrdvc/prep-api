@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using PrepApi.Recipes;
 using PrepApi.Recipes.Requests;
 using PrepApi.Shared.Services;
+using PrepApi.Tests.Integration.Helpers;
 using PrepApi.Tests.Unit.Helpers;
 
 namespace PrepApi.Tests.Unit.Recipes;
@@ -37,8 +38,8 @@ public class RecipeEndpointsTests
     {
         // Arrange
         await using var context = _fakeDb.CreateDbContext();
-        var recipe = await _fakeDb.SeedRecipeAsync(context);
-        var prep = await _fakeDb.SeedPrepAsync(context, recipe.Id);
+        var recipe = await context.SeedRecipeAsync();
+        var prep = await context.SeedPrepAsync(recipe);
         var request = new CreateVariantFromPrepRequest { Name = "Variant", SetAsFavorite = true };
 
         // Act
@@ -66,9 +67,9 @@ public class RecipeEndpointsTests
     {
         // Arrange
         await using var context = _fakeDb.CreateDbContext();
-        var recipe = await _fakeDb.SeedRecipeAsync(context);
-        var variant1 = await _fakeDb.SeedVariantRecipeAsync(context, recipe.Id, "Variant 1", true);
-        var variant2 = await _fakeDb.SeedVariantRecipeAsync(context, recipe.Id, "Variant 2", false);
+        var recipe = await context.SeedRecipeAsync();
+        var variant1 = await context.SeedVariantRecipeAsync(recipe.Id, "Variant 1", true);
+        var variant2 = await context.SeedVariantRecipeAsync(recipe.Id, "Variant 2", false);
 
         // Act
         var result = await RecipeEndpoints.SetFavoriteVariant(variant2.Id, context, _userContext);

@@ -1,17 +1,29 @@
-﻿using PrepApi.Shared.Services;
+﻿using System.Security.Claims;
+
+using PrepApi.Shared.Services;
+using PrepApi.Tests.Integration.Helpers;
+using PrepApi.Users;
 
 namespace PrepApi.Tests.Unit.Helpers;
 
 public class TestUserContext : IUserContext
 {
-    public bool IsAuthenticated { get; init; } = true;
-    public string? ExternalId { get; init; }
+    public User? User { get; set; }
+    public ClaimsPrincipal Principal { get; set; } = new();
+    public Guid? InternalId => User?.Id;
 
     private TestUserContext() { }
 
     public static IUserContext Authenticated(string userId = "test-user-id") =>
-        new TestUserContext { IsAuthenticated = true, ExternalId = userId };
-
-    public static IUserContext Anonymous() =>
-        new TestUserContext { IsAuthenticated = false, ExternalId = null };
+        new TestUserContext
+        {
+            User = new User
+            {
+                Id = TestConstants.TestUserId,
+                ExternalId = userId
+            },
+            Principal = new ClaimsPrincipal(new ClaimsIdentity([
+                new Claim(ClaimTypes.NameIdentifier, userId)
+            ], "test"))
+        };
 }

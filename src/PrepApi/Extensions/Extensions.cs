@@ -17,8 +17,6 @@ public static class Extensions
         builder.Services.AddAzureOpenAiServices(builder.Configuration);
 
         builder.Services.AddScoped<PrepService>();
-
-        builder.Services.AddScoped<IUserContext, UserContext>();
         
         builder.Services.AddSingleton<ITaskQueue, InMemoryTaskQueue>();
         

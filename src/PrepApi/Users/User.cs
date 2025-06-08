@@ -4,7 +4,7 @@ namespace PrepApi.Users;
 
 public class User : Entity
 {
-    public new required string ExternalId { get; set; }
+    public required string ExternalId { get; init; }
     public string? Email { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }

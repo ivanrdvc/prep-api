@@ -1,6 +1,5 @@
 ﻿using PrepApi.Data;
 using PrepApi.Preps.Entities;
-using PrepApi.Shared.Entities;
 using PrepApi.Users;
 
 namespace PrepApi.Recipes.Entities;

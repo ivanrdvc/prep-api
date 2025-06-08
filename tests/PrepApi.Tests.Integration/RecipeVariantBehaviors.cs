@@ -2,9 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 
-using PrepApi.Data;
 using PrepApi.Recipes.Requests;
 using PrepApi.Tests.Integration.Helpers;
 
@@ -13,7 +11,6 @@ namespace PrepApi.Tests.Integration;
 public class RecipeVariantBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebAppFactory>, IAsyncLifetime
 {
     private readonly HttpClient _client = factory.CreateClient();
-    private readonly TestSeeder _seeder = new(factory);
 
     public Task InitializeAsync() => Task.CompletedTask;
 
@@ -23,8 +20,9 @@ public class RecipeVariantBehaviors(TestWebAppFactory factory) : IClassFixture<T
     public async Task UserCreatesVariantFromPrep()
     {
         // Arrange
-        var recipe = await _seeder.SeedRecipeAsync();
-        var prep = await _seeder.SeedPrepAsync(recipe);
+        await using var context = await factory.CreateScopedDbContextAsync();
+        var recipe = await context.SeedRecipeAsync();
+        var prep = await context.SeedPrepAsync(recipe);
         var request = new CreateVariantFromPrepRequest
         {
             Name = "Test Variant",
@@ -40,10 +38,8 @@ public class RecipeVariantBehaviors(TestWebAppFactory factory) : IClassFixture<T
         var variantId = await response.Content.ReadFromJsonAsync<Guid>();
         Assert.NotEqual(Guid.Empty, variantId);
 
-        await using var scope = factory.Services.CreateAsyncScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<PrepDb>();
-
-        var variant = await dbContext.Recipes
+        await using var assertContext = await factory.CreateScopedDbContextAsync();
+        var variant = await assertContext.Recipes
             .Include(r => r.RecipeIngredients)
             .FirstOrDefaultAsync(r => r.Id == variantId);
 
@@ -58,12 +54,13 @@ public class RecipeVariantBehaviors(TestWebAppFactory factory) : IClassFixture<T
     public async Task UserSetsFavoriteVariant()
     {
         // Arrange
-        var originalRecipe = await _seeder.SeedRecipeAsync();
-        var variant1 = await _seeder.SeedRecipeAsync(
+        await using var context = await factory.CreateScopedDbContextAsync();
+        var originalRecipe = await context.SeedRecipeAsync();
+        var variant1 = await context.SeedRecipeAsync(
             name: "Variant 1",
             originalRecipeId: originalRecipe.Id,
             isFavoriteVariant: true);
-        var variant2 = await _seeder.SeedRecipeAsync(
+        var variant2 = await context.SeedRecipeAsync(
             name: "Variant 2",
             originalRecipeId: originalRecipe.Id,
             isFavoriteVariant: false);
@@ -74,11 +71,9 @@ public class RecipeVariantBehaviors(TestWebAppFactory factory) : IClassFixture<T
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
-        await using var scope = factory.Services.CreateAsyncScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<PrepDb>();
-
-        var updatedVariant1 = await dbContext.Recipes.FindAsync(variant1.Id);
-        var updatedVariant2 = await dbContext.Recipes.FindAsync(variant2.Id);
+        await using var assertContext = await factory.CreateScopedDbContextAsync();
+        var updatedVariant1 = await assertContext.Recipes.FindAsync(variant1.Id);
+        var updatedVariant2 = await assertContext.Recipes.FindAsync(variant2.Id);
 
         Assert.NotNull(updatedVariant1);
         Assert.NotNull(updatedVariant2);

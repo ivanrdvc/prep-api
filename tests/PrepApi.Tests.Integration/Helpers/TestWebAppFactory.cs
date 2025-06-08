@@ -46,10 +46,32 @@ public class TestWebAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
     protected override void ConfigureClient(HttpClient client)
     {
-        client.DefaultRequestHeaders.Add(TestAuthenticationHandler.AuthenticationHeaderName,
-            TestConstants.TestUserId);
+        client.DefaultRequestHeaders.Add(
+            TestAuthenticationHandler.AuthenticationHeaderName,
+            TestConstants.TestUserExternalId);
 
         base.ConfigureClient(client);
+    }
+        
+    public async Task<PrepDb> CreateScopedDbContextAsync()
+    {
+        var scope = Services.CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<PrepDb>();
+        return context;
+    }
+
+    public async Task InitializeAsync()
+    {
+        await _dbContainer.StartAsync();
+
+        using var scope = Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<PrepDb>();
+        await dbContext.Database.EnsureCreatedAsync();
+
+        await dbContext.SeedUserAsync(
+            userId: TestConstants.TestUserId,
+            externalId: TestConstants.TestUserExternalId,
+            email: TestConstants.TestUserEmail);
     }
 
     public HttpClient CreateUnauthenticatedClient()
@@ -66,18 +88,6 @@ public class TestWebAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
         client.DefaultRequestHeaders.Add(TestAuthenticationHandler.AuthenticationHeaderName, userId);
 
         return client;
-    }
-
-    public async Task InitializeAsync()
-    {
-        await _dbContainer.StartAsync();
-
-        using var scope = Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<PrepDb>();
-        await dbContext.Database.EnsureCreatedAsync();
-        
-        var seeder = new TestSeeder(this);
-        await seeder.SeedTestUserAsync(TestConstants.TestUserId, "test@example.com", "Test", "User");
     }
 
     public new async Task DisposeAsync()
@@ -102,10 +112,10 @@ public class TestAuthenticationHandler(
             return Task.FromResult(AuthenticateResult.NoResult());
         }
 
-        var userId = userIdValues.FirstOrDefault() ?? TestConstants.TestUserId;
+        var externalUserId = userIdValues.FirstOrDefault() ?? TestConstants.TestUserExternalId;
         var claims = new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, userId)
+            new Claim(ClaimTypes.NameIdentifier, externalUserId)
         };
         var identity = new ClaimsIdentity(claims, Scheme.Name);
         var principal = new ClaimsPrincipal(identity);

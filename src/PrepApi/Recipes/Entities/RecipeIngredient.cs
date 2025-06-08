@@ -1,4 +1,4 @@
-﻿using PrepApi.Shared.Entities;
+﻿using PrepApi.Data;
 
 namespace PrepApi.Recipes.Entities;
 

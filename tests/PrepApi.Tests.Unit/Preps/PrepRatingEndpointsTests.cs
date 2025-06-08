@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using PrepApi.Preps;
 using PrepApi.Preps.Requests;
 using PrepApi.Shared.Services;
+using PrepApi.Tests.Integration.Helpers;
 using PrepApi.Tests.Unit.Helpers;
 
 namespace PrepApi.Tests.Unit.Preps;
@@ -26,12 +27,13 @@ public class PrepRatingEndpointsTests
     public async Task CreatePrepRating_InvalidRequest_ReturnsValidationProblem()
     {
         // Arrange
-        await using var context = _fakeDb.CreateDbContext();
-        var prep = await _fakeDb.SeedPrepAsync(context);
+        await using var db = _fakeDb.CreateDbContext();
+        var recipe = await db.SeedRecipeAsync();
+        var prep = await db.SeedPrepAsync(recipe);
         var request = new UpsertPrepRatingRequest { OverallRating = 0, Dimensions = new() };
 
         // Act
-        var result = await PrepRatingEndpoints.CreatePrepRating(prep.Id, request, context, _userContext, _validator);
+        var result = await PrepRatingEndpoints.CreatePrepRating(prep.Id, request, db, _userContext, _validator);
 
         // Assert
         Assert.IsType<ValidationProblem>(result.Result);
@@ -41,9 +43,10 @@ public class PrepRatingEndpointsTests
     public async Task CreatePrepRating_ValidRequest_ReturnsCreated()
     {
         // Arrange
-        await using var context = _fakeDb.CreateDbContext();
-        await _fakeDb.SeedDefaultRatingDimensionsAsync(context);
-        var prep = await _fakeDb.SeedPrepAsync(context);
+        await using var db = _fakeDb.CreateDbContext();
+        await db.SeedDefaultRatingDimensionsAsync();
+        var recipe = await db.SeedRecipeAsync();
+        var prep = await db.SeedPrepAsync(recipe);
         var request = new UpsertPrepRatingRequest
         {
             OverallRating = 5,
@@ -55,7 +58,7 @@ public class PrepRatingEndpointsTests
         };
 
         // Act
-        var result = await PrepRatingEndpoints.CreatePrepRating(prep.Id, request, context, _userContext, _validator);
+        var result = await PrepRatingEndpoints.CreatePrepRating(prep.Id, request, db, _userContext, _validator);
 
         // Assert
         Assert.IsType<Created<Guid>>(result.Result);
@@ -65,13 +68,14 @@ public class PrepRatingEndpointsTests
     public async Task CreatePrepRating_DuplicateRating_ReturnsValidationProblem()
     {
         // Arrange
-        await using var context = _fakeDb.CreateDbContext();
-        var prep = await _fakeDb.SeedPrepAsync(context);
+        await using var db = _fakeDb.CreateDbContext();
+        var recipe = await db.SeedRecipeAsync();
+        var prep = await db.SeedPrepAsync(recipe);
         var request = new UpsertPrepRatingRequest { OverallRating = 5, Liked = true, Dimensions = new() };
 
         // Act
-        var firstResult = await PrepRatingEndpoints.CreatePrepRating(prep.Id, request, context, _userContext, _validator);
-        var secondResult = await PrepRatingEndpoints.CreatePrepRating(prep.Id, request, context, _userContext, _validator);
+        var firstResult = await PrepRatingEndpoints.CreatePrepRating(prep.Id, request, db, _userContext, _validator);
+        var secondResult = await PrepRatingEndpoints.CreatePrepRating(prep.Id, request, db, _userContext, _validator);
 
         // Assert
         Assert.IsType<Created<Guid>>(firstResult.Result);
@@ -82,9 +86,10 @@ public class PrepRatingEndpointsTests
     public async Task CreatePrepRating_WithInvalidDimension_ReturnsValidationProblem()
     {
         // Arrange
-        await using var context = _fakeDb.CreateDbContext();
-        await _fakeDb.SeedDefaultRatingDimensionsAsync(context);
-        var prep = await _fakeDb.SeedPrepAsync(context);
+        await using var db = _fakeDb.CreateDbContext();
+        await db.SeedDefaultRatingDimensionsAsync();
+        var recipe = await db.SeedRecipeAsync();
+        var prep = await db.SeedPrepAsync(recipe);
         var request = new UpsertPrepRatingRequest
         {
             OverallRating = 5,
@@ -96,7 +101,7 @@ public class PrepRatingEndpointsTests
         };
 
         // Act
-        var result = await PrepRatingEndpoints.CreatePrepRating(prep.Id, request, context, _userContext, _validator);
+        var result = await PrepRatingEndpoints.CreatePrepRating(prep.Id, request, db, _userContext, _validator);
 
         // Assert
         Assert.IsType<ValidationProblem>(result.Result);
@@ -106,12 +111,13 @@ public class PrepRatingEndpointsTests
     public async Task UpdatePrepRating_NotFound_ReturnsNotFound()
     {
         // Arrange
-        await using var context = _fakeDb.CreateDbContext();
-        var prep = await _fakeDb.SeedPrepAsync(context);
+        await using var db = _fakeDb.CreateDbContext();
+        var recipe = await db.SeedRecipeAsync();
+        var prep = await db.SeedPrepAsync(recipe);
         var request = new UpsertPrepRatingRequest { OverallRating = 5, Dimensions = new() };
 
         // Act
-        var result = await PrepRatingEndpoints.UpdatePrepRating(prep.Id, Guid.NewGuid(), request, context, _userContext,
+        var result = await PrepRatingEndpoints.UpdatePrepRating(prep.Id, Guid.NewGuid(), request, db, _userContext,
             _validator);
 
         // Assert
@@ -122,10 +128,11 @@ public class PrepRatingEndpointsTests
     public async Task UpdatePrepRating_ValidRequest_ReturnsNoContent()
     {
         // Arrange
-        await using var context = _fakeDb.CreateDbContext();
-        await _fakeDb.SeedDefaultRatingDimensionsAsync(context);
-        var prep = await _fakeDb.SeedPrepAsync(context);
-        var rating = await _fakeDb.SeedPrepRatingAsync(context, prep.Id, _userContext.ExternalId);
+        await using var db = _fakeDb.CreateDbContext();
+        await db.SeedDefaultRatingDimensionsAsync();
+        var recipe = await db.SeedRecipeAsync();
+        var prep = await db.SeedPrepAsync(recipe);
+        var rating = await db.SeedPrepRatingAsync(prep.Id, _userContext.InternalId!.Value);
 
         // Act
         var updateRequest = new UpsertPrepRatingRequest
@@ -137,7 +144,7 @@ public class PrepRatingEndpointsTests
             WhatToChange = "Improve texture",
             AdditionalNotes = "Test update."
         };
-        var result = await PrepRatingEndpoints.UpdatePrepRating(prep.Id, rating.Id, updateRequest, context, _userContext,
+        var result = await PrepRatingEndpoints.UpdatePrepRating(prep.Id, rating.Id, updateRequest, db, _userContext,
             _validator);
 
         // Assert
@@ -148,13 +155,14 @@ public class PrepRatingEndpointsTests
     public async Task UpdatePrepRating_InvalidRequest_ReturnsValidationProblem()
     {
         // Arrange
-        await using var context = _fakeDb.CreateDbContext();
-        var prep = await _fakeDb.SeedPrepAsync(context);
-        var rating = await _fakeDb.SeedPrepRatingAsync(context, prep.Id, _userContext.ExternalId);
+        await using var db = _fakeDb.CreateDbContext();
+        var recipe = await db.SeedRecipeAsync();
+        var prep = await db.SeedPrepAsync(recipe);
+        var rating = await db.SeedPrepRatingAsync(prep.Id, _userContext.InternalId!.Value);
         var invalidRequest = new UpsertPrepRatingRequest { OverallRating = 0, Liked = true, Dimensions = new() };
 
         // Act
-        var result = await PrepRatingEndpoints.UpdatePrepRating(prep.Id, rating.Id, invalidRequest, context, _userContext,
+        var result = await PrepRatingEndpoints.UpdatePrepRating(prep.Id, rating.Id, invalidRequest, db, _userContext,
             _validator);
 
         // Assert
@@ -165,11 +173,12 @@ public class PrepRatingEndpointsTests
     public async Task GetPrepRatings_NoneExist_ReturnsNotFound()
     {
         // Arrange
-        await using var context = _fakeDb.CreateDbContext();
-        var prep = await _fakeDb.SeedPrepAsync(context);
+        await using var db = _fakeDb.CreateDbContext();
+        var recipe = await db.SeedRecipeAsync();
+        var prep = await db.SeedPrepAsync(recipe);
 
         // Act
-        var result = await PrepRatingEndpoints.GetPrepRatings(prep.Id, context);
+        var result = await PrepRatingEndpoints.GetPrepRatings(prep.Id, db);
 
         // Assert
         Assert.IsType<NotFound>(result.Result);
@@ -179,12 +188,13 @@ public class PrepRatingEndpointsTests
     public async Task GetPrepRatings_Exist_ReturnsOkWithRatings()
     {
         // Arrange
-        await using var context = _fakeDb.CreateDbContext();
-        var prep = await _fakeDb.SeedPrepAsync(context);
-        await _fakeDb.SeedPrepRatingAsync(context, prep.Id, _userContext.ExternalId);
+        await using var db = _fakeDb.CreateDbContext();
+        var recipe = await db.SeedRecipeAsync();
+        var prep = await db.SeedPrepAsync(recipe);
+        await db.SeedPrepRatingAsync(prep.Id, _userContext.InternalId!.Value);
 
         // Act
-        var result = await PrepRatingEndpoints.GetPrepRatings(prep.Id, context);
+        var result = await PrepRatingEndpoints.GetPrepRatings(prep.Id, db);
 
         // Assert
         var okResult = Assert.IsType<Ok<List<PrepRatingDto>>>(result.Result);

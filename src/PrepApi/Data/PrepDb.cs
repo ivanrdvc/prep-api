@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using PrepApi.Preps.Entities;
 using PrepApi.Recipes.Entities;
 using PrepApi.Shared.Dtos;
-using PrepApi.Shared.Entities;
 using PrepApi.Shared.Services;
 using PrepApi.Users;
 
@@ -34,11 +33,11 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
             entity.Property(u => u.ExternalId)
                 .HasMaxLength(256)
                 .IsRequired();
-            
+
             entity.HasIndex(u => u.ExternalId).IsUnique();
-            
+
             entity.Property(u => u.Email).HasMaxLength(256);
-            
+
             entity.Property(u => u.FirstName).HasMaxLength(256);
 
             entity.Property(u => u.LastName).HasMaxLength(256);
@@ -323,7 +322,7 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
                         new Ingredient { Id = sugarId, Name = "Sugar" },
                         new Ingredient { Id = saltId, Name = "Salt" }
                     );
-                    
+
                     // Seed User
                     var seedUser = new User
                     {
@@ -334,7 +333,7 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
                         PreferredUnits = PreferredUnits.Metric,
                     };
                     prepDbContext.Users.Add(seedUser);
-                    
+
                     // Seed Tags
                     prepDbContext.Tags.AddRange(
                         new Tag { Id = sweetTagId, Name = "Sweet", UserId = seedUser.Id },
@@ -473,8 +472,9 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new())
     {
-        var timestamp = DateTimeOffset.UtcNow;;
-        var userId = userContext.ExternalId ?? "system";
+        var timestamp = DateTimeOffset.UtcNow;
+        var systemUser = new Guid("00000000-0000-0000-0000-000000000001");
+        var userId = userContext.InternalId ?? systemUser;
 
         foreach (var entry in ChangeTracker.Entries<Entity>())
         {

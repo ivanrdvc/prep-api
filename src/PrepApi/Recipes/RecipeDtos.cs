@@ -1,8 +1,8 @@
 ﻿using System.Text.Json;
 
+using PrepApi.Data;
 using PrepApi.Recipes.Entities;
 using PrepApi.Shared.Dtos;
-using PrepApi.Shared.Entities;
 
 namespace PrepApi.Recipes;
 

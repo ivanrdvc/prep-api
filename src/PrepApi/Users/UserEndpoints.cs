@@ -30,7 +30,7 @@ public static class UserEndpoints
     {
         var user = await db.Users
             .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.ExternalId == userContext.ExternalId);
+            .FirstOrDefaultAsync(u => u.Id == userContext.InternalId);
 
         if (user is null)
         {
@@ -45,25 +45,26 @@ public static class UserEndpoints
         IUserContext userContext,
         IHttpContextAccessor httpContextAccessor)
     {
-        var user = httpContextAccessor.HttpContext?.User;
-        if (user?.Identity?.IsAuthenticated != true)
+        var claimsPrincipal = httpContextAccessor.HttpContext?.User;
+        if (claimsPrincipal?.Identity?.IsAuthenticated != true)
         {
             throw new UnauthorizedAccessException("User is not authenticated");
         }
 
-        // var existingUser = await db.Users
-        //     .AsNoTracking()
-        //     .FirstOrDefaultAsync(u => u.ExternalId == userContext.ExternalId);
-
-        if (!string.IsNullOrEmpty(userContext.ExternalId))
+        if (userContext.User is not null)
         {
             return TypedResults.Conflict();
         }
 
+        var userId = Guid.NewGuid();
+
         var newUser = new User
         {
-            ExternalId = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value!,
-            PreferredUnits = PreferredUnits.Metric
+            Id = userId,
+            ExternalId = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value!,
+            PreferredUnits = PreferredUnits.Metric,
+            CreatedBy = userId,
+            UpdatedBy = userId
         };
 
         db.Users.Add(newUser);
@@ -80,7 +81,7 @@ public static class UserEndpoints
         IUserContext userContext)
     {
         var user = await db.Users
-            .FirstOrDefaultAsync(u => u.ExternalId == userContext.ExternalId);
+            .FirstOrDefaultAsync(u => u.Id == userContext.InternalId);
 
         if (user is null)
         {
@@ -95,29 +96,4 @@ public static class UserEndpoints
 
         return TypedResults.NoContent();
     }
-}
-
-public class UpdateUserRequest
-{
-    public string? FirstName { get; set; }
-    public string? LastName { get; set; }
-    public PreferredUnits PreferredUnits { get; set; }
-}
-
-public class UserDto
-{
-    public required string Id { get; set; }
-    public string? Email { get; set; }
-    public string? FirstName { get; set; }
-    public string? LastName { get; set; }
-    public PreferredUnits PreferredUnits { get; set; }
-
-    public static UserDto FromUser(User user) => new()
-    {
-        Id = user.ExternalId,
-        Email = user.Email,
-        FirstName = user.FirstName,
-        LastName = user.LastName,
-        PreferredUnits = user.PreferredUnits
-    };
 }
