@@ -17,9 +17,9 @@ public static class Extensions
         builder.Services.AddAzureOpenAiServices(builder.Configuration);
 
         builder.Services.AddScoped<PrepService>();
-        
+
         builder.Services.AddSingleton<ITaskQueue, InMemoryTaskQueue>();
-        
+
         builder.Services.AddHostedService<SupabaseKeepAliveService>();
         builder.Services.AddHostedService<TaskProcessor>();
     }
@@ -50,7 +50,7 @@ public static class Extensions
             return azureClient.AsChatClient(modelId);
         });
     }
-    
+
     public static IServiceCollection AddDefaultCorsPolicy(this IServiceCollection services, IConfiguration configuration)
     {
         var allowedOrigins = configuration.GetSection("AllowedOrigins").Get<string[]>() ?? [];

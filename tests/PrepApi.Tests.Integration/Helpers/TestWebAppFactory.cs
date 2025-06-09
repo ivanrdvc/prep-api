@@ -56,8 +56,7 @@ public class TestWebAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
     public async Task<PrepDb> CreateScopedDbContextAsync()
     {
         var scope = Services.CreateAsyncScope();
-        var context = scope.ServiceProvider.GetRequiredService<PrepDb>();
-        return context;
+        return scope.ServiceProvider.GetRequiredService<PrepDb>();
     }
 
     public async Task InitializeAsync()
@@ -78,14 +77,6 @@ public class TestWebAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
     {
         var client = base.CreateClient();
         client.DefaultRequestHeaders.Remove(TestAuthenticationHandler.AuthenticationHeaderName);
-
-        return client;
-    }
-
-    public HttpClient CreateAuthenticatedClient(string userId)
-    {
-        var client = CreateUnauthenticatedClient();
-        client.DefaultRequestHeaders.Add(TestAuthenticationHandler.AuthenticationHeaderName, userId);
 
         return client;
     }

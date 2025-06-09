@@ -5,7 +5,7 @@ using PrepApi.Data;
 namespace PrepApi.Shared.Services;
 
 public class SupabaseKeepAliveService(
-    ILogger<SupabaseKeepAliveService> logger, 
+    ILogger<SupabaseKeepAliveService> logger,
     IServiceScopeFactory serviceScopeFactory)
     : BackgroundService
 {

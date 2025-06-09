@@ -21,14 +21,14 @@ public static class OpenApiOptionsExtensions
                 Id = schemeName
             }
         };
-        
+
         options.AddDocumentTransformer((document, _, _) =>
         {
             document.Components ??= new();
             document.Components.SecuritySchemes.Add(schemeName, scheme);
             return Task.CompletedTask;
         });
-        
+
         options.AddOperationTransformer((operation, context, _) =>
         {
             if (context.Description.ActionDescriptor.EndpointMetadata.OfType<IAuthorizeData>().Any())
@@ -38,7 +38,7 @@ public static class OpenApiOptionsExtensions
 
             return Task.CompletedTask;
         });
-        
+
         return options;
     }
 }

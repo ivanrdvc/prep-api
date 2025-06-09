@@ -30,10 +30,7 @@ public class PrepBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebApp
     {
         // Arrange
         await using var context = await factory.CreateScopedDbContextAsync();
-        var baseRecipe = await context.SeedRecipeAsync(
-            name: "Simple Recipe",
-            ingredients: [(_ingredients["Flour"], 100, Unit.Gram)]
-        );
+        var baseRecipe = await context.SeedRecipeAsync(ingredients: [(_ingredients["Flour"], 100, Unit.Gram)]);
 
         var createRequest = new UpsertPrepRequest
         {
@@ -68,10 +65,7 @@ public class PrepBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebApp
     {
         // Arrange
         await using var context = await factory.CreateScopedDbContextAsync();
-        var recipe = await context.SeedRecipeAsync(
-            name: "Test Recipe",
-            ingredients: [(_ingredients["Eggs"], 2, Unit.Whole)]
-        );
+        var recipe = await context.SeedRecipeAsync(ingredients: [(_ingredients["Eggs"], 2, Unit.Whole)]);
 
         var seededPrep = await context.SeedPrepAsync(
             recipe,

@@ -330,7 +330,6 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
                         Email = "seed@example.com",
                         FirstName = "Seed",
                         LastName = "User",
-                        PreferredUnits = PreferredUnits.Metric,
                     };
                     prepDbContext.Users.Add(seedUser);
 
@@ -364,13 +363,13 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
                     // Seed RecipeIngredients
                     prepDbContext.RecipeIngredients.AddRange(
                         new RecipeIngredient
-                            { RecipeId = recipeId, IngredientId = flourId, Quantity = 2, Unit = Unit.Whole },
+                        { RecipeId = recipeId, IngredientId = flourId, Quantity = 2, Unit = Unit.Whole },
                         new RecipeIngredient
-                            { RecipeId = recipeId, IngredientId = butterId, Quantity = 3, Unit = Unit.Gram },
+                        { RecipeId = recipeId, IngredientId = butterId, Quantity = 3, Unit = Unit.Gram },
                         new RecipeIngredient
-                            { RecipeId = recipeId, IngredientId = sugarId, Quantity = 4, Unit = Unit.Kilogram },
+                        { RecipeId = recipeId, IngredientId = sugarId, Quantity = 4, Unit = Unit.Kilogram },
                         new RecipeIngredient
-                            { RecipeId = recipeId, IngredientId = saltId, Quantity = 0.5m, Unit = Unit.Milliliter }
+                        { RecipeId = recipeId, IngredientId = saltId, Quantity = 0.5m, Unit = Unit.Milliliter }
                     );
 
                     // Seed Recipe Tags
@@ -444,12 +443,12 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
 
                     // Seed  Rating Dimensions
                     prepDbContext.RatingDimensions.AddRange(new RatingDimension
-                        {
-                            Key = "taste",
-                            DisplayName = "Taste",
-                            Description = "How good did the recipe taste?",
-                            SortOrder = 10,
-                        },
+                    {
+                        Key = "taste",
+                        DisplayName = "Taste",
+                        Description = "How good did the recipe taste?",
+                        SortOrder = 10,
+                    },
                         new RatingDimension
                         {
                             Key = "texture",

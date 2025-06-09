@@ -80,7 +80,7 @@ public class RecipeEndpointsTests
         var updated2 = await context.Recipes.FindAsync(variant2.Id);
         Assert.NotNull(updated1);
         Assert.NotNull(updated2);
-        Assert.False(updated1!.IsFavoriteVariant);
-        Assert.True(updated2!.IsFavoriteVariant);
+        Assert.False(updated1.IsFavoriteVariant);
+        Assert.True(updated2.IsFavoriteVariant);
     }
 }

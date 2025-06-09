@@ -36,7 +36,7 @@ builder.Services.AddDbContext<PrepDb>(options =>
 
 builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddCurrentUser();
+builder.Services.AddUserContext();
 
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
@@ -63,7 +63,7 @@ if (app.Environment.IsDevelopment())
 
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<PrepDb>();
-    await dbContext.Database.EnsureDeletedAsync();
+    // await dbContext.Database.EnsureDeletedAsync();
     await dbContext.Database.EnsureCreatedAsync();
 }
 else
@@ -75,7 +75,11 @@ else
 if (app.Configuration.GetValue<bool>("ApiDocsEnabled"))
 {
     app.MapOpenApi();
-    app.MapScalarApiReference();
+    app.MapScalarApiReference(options =>
+    {
+        options.Servers = [];
+        options.Authentication = new() { PreferredSecurityScheme = "Bearer" };
+    });
 }
 
 app.UseCors();
