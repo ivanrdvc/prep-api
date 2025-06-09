@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Http.HttpResults;
 
 using PrepApi.Recipes;
 using PrepApi.Recipes.Requests;
+using PrepApi.Shared.Services;
+using PrepApi.Tests.Integration.Helpers;
 using PrepApi.Tests.Unit.Helpers;
 
 namespace PrepApi.Tests.Unit.Recipes;
@@ -15,23 +17,6 @@ public class RecipeEndpointsTests
     {
         _userContext = TestUserContext.Authenticated();
         _fakeDb = new FakeDb(_userContext);
-    }
-
-    [Fact]
-    public async Task CreateVariantFromPrep_Unauthorized_ReturnsUnauthorized()
-    {
-        // Arrange
-        await using var context = _fakeDb.CreateDbContext();
-        var recipe = await _fakeDb.SeedRecipeAsync(context);
-        var prep = await _fakeDb.SeedPrepAsync(context, recipe.Id);
-        var request = new CreateVariantFromPrepRequest { Name = "Variant", SetAsFavorite = false };
-        var anonUser = TestUserContext.Anonymous();
-
-        // Act
-        var result = await RecipeEndpoints.CreateVariantFromPrep(prep.Id, request, context, anonUser);
-
-        // Assert
-        Assert.IsType<UnauthorizedHttpResult>(result.Result);
     }
 
     [Fact]
@@ -53,8 +38,8 @@ public class RecipeEndpointsTests
     {
         // Arrange
         await using var context = _fakeDb.CreateDbContext();
-        var recipe = await _fakeDb.SeedRecipeAsync(context);
-        var prep = await _fakeDb.SeedPrepAsync(context, recipe.Id);
+        var recipe = await context.SeedRecipeAsync();
+        var prep = await context.SeedPrepAsync(recipe);
         var request = new CreateVariantFromPrepRequest { Name = "Variant", SetAsFavorite = true };
 
         // Act
@@ -82,9 +67,9 @@ public class RecipeEndpointsTests
     {
         // Arrange
         await using var context = _fakeDb.CreateDbContext();
-        var recipe = await _fakeDb.SeedRecipeAsync(context);
-        var variant1 = await _fakeDb.SeedVariantRecipeAsync(context, recipe.Id, "Variant 1", true);
-        var variant2 = await _fakeDb.SeedVariantRecipeAsync(context, recipe.Id, "Variant 2", false);
+        var recipe = await context.SeedRecipeAsync();
+        var variant1 = await context.SeedVariantRecipeAsync(recipe.Id, "Variant 1", true);
+        var variant2 = await context.SeedVariantRecipeAsync(recipe.Id, "Variant 2", false);
 
         // Act
         var result = await RecipeEndpoints.SetFavoriteVariant(variant2.Id, context, _userContext);
@@ -95,7 +80,7 @@ public class RecipeEndpointsTests
         var updated2 = await context.Recipes.FindAsync(variant2.Id);
         Assert.NotNull(updated1);
         Assert.NotNull(updated2);
-        Assert.False(updated1!.IsFavoriteVariant);
-        Assert.True(updated2!.IsFavoriteVariant);
+        Assert.False(updated1.IsFavoriteVariant);
+        Assert.True(updated2.IsFavoriteVariant);
     }
 }

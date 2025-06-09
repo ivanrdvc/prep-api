@@ -1,5 +1,7 @@
 using System.Security.Claims;
 
+using Azure.Monitor.OpenTelemetry.AspNetCore;
+
 using FluentValidation;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -10,7 +12,8 @@ using PrepApi.Data;
 using PrepApi.Extensions;
 using PrepApi.Preps;
 using PrepApi.Recipes;
-using PrepApi.Shared.Queue;
+using PrepApi.Shared.Services;
+using PrepApi.Users;
 
 using Scalar.AspNetCore;
 
@@ -18,16 +21,22 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddAppServices();
 
+if (!builder.Environment.IsEnvironment("Development"))
+{
+    builder.Services.AddOpenTelemetry().UseAzureMonitor();
+}
+
 builder.Services.AddDefaultCorsPolicy(builder.Configuration);
 
-builder.Services.AddOpenApi(options => options.AddDocumentTransformer<BearerSecuritySchemeTransformer>());
-
+builder.Services.AddOpenApi(options => options.AddBearerTokenAuthentication());
 builder.Services.AddProblemDetails();
 
-builder.Services.AddDbContext<PrepDb>(
-    options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<PrepDb>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddUserContext();
 
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
@@ -45,9 +54,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 builder.Services.AddHealthChecks().AddDbContextCheck<PrepDb>("Database");
-
-builder.Services.AddSingleton<ITaskQueue, InMemoryTaskQueue>();
-builder.Services.AddHostedService<TaskProcessor>();
 
 var app = builder.Build();
 
@@ -69,7 +75,11 @@ else
 if (app.Configuration.GetValue<bool>("ApiDocsEnabled"))
 {
     app.MapOpenApi();
-    app.MapScalarApiReference();
+    app.MapScalarApiReference(options =>
+    {
+        options.Servers = [];
+        options.Authentication = new() { PreferredSecurityScheme = "Bearer" };
+    });
 }
 
 app.UseCors();
@@ -78,8 +88,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapRecipeEndpoints();
-app.MapPrepEndpoints();
 app.MapTagEndpoints();
+app.MapPrepEndpoints();
+app.MapUserEndpoints();
 app.MapHealthChecks("/health");
 
 app.Run();

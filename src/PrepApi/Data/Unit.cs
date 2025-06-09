@@ -1,4 +1,4 @@
-﻿namespace PrepApi.Shared.Entities;
+﻿namespace PrepApi.Data;
 
 public enum Unit
 {

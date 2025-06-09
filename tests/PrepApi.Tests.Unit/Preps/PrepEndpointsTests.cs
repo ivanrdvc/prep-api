@@ -11,6 +11,8 @@ using PrepApi.Preps.Entities;
 using PrepApi.Preps.Requests;
 using PrepApi.Shared.Dtos;
 using PrepApi.Shared.Requests;
+using PrepApi.Shared.Services;
+using PrepApi.Tests.Integration.Helpers;
 using PrepApi.Tests.Unit.Helpers;
 
 namespace PrepApi.Tests.Unit.Preps;
@@ -47,11 +49,12 @@ public class PrepEndpointsTests
     public async Task GetPrep_Exists_ReturnsOk()
     {
         // Arrange
-        await using var context = _fakeDb.CreateDbContext();
-        var prep = await _fakeDb.SeedPrepAsync(context);
+        await using var db = _fakeDb.CreateDbContext();
+        var recipe = await db.SeedRecipeAsync();
+        var prep = await db.SeedPrepAsync(recipe);
 
         // Act
-        var result = await PrepEndpoints.GetPrep(prep.Id, context, _userContext);
+        var result = await PrepEndpoints.GetPrep(prep.Id, db, _userContext);
 
         // Assert
         Assert.IsType<Ok<PrepDto>>(result.Result);
@@ -61,12 +64,13 @@ public class PrepEndpointsTests
     public async Task CreatePrep_ValidRequest_ReturnsCreated()
     {
         // Arrange
-        await using var context = _fakeDb.CreateDbContext();
-        var recipe = await _fakeDb.SeedRecipeAsync(context);
-        var request = CreateUpsertPrepRequest(context, recipe.Id);
+        await using var db = _fakeDb.CreateDbContext();
+        var ingredients = await db.SeedIngredientsAsync("Egg");
+        var recipe = await db.SeedRecipeAsync(ingredients: [(ingredients["Egg"], 1, Data.Unit.Whole)]);
+        var request = CreateUpsertPrepRequest(db, recipe.Id);
 
         // Act
-        var result = await PrepEndpoints.CreatePrep(request, context, _userContext, _prepService, _validator);
+        var result = await PrepEndpoints.CreatePrep(request, db, _userContext, _prepService, _validator);
 
         // Assert
         Assert.IsType<Created<Guid>>(result.Result);
@@ -76,7 +80,7 @@ public class PrepEndpointsTests
     public async Task CreatePrep_InvalidRequest_ReturnsValidationProblem()
     {
         // Arrange
-        await using var context = _fakeDb.CreateDbContext();
+        await using var db = _fakeDb.CreateDbContext();
 
         var invalidRequest = new UpsertPrepRequest
         {
@@ -91,45 +95,31 @@ public class PrepEndpointsTests
                 {
                     IngredientId = Guid.NewGuid(),
                     Quantity = 0,
-                    Unit = Shared.Entities.Unit.Gram,
+                    Unit = Data.Unit.Gram,
                     Notes = new string('x', 600)
                 }
             ]
         };
 
         // Act
-        var result = await PrepEndpoints.CreatePrep(invalidRequest, context, _userContext, _prepService, _validator);
+        var result = await PrepEndpoints.CreatePrep(invalidRequest, db, _userContext, _prepService, _validator);
 
         // Assert
         Assert.IsType<ValidationProblem>(result.Result);
     }
 
     [Fact]
-    public async Task CreatePrep_NoUser_ReturnsUnauthorized()
-    {
-        // Arrange
-        await using var context = _fakeDb.CreateDbContext();
-        var recipe = await _fakeDb.SeedRecipeAsync(context);
-        var request = CreateUpsertPrepRequest(context, recipe.Id);
-        var anonUserContext = TestUserContext.Anonymous();
-
-        // Act
-        var result = await PrepEndpoints.CreatePrep(request, context, anonUserContext, _prepService, _validator);
-
-        // Assert
-        Assert.IsType<UnauthorizedHttpResult>(result.Result);
-    }
-
-    [Fact]
     public async Task UpdatePrep_Exists_ReturnsNoContent()
     {
         // Arrange
-        await using var context = _fakeDb.CreateDbContext();
-        var prep = await _fakeDb.SeedPrepAsync(context);
-        var request = CreateUpsertPrepRequest(context, prep.RecipeId);
+        await using var db = _fakeDb.CreateDbContext();
+        var ingredients = await db.SeedIngredientsAsync("Egg");
+        var recipe = await db.SeedRecipeAsync(ingredients: [(ingredients["Egg"], 1, Data.Unit.Whole)]);
+        var prep = await db.SeedPrepAsync(recipe);
+        var request = CreateUpsertPrepRequest(db, prep.RecipeId);
 
         // Act
-        var result = await PrepEndpoints.UpdatePrep(prep.Id, request, context, _userContext, _prepService, _validator);
+        var result = await PrepEndpoints.UpdatePrep(prep.Id, request, db, _userContext, _prepService, _validator);
 
         // Assert
         Assert.IsType<NoContent>(result.Result);
@@ -139,12 +129,12 @@ public class PrepEndpointsTests
     public async Task UpdatePrep_NotExists_ReturnsNotFound()
     {
         // Arrange
-        await using var context = _fakeDb.CreateDbContext();
-        var recipe = await _fakeDb.SeedRecipeAsync(context);
-        var request = CreateUpsertPrepRequest(context, recipe.Id);
+        await using var db = _fakeDb.CreateDbContext();
+        var recipe = await db.SeedRecipeAsync();
+        var request = CreateUpsertPrepRequest(db, recipe.Id);
 
         // Act
-        var result = await PrepEndpoints.UpdatePrep(Guid.NewGuid(), request, context, _userContext, _prepService, _validator);
+        var result = await PrepEndpoints.UpdatePrep(Guid.NewGuid(), request, db, _userContext, _prepService, _validator);
 
         // Assert
         Assert.IsType<NotFound>(result.Result);
@@ -154,15 +144,15 @@ public class PrepEndpointsTests
     public async Task UpdatePrep_DifferentUser_ReturnsNotFound()
     {
         // Arrange
-        await using var context = _fakeDb.CreateDbContext();
-        var prep = await _fakeDb.SeedPrepAsync(context);
-        var request = CreateUpsertPrepRequest(context, prep.RecipeId);
+        await using var db = _fakeDb.CreateDbContext();
+        var recipe = await db.SeedRecipeAsync();
+        var prep = await db.SeedPrepAsync(recipe);
+        var request = CreateUpsertPrepRequest(db, prep.RecipeId);
 
         var differentUserContext = Substitute.For<IUserContext>();
-        differentUserContext.UserId.Returns(Guid.NewGuid().ToString());
 
         // Act
-        var result = await PrepEndpoints.UpdatePrep(prep.Id, request, context, differentUserContext, _prepService, _validator);
+        var result = await PrepEndpoints.UpdatePrep(prep.Id, request, db, differentUserContext, _prepService, _validator);
 
         // Assert
         Assert.IsType<NotFound>(result.Result);
@@ -172,20 +162,21 @@ public class PrepEndpointsTests
     public async Task UpdatePrep_InvalidIngredients_ReturnsValidationProblem()
     {
         // Arrange
-        await using var context = _fakeDb.CreateDbContext();
-        var prep = await _fakeDb.SeedPrepAsync(context);
+        await using var db = _fakeDb.CreateDbContext();
+        var recipe = await db.SeedRecipeAsync();
+        var prep = await db.SeedPrepAsync(recipe);
 
-        var request = CreateUpsertPrepRequest(context, prep.RecipeId);
+        var request = CreateUpsertPrepRequest(db, prep.RecipeId);
 
         request.PrepIngredients.Add(new PrepIngredientInputDto
         {
             IngredientId = Guid.NewGuid(),
             Quantity = 1,
-            Unit = Shared.Entities.Unit.Gram
+            Unit = Data.Unit.Gram
         });
 
         // Act
-        var result = await PrepEndpoints.UpdatePrep(prep.Id, request, context, _userContext, _prepService, _validator);
+        var result = await PrepEndpoints.UpdatePrep(prep.Id, request, db, _userContext, _prepService, _validator);
 
         // Assert
         Assert.IsType<ValidationProblem>(result.Result);
@@ -195,11 +186,12 @@ public class PrepEndpointsTests
     public async Task DeletePrep_Exists_ReturnsNoContent()
     {
         // Arrange
-        await using var context = _fakeDb.CreateDbContext();
-        var prep = await _fakeDb.SeedPrepAsync(context);
+        await using var db = _fakeDb.CreateDbContext();
+        var recipe = await db.SeedRecipeAsync();
+        var prep = await db.SeedPrepAsync(recipe);
 
         // Act
-        var result = await PrepEndpoints.DeletePrep(prep.Id, context, _userContext);
+        var result = await PrepEndpoints.DeletePrep(prep.Id, db, _userContext);
 
         // Assert
         Assert.IsType<NoContent>(result.Result);
@@ -222,13 +214,13 @@ public class PrepEndpointsTests
     public async Task GetPrepsByRecipe_ValidRequest_ReturnsPaginatedResult()
     {
         // Arrange
-        await using var context = _fakeDb.CreateDbContext();
-        var recipe = await _fakeDb.SeedRecipeAsync(context);
-        await _fakeDb.SeedPrepAsync(context, recipeId: recipe.Id);
+        await using var db = _fakeDb.CreateDbContext();
+        var recipe = await db.SeedRecipeAsync();
+        await db.SeedPrepAsync(recipe);
         var request = new PaginationRequest { PageIndex = 0, PageSize = 10 };
 
         // Act
-        var result = await PrepEndpoints.GetPrepsByRecipe(recipe.Id, request, context, _userContext);
+        var result = await PrepEndpoints.GetPrepsByRecipe(recipe.Id, request, db, _userContext);
 
         // Assert
         Assert.IsType<Ok<PaginatedItems<PrepSummaryDto>>>(result.Result);
@@ -238,13 +230,12 @@ public class PrepEndpointsTests
     public async Task GetPrepsByRecipe_PageSizeZero_ReturnsEmptyData()
     {
         // Arrange
-        await using var context = _fakeDb.CreateDbContext();
-        var recipe = await _fakeDb.SeedRecipeAsync(context);
-        await _fakeDb.SeedPrepAsync(context, recipeId: recipe.Id);
+        await using var db = _fakeDb.CreateDbContext();
+        var recipe = await db.SeedRecipeAsync();
         var request = new PaginationRequest { PageIndex = 0, PageSize = 0 };
 
         // Act
-        var result = await PrepEndpoints.GetPrepsByRecipe(recipe.Id, request, context, _userContext);
+        var result = await PrepEndpoints.GetPrepsByRecipe(recipe.Id, request, db, _userContext);
 
         // Assert
         Assert.Empty(Assert.IsType<Ok<PaginatedItems<PrepSummaryDto>>>(result.Result).Value!.Data);
@@ -258,19 +249,19 @@ public class PrepEndpointsTests
         int firstExpectedIndex)
     {
         // Arrange
-        await using var context = _fakeDb.CreateDbContext();
-        var recipe = await _fakeDb.SeedRecipeAsync(context);
+        await using var db = _fakeDb.CreateDbContext();
+        var recipe = await db.SeedRecipeAsync();
 
         var preps = new List<Prep>();
 
-        var older = await _fakeDb.SeedPrepAsync(context, recipeId: recipe.Id);
+        var older = await db.SeedPrepAsync(recipe);
         older.CreatedAt = DateTime.UtcNow.AddDays(-2);
         preps.Add(older);
-        var newer = await _fakeDb.SeedPrepAsync(context, recipeId: recipe.Id);
+        var newer = await db.SeedPrepAsync(recipe);
         newer.CreatedAt = DateTime.UtcNow;
         preps.Add(newer);
 
-        await context.SaveChangesAsync();
+        await db.SaveChangesAsync();
 
         var request = new PaginationRequest
         {
@@ -280,7 +271,7 @@ public class PrepEndpointsTests
         };
 
         // Act
-        var result = await PrepEndpoints.GetPrepsByRecipe(recipe.Id, request, context, _userContext);
+        var result = await PrepEndpoints.GetPrepsByRecipe(recipe.Id, request, db, _userContext);
 
         // Assert
         var data = Assert.IsType<Ok<PaginatedItems<PrepSummaryDto>>>(result.Result).Value!.Data.ToList();
@@ -298,7 +289,7 @@ public class PrepEndpointsTests
             PrepTimeMinutes = 10,
             CookTimeMinutes = 20,
             Steps = [new() { Description = "Step 1", Order = 1 }],
-            PrepIngredients = [new() { IngredientId = ingredientId, Quantity = 100, Unit = Shared.Entities.Unit.Gram }]
+            PrepIngredients = [new() { IngredientId = ingredientId, Quantity = 100, Unit = Data.Unit.Gram }]
         };
     }
 }

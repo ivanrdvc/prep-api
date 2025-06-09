@@ -10,7 +10,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 using PrepApi.Data;
-using PrepApi.Shared;
 
 using Testcontainers.PostgreSql;
 
@@ -47,26 +46,17 @@ public class TestWebAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
     protected override void ConfigureClient(HttpClient client)
     {
-        client.DefaultRequestHeaders.Add(TestAuthenticationHandler.AuthenticationHeaderName,
-            TestAuthenticationHandler.TestUserId);
+        client.DefaultRequestHeaders.Add(
+            TestAuthenticationHandler.AuthenticationHeaderName,
+            TestConstants.TestUserExternalId);
 
         base.ConfigureClient(client);
     }
-
-    public HttpClient CreateUnauthenticatedClient()
+        
+    public async Task<PrepDb> CreateScopedDbContextAsync()
     {
-        var client = base.CreateClient();
-        client.DefaultRequestHeaders.Remove(TestAuthenticationHandler.AuthenticationHeaderName);
-
-        return client;
-    }
-
-    public HttpClient CreateAuthenticatedClient(string userId)
-    {
-        var client = CreateUnauthenticatedClient();
-        client.DefaultRequestHeaders.Add(TestAuthenticationHandler.AuthenticationHeaderName, userId);
-
-        return client;
+        var scope = Services.CreateAsyncScope();
+        return scope.ServiceProvider.GetRequiredService<PrepDb>();
     }
 
     public async Task InitializeAsync()
@@ -76,6 +66,19 @@ public class TestWebAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
         using var scope = Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<PrepDb>();
         await dbContext.Database.EnsureCreatedAsync();
+
+        await dbContext.SeedUserAsync(
+            userId: TestConstants.TestUserId,
+            externalId: TestConstants.TestUserExternalId,
+            email: TestConstants.TestUserEmail);
+    }
+
+    public HttpClient CreateUnauthenticatedClient()
+    {
+        var client = base.CreateClient();
+        client.DefaultRequestHeaders.Remove(TestAuthenticationHandler.AuthenticationHeaderName);
+
+        return client;
     }
 
     public new async Task DisposeAsync()
@@ -91,7 +94,6 @@ public class TestAuthenticationHandler(
     : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
 {
     public const string TestScheme = "TestScheme";
-    public const string TestUserId = "TestUserId";
     public const string AuthenticationHeaderName = "X-Test-User-Id";
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
@@ -101,10 +103,10 @@ public class TestAuthenticationHandler(
             return Task.FromResult(AuthenticateResult.NoResult());
         }
 
-        var userId = userIdValues.FirstOrDefault() ?? TestUserId;
+        var externalUserId = userIdValues.FirstOrDefault() ?? TestConstants.TestUserExternalId;
         var claims = new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, userId)
+            new Claim(ClaimTypes.NameIdentifier, externalUserId)
         };
         var identity = new ClaimsIdentity(claims, Scheme.Name);
         var principal = new ClaimsPrincipal(identity);

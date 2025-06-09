@@ -5,12 +5,14 @@ using Microsoft.EntityFrameworkCore;
 using PrepApi.Preps.Entities;
 using PrepApi.Recipes.Entities;
 using PrepApi.Shared.Dtos;
-using PrepApi.Shared.Entities;
+using PrepApi.Shared.Services;
+using PrepApi.Users;
 
 namespace PrepApi.Data;
 
 public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) : DbContext(options)
 {
+    public DbSet<User> Users { get; set; }
     public DbSet<Recipe> Recipes { get; set; }
     public DbSet<Ingredient> Ingredients { get; set; }
     public DbSet<RecipeIngredient> RecipeIngredients { get; set; }
@@ -26,25 +28,52 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<Recipe>(entity =>
+        modelBuilder.Entity<User>(entity =>
         {
-            entity.Property(p => p.Name)
+            entity.Property(u => u.ExternalId)
                 .HasMaxLength(256)
                 .IsRequired();
 
-            entity.Property(p => p.Description)
+            entity.HasIndex(u => u.ExternalId).IsUnique();
+
+            entity.Property(u => u.Email).HasMaxLength(256);
+
+            entity.Property(u => u.FirstName).HasMaxLength(256);
+
+            entity.Property(u => u.LastName).HasMaxLength(256);
+
+            entity.Property(u => u.PreferredUnits)
+                .HasConversion<string>()
+                .HasMaxLength(50)
+                .IsRequired();
+
+            entity.HasIndex(u => u.Email).IsUnique();
+        });
+
+        modelBuilder.Entity<Recipe>(entity =>
+        {
+            entity.Property(r => r.Name)
+                .HasMaxLength(256)
+                .IsRequired();
+
+            entity.Property(r => r.Description)
                 .HasMaxLength(1000)
                 .IsRequired();
 
-            entity.Property(p => p.Yield).HasMaxLength(256);
+            entity.Property(r => r.Yield).HasMaxLength(256);
 
-            entity.Property(p => p.StepsJson)
+            entity.Property(r => r.StepsJson)
                 .IsRequired()
                 .HasColumnType("jsonb");
 
-            entity.Property(p => p.UserId).IsRequired();
+            entity.Property(r => r.UserId).IsRequired();
 
             entity.HasIndex(r => r.UserId);
+
+            entity.HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(r => r.OriginalRecipe)
                 .WithMany(r => r.Variants)
@@ -54,17 +83,10 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
 
             entity.Property(r => r.IsFavoriteVariant).HasDefaultValue(false);
 
-            entity.HasMany<Prep>()
+            entity.HasMany(r => r.Preps)
                 .WithOne(p => p.Recipe)
                 .HasForeignKey(p => p.RecipeId)
-                .IsRequired()
                 .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasOne<Prep>()
-                .WithOne(p => p.CreatedNewRecipe)
-                .HasForeignKey<Prep>(p => p.CreatedNewRecipeId)
-                .IsRequired(false)
-                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<RecipeIngredient>(entity =>
@@ -101,6 +123,11 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
             entity.Property(t => t.UserId).IsRequired();
 
             entity.HasIndex(t => new { t.Name, t.UserId }).IsUnique();
+
+            entity.HasOne(t => t.User)
+                .WithMany()
+                .HasForeignKey(t => t.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<RecipeTag>(entity =>
@@ -131,6 +158,17 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
 
             entity.Property(p => p.UserId).IsRequired();
             entity.HasIndex(p => p.UserId);
+
+            entity.HasOne(p => p.User)
+                .WithMany()
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(p => p.CreatedNewRecipe)
+                .WithMany()
+                .HasForeignKey(p => p.CreatedNewRecipeId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
 
             entity.Property(p => p.StepsJson)
                 .IsRequired()
@@ -173,32 +211,37 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
 
         modelBuilder.Entity<PrepRating>(entity =>
         {
-            entity.HasOne(r => r.Prep)
+            entity.HasOne(pr => pr.Prep)
                 .WithMany(p => p.Ratings)
-                .HasForeignKey(r => r.PrepId)
+                .HasForeignKey(pr => pr.PrepId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            entity.Property(r => r.UserId).IsRequired();
+            entity.Property(pr => pr.UserId).IsRequired();
 
-            entity.Property(r => r.OverallRating)
+            entity.HasOne(pr => pr.User)
+                .WithMany()
+                .HasForeignKey(pr => pr.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.Property(pr => pr.OverallRating)
                 .HasDefaultValue(1)
                 .IsRequired();
 
-            entity.Property(r => r.Liked).IsRequired();
+            entity.Property(pr => pr.Liked).IsRequired();
 
-            entity.Property(r => r.DimensionsJson)
+            entity.Property(pr => pr.DimensionsJson)
                 .HasColumnType("jsonb")
                 .IsRequired(false);
 
-            entity.Property(r => r.WhatWorkedWell).HasMaxLength(1000);
+            entity.Property(pr => pr.WhatWorkedWell).HasMaxLength(1000);
 
-            entity.Property(r => r.WhatToChange).HasMaxLength(1000);
+            entity.Property(pr => pr.WhatToChange).HasMaxLength(1000);
 
-            entity.Property(r => r.AdditionalNotes).HasMaxLength(1000);
+            entity.Property(pr => pr.AdditionalNotes).HasMaxLength(1000);
 
-            entity.HasIndex(r => r.PrepId);
-            entity.HasIndex(r => r.UserId);
-            entity.HasIndex(r => new { r.PrepId, r.UserId }).IsUnique();
+            entity.HasIndex(pr => pr.PrepId);
+            entity.HasIndex(pr => pr.UserId);
+            entity.HasIndex(pr => new { pr.PrepId, pr.UserId }).IsUnique();
         });
 
         modelBuilder.Entity<RatingDimension>(entity =>
@@ -280,10 +323,20 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
                         new Ingredient { Id = saltId, Name = "Salt" }
                     );
 
+                    // Seed User
+                    var seedUser = new User
+                    {
+                        ExternalId = "SeedUser",
+                        Email = "seed@example.com",
+                        FirstName = "Seed",
+                        LastName = "User",
+                    };
+                    prepDbContext.Users.Add(seedUser);
+
                     // Seed Tags
                     prepDbContext.Tags.AddRange(
-                        new Tag { Id = sweetTagId, Name = "Sweet", UserId = "SeedUser" },
-                        new Tag { Id = basicTagId, Name = "Basic", UserId = "SeedUser" }
+                        new Tag { Id = sweetTagId, Name = "Sweet", UserId = seedUser.Id },
+                        new Tag { Id = basicTagId, Name = "Basic", UserId = seedUser.Id }
                     );
 
                     var recipeSteps = new List<StepDto>
@@ -298,7 +351,7 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
                     {
                         Id = recipeId,
                         Name = "Seeded Recipe",
-                        UserId = "SeedUser",
+                        UserId = seedUser.Id,
                         Description = "Basic recipe description.",
                         PrepTimeMinutes = 5,
                         CookTimeMinutes = 10,
@@ -338,7 +391,7 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
                     {
                         Id = prepId,
                         RecipeId = recipeId,
-                        UserId = "SeedUser",
+                        UserId = seedUser.Id,
                         SummaryNotes = "Made this with a bit more butter than called for.",
                         PrepTimeMinutes = 7,
                         CookTimeMinutes = 12,
@@ -418,8 +471,9 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new())
     {
-        var timestamp = DateTime.UtcNow;
-        var userId = userContext.UserId ?? "system";
+        var timestamp = DateTimeOffset.UtcNow;
+        var systemUser = new Guid("00000000-0000-0000-0000-000000000001");
+        var userId = userContext.InternalId ?? systemUser;
 
         foreach (var entry in ChangeTracker.Entries<Entity>())
         {

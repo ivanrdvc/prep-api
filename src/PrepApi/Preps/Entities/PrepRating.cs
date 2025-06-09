@@ -2,6 +2,7 @@
 using System.Text.Json;
 
 using PrepApi.Data;
+using PrepApi.Users;
 
 namespace PrepApi.Preps.Entities;
 
@@ -9,7 +10,8 @@ public class PrepRating : Entity
 {
     public Guid PrepId { get; set; }
     public Prep Prep { get; set; } = null!;
-    public required string UserId { get; set; }
+    public Guid UserId { get; set; }
+    public User User { get; set; } = null!;
     public bool Liked { get; set; }
     public int OverallRating { get; set; } = 1;
     public string? DimensionsJson { get; set; }

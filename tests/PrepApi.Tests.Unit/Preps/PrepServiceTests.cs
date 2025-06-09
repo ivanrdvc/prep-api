@@ -1,4 +1,5 @@
-﻿using PrepApi.Preps;
+﻿using PrepApi.Data;
+using PrepApi.Preps;
 using PrepApi.Preps.Entities;
 using PrepApi.Recipes.Entities;
 using PrepApi.Shared.Dtos;
@@ -12,7 +13,7 @@ public class PrepServiceTests
     private readonly Guid _ingredientId1 = Guid.NewGuid();
     private readonly Guid _ingredientId2 = Guid.NewGuid();
     private readonly Guid _ingredientId3 = Guid.NewGuid();
-    private const string UserId = "test-user-id";
+    private readonly Guid _userId = Guid.NewGuid();
 
     private readonly List<StepDto> _defaultSteps = [new() { Description = "Default step", Order = 1 }];
 
@@ -22,15 +23,15 @@ public class PrepServiceTests
         // Arrange
         var baseIngredients = new List<RecipeIngredient>
         {
-            new() { RecipeId = _recipeId, IngredientId = _ingredientId1, Quantity = 100, Unit = Shared.Entities.Unit.Gram },
-            new() { RecipeId = _recipeId, IngredientId = _ingredientId2, Quantity = 2, Unit = Shared.Entities.Unit.Whole }
+            new() { RecipeId = _recipeId, IngredientId = _ingredientId1, Quantity = 100, Unit = Data.Unit.Gram },
+            new() { RecipeId = _recipeId, IngredientId = _ingredientId2, Quantity = 2, Unit = Data.Unit.Whole }
         };
         var baseRecipe = CreateBaseRecipe(baseIngredients);
 
         var prepIngredients = new List<PrepIngredientInputDto>
         {
-            new() { IngredientId = _ingredientId1, Quantity = 100, Unit = Shared.Entities.Unit.Gram },
-            new() { IngredientId = _ingredientId2, Quantity = 2, Unit = Shared.Entities.Unit.Whole }
+            new() { IngredientId = _ingredientId1, Quantity = 100, Unit = Data.Unit.Gram },
+            new() { IngredientId = _ingredientId2, Quantity = 2, Unit = Data.Unit.Whole }
         };
 
         // Act
@@ -47,15 +48,15 @@ public class PrepServiceTests
         // Arrange
         var baseIngredients = new List<RecipeIngredient>
         {
-            new() { RecipeId = _recipeId, IngredientId = _ingredientId1, Quantity = 100, Unit = Shared.Entities.Unit.Gram },
-            new() { RecipeId = _recipeId, IngredientId = _ingredientId2, Quantity = 2, Unit = Shared.Entities.Unit.Whole }
+            new() { RecipeId = _recipeId, IngredientId = _ingredientId1, Quantity = 100, Unit = Data.Unit.Gram },
+            new() { RecipeId = _recipeId, IngredientId = _ingredientId2, Quantity = 2, Unit = Data.Unit.Whole }
         };
         var baseRecipe = CreateBaseRecipe(baseIngredients);
 
         var prepIngredients = new List<PrepIngredientInputDto>
         {
-            new() { IngredientId = _ingredientId1, Quantity = 150, Unit = Shared.Entities.Unit.Gram },
-            new() { IngredientId = _ingredientId2, Quantity = 2, Unit = Shared.Entities.Unit.Kilogram }
+            new() { IngredientId = _ingredientId1, Quantity = 150, Unit = Data.Unit.Gram },
+            new() { IngredientId = _ingredientId2, Quantity = 2, Unit = Data.Unit.Kilogram }
         };
 
         // Act
@@ -74,8 +75,8 @@ public class PrepServiceTests
 
         var prepIngredients = new List<PrepIngredientInputDto>
         {
-            new() { IngredientId = _ingredientId1, Quantity = 50, Unit = Shared.Entities.Unit.Milliliter },
-            new() { IngredientId = _ingredientId2, Quantity = 1, Unit = Shared.Entities.Unit.Whole }
+            new() { IngredientId = _ingredientId1, Quantity = 50, Unit = Data.Unit.Milliliter },
+            new() { IngredientId = _ingredientId2, Quantity = 1, Unit = Data.Unit.Whole }
         };
 
         // Act
@@ -92,16 +93,16 @@ public class PrepServiceTests
         // Arrange
         var baseIngredients = new List<RecipeIngredient>
         {
-            new() { RecipeId = _recipeId, IngredientId = _ingredientId1, Quantity = 100, Unit = Shared.Entities.Unit.Gram },
-            new() { RecipeId = _recipeId, IngredientId = _ingredientId2, Quantity = 2, Unit = Shared.Entities.Unit.Whole }
+            new() { RecipeId = _recipeId, IngredientId = _ingredientId1, Quantity = 100, Unit = Data.Unit.Gram },
+            new() { RecipeId = _recipeId, IngredientId = _ingredientId2, Quantity = 2, Unit = Data.Unit.Whole }
         };
         var baseRecipe = CreateBaseRecipe(baseIngredients);
 
         var prepIngredients = new List<PrepIngredientInputDto>
         {
-            new() { IngredientId = _ingredientId1, Quantity = 100, Unit = Shared.Entities.Unit.Gram },
-            new() { IngredientId = _ingredientId2, Quantity = 3, Unit = Shared.Entities.Unit.Whole },
-            new() { IngredientId = _ingredientId3, Quantity = 500, Unit = Shared.Entities.Unit.Milliliter }
+            new() { IngredientId = _ingredientId1, Quantity = 100, Unit = Data.Unit.Gram },
+            new() { IngredientId = _ingredientId2, Quantity = 3, Unit = Data.Unit.Whole },
+            new() { IngredientId = _ingredientId3, Quantity = 500, Unit = Data.Unit.Milliliter }
         };
 
         // Act
@@ -126,7 +127,7 @@ public class PrepServiceTests
         // Arrange
         var baseIngredients = new List<RecipeIngredient>
         {
-            new() { RecipeId = _recipeId, IngredientId = _ingredientId1, Quantity = 100, Unit = Shared.Entities.Unit.Gram }
+            new() { RecipeId = _recipeId, IngredientId = _ingredientId1, Quantity = 100, Unit = Data.Unit.Gram }
         };
         var baseRecipe = CreateBaseRecipe(baseIngredients);
 
@@ -145,7 +146,7 @@ public class PrepServiceTests
         // Arrange
         var baseIngredients = new List<RecipeIngredient>
         {
-            new() { RecipeId = _recipeId, IngredientId = _ingredientId1, Quantity = 100, Unit = Shared.Entities.Unit.Gram }
+            new() { RecipeId = _recipeId, IngredientId = _ingredientId1, Quantity = 100, Unit = Data.Unit.Gram }
         };
         var baseRecipe = CreateBaseRecipe(baseIngredients);
 
@@ -153,7 +154,7 @@ public class PrepServiceTests
         {
             new()
             {
-                IngredientId = _ingredientId1, Quantity = 100, Unit = Shared.Entities.Unit.Gram,
+                IngredientId = _ingredientId1, Quantity = 100, Unit = Data.Unit.Gram,
                 Status = PrepIngredientStatus.Kept
             }
         };
@@ -163,11 +164,11 @@ public class PrepServiceTests
             PrepIngredients = prepIngredients,
             PrepTimeMinutes = baseRecipe.PrepTimeMinutes,
             CookTimeMinutes = baseRecipe.CookTimeMinutes,
-            UserId = UserId,
+            UserId = _userId,
             StepsJson = "[]"
         };
 
-        var ingredients = new Dictionary<Guid, Shared.Entities.Ingredient>
+        var ingredients = new Dictionary<Guid, Ingredient>
         {
             { _ingredientId1, new() { Id = _ingredientId1, Name = "Test Ingredient" } }
         };
@@ -185,8 +186,8 @@ public class PrepServiceTests
         // Arrange
         var baseIngredients = new List<RecipeIngredient>
         {
-            new() { RecipeId = _recipeId, IngredientId = _ingredientId1, Quantity = 100, Unit = Shared.Entities.Unit.Gram },
-            new() { RecipeId = _recipeId, IngredientId = _ingredientId2, Quantity = 2, Unit = Shared.Entities.Unit.Whole }
+            new() { RecipeId = _recipeId, IngredientId = _ingredientId1, Quantity = 100, Unit = Data.Unit.Gram },
+            new() { RecipeId = _recipeId, IngredientId = _ingredientId2, Quantity = 2, Unit = Data.Unit.Whole }
         };
         var baseRecipe = CreateBaseRecipe(baseIngredients);
 
@@ -194,12 +195,12 @@ public class PrepServiceTests
         {
             new()
             {
-                IngredientId = _ingredientId1, Quantity = 150, Unit = Shared.Entities.Unit.Gram,
+                IngredientId = _ingredientId1, Quantity = 150, Unit = Data.Unit.Gram,
                 Status = PrepIngredientStatus.Modified
             },
             new()
             {
-                IngredientId = _ingredientId3, Quantity = 1, Unit = Shared.Entities.Unit.Whole,
+                IngredientId = _ingredientId3, Quantity = 1, Unit = Data.Unit.Whole,
                 Status = PrepIngredientStatus.Added
             }
         };
@@ -209,11 +210,11 @@ public class PrepServiceTests
             PrepIngredients = prepIngredients,
             PrepTimeMinutes = baseRecipe.PrepTimeMinutes,
             CookTimeMinutes = baseRecipe.CookTimeMinutes,
-            UserId = UserId,
+            UserId = _userId,
             StepsJson = "[]"
         };
 
-        var ingredients = new Dictionary<Guid, Shared.Entities.Ingredient>
+        var ingredients = new Dictionary<Guid, Ingredient>
         {
             { _ingredientId1, new() { Id = _ingredientId1, Name = "Flour" } },
             { _ingredientId2, new() { Id = _ingredientId2, Name = "Eggs" } },
@@ -238,14 +239,14 @@ public class PrepServiceTests
 
         var prep = new Prep
         {
-            UserId = UserId,
+            UserId = _userId,
             StepsJson = "[]",
             PrepIngredients = [],
             PrepTimeMinutes = 15,
             CookTimeMinutes = 25
         };
 
-        var ingredients = new Dictionary<Guid, Shared.Entities.Ingredient>();
+        var ingredients = new Dictionary<Guid, Ingredient>();
 
         // Act
         var result = _prepService.GetChangeSummary(prep, baseRecipe, ingredients);
@@ -261,7 +262,7 @@ public class PrepServiceTests
         {
             Id = _recipeId,
             Name = "Base Recipe",
-            UserId = UserId,
+            UserId = _userId,
             Description = "Base Description",
             PrepTimeMinutes = 10,
             CookTimeMinutes = 20,

@@ -11,7 +11,6 @@ using PrepApi.Recipes;
 using PrepApi.Recipes.Entities;
 using PrepApi.Recipes.Requests;
 using PrepApi.Shared.Dtos;
-using PrepApi.Shared.Entities;
 using PrepApi.Tests.Integration.Helpers;
 
 namespace PrepApi.Tests.Integration;
@@ -19,16 +18,16 @@ namespace PrepApi.Tests.Integration;
 public class RecipeBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebAppFactory>, IAsyncLifetime
 {
     private readonly HttpClient _client = factory.CreateClient();
-    private const string TestUserId = TestAuthenticationHandler.TestUserId;
-    private readonly TestSeeder _seeder = new(factory);
+    private static readonly Guid TestUserId = TestConstants.TestUserId;
 
     private Dictionary<string, Ingredient> _ingredients = new();
     private Dictionary<string, Tag> _tags = new();
 
     public async Task InitializeAsync()
     {
-        _ingredients = await _seeder.SeedIngredientsAsync("Flour", "Sugar", "Milk", "Butter");
-        _tags = await _seeder.SeedTagsAsync(TestUserId, "Tag1", "Test Tag");
+        await using var context = await factory.CreateScopedDbContextAsync();
+        _ingredients = await context.SeedIngredientsAsync("Flour", "Sugar", "Milk", "Butter");
+        _tags = await context.SeedTagsAsync(TestConstants.TestUserId, "Tag1", "Test Tag");
     }
 
     public Task DisposeAsync() => Task.CompletedTask;
@@ -37,9 +36,8 @@ public class RecipeBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebA
     public async Task UserViewsOwnRecipeDetails()
     {
         // Arrange
-        var recipe = await _seeder.SeedRecipeAsync(
-            ingredients: [(_ingredients["Flour"], 100, Unit.Gram)],
-            tags: [_tags["Tag1"], _tags["Test Tag"]]);
+        await using var context = await factory.CreateScopedDbContextAsync();
+        var recipe = await context.SeedRecipeAsync();
 
         // Act
         var response = await _client.GetAsync($"/api/recipes/{recipe.Id}");
@@ -74,8 +72,14 @@ public class RecipeBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebA
     public async Task UserCannotViewRecipeOwnedByAnotherUser()
     {
         // Arrange
-        const string otherUserId = "other-user-id-abc";
-        var recipeForOtherUser = await _seeder.SeedRecipeAsync(userId: otherUserId);
+        await using var context = await factory.CreateScopedDbContextAsync();
+        var otherUserId = Guid.NewGuid();
+        await context.SeedUserAsync(
+            userId: otherUserId,
+            externalId: "other-user-id-abc",
+            email: "other@example.com");
+
+        var recipeForOtherUser = await context.SeedRecipeAsync(userId: otherUserId);
 
         // Act
         var response = await _client.GetAsync($"/api/recipes/{recipeForOtherUser.Id}");
@@ -88,8 +92,8 @@ public class RecipeBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebA
     public async Task UserCannotViewRecipeWhenNotAuthenticated()
     {
         // Arrange
-        var recipe = await _seeder.SeedRecipeAsync(
-            ingredients: [(_ingredients["Milk"], 100, Unit.Milliliter)]);
+        await using var context = await factory.CreateScopedDbContextAsync();
+        var recipe = await context.SeedRecipeAsync();
 
         var unauthenticatedClient = factory.CreateUnauthenticatedClient();
 
@@ -187,16 +191,11 @@ public class RecipeBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebA
             PrepTimeMinutes = 5,
             CookTimeMinutes = 15,
             Yield = "2 servings",
-            Steps =
-            [
-                new StepDto { Order = 1, Description = "Test step 1" }
-            ],
+            Steps = [new StepDto { Order = 1, Description = "Test step 1" }],
             Ingredients =
             [
-                new RecipeIngredientInputDto
-                    { IngredientId = _ingredients["Flour"].Id, Quantity = 50, Unit = Unit.Gram },
-                new RecipeIngredientInputDto
-                    { IngredientId = nonExistentIngredientId, Quantity = 100, Unit = Unit.Gram }
+                new RecipeIngredientInputDto { IngredientId = _ingredients["Flour"].Id, Quantity = 50, Unit = Unit.Gram },
+                new RecipeIngredientInputDto { IngredientId = nonExistentIngredientId, Quantity = 100, Unit = Unit.Gram }
             ]
         };
 
@@ -214,7 +213,8 @@ public class RecipeBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebA
     public async Task UserDeletesOwnRecipe()
     {
         // Arrange
-        var recipeToDelete = await _seeder.SeedRecipeAsync();
+        await using var context = await factory.CreateScopedDbContextAsync();
+        var recipeToDelete = await context.SeedRecipeAsync();
         var recipeIdToDelete = recipeToDelete.Id;
 
         // Act
@@ -223,15 +223,14 @@ public class RecipeBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebA
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
-        await using var assertScope = factory.Services.CreateAsyncScope();
-        var dbContextAssert = assertScope.ServiceProvider.GetRequiredService<PrepDb>();
-        var recipeInDbAfterDelete = await dbContextAssert.Recipes
+        await using var assertContext = await factory.CreateScopedDbContextAsync();
+        var recipeInDbAfterDelete = await assertContext.Recipes
             .AsNoTracking()
             .FirstOrDefaultAsync(r => r.Id == recipeIdToDelete);
 
         Assert.Null(recipeInDbAfterDelete);
 
-        var recipeIngredientCount = await dbContextAssert
+        var recipeIngredientCount = await assertContext
             .RecipeIngredients.CountAsync(ri => ri.RecipeId == recipeIdToDelete);
         Assert.Equal(0, recipeIngredientCount);
     }
@@ -240,6 +239,7 @@ public class RecipeBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebA
     public async Task UserUpdatesOwnRecipe()
     {
         // Arrange
+        await using var context = await factory.CreateScopedDbContextAsync();
         var flour = _ingredients["Flour"];
         var sugar = _ingredients["Sugar"];
         var milk = _ingredients["Milk"];
@@ -250,7 +250,7 @@ public class RecipeBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebA
             new() { Order = 2, Description = "Test step 2" }
         };
 
-        var initialRecipe = await _seeder.SeedRecipeAsync(
+        var initialRecipe = await context.SeedRecipeAsync(
             name: "Test Recipe",
             description: "Original description",
             userId: TestUserId,
@@ -264,7 +264,7 @@ public class RecipeBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebA
 
         var recipeIdToUpdate = initialRecipe.Id;
 
-        var newTags = await _seeder.SeedTagsAsync(TestUserId, "NewTag");
+        var newTags = await context.SeedTagsAsync(TestUserId, "NewTag");
         var newTag = newTags["NewTag"];
 
         var updateRequest = new UpsertRecipeRequest
@@ -287,8 +287,6 @@ public class RecipeBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebA
             ],
             TagIds = [newTag.Id]
         };
-
-        // Act
         var response = await _client.PutAsJsonAsync($"/api/recipes/{recipeIdToUpdate}", updateRequest);
 
         // Assert
