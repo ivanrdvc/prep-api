@@ -1,7 +1,6 @@
 # TODOs
 
 ## Features
-- User
 - Photos
 
 ## Improve

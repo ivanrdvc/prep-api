@@ -28,12 +28,13 @@ public class PrepRatingEndpointsTests
     {
         // Arrange
         await using var db = _fakeDb.CreateDbContext();
+        var recipeInsightService = new RecipeInsightService(db);
         var recipe = await db.SeedRecipeAsync();
         var prep = await db.SeedPrepAsync(recipe);
         var request = new UpsertPrepRatingRequest { OverallRating = 0, Dimensions = new() };
 
         // Act
-        var result = await PrepRatingEndpoints.CreatePrepRating(prep.Id, request, db, _userContext, _validator);
+        var result = await PrepRatingEndpoints.CreatePrepRating(prep.Id, request, db, _userContext, recipeInsightService, _validator);
 
         // Assert
         Assert.IsType<ValidationProblem>(result.Result);
@@ -44,6 +45,7 @@ public class PrepRatingEndpointsTests
     {
         // Arrange
         await using var db = _fakeDb.CreateDbContext();
+        var recipeInsightService = new RecipeInsightService(db);
         await db.SeedDefaultRatingDimensionsAsync();
         var recipe = await db.SeedRecipeAsync();
         var prep = await db.SeedPrepAsync(recipe);
@@ -58,7 +60,7 @@ public class PrepRatingEndpointsTests
         };
 
         // Act
-        var result = await PrepRatingEndpoints.CreatePrepRating(prep.Id, request, db, _userContext, _validator);
+        var result = await PrepRatingEndpoints.CreatePrepRating(prep.Id, request, db, _userContext, recipeInsightService, _validator);
 
         // Assert
         Assert.IsType<Created<Guid>>(result.Result);
@@ -69,13 +71,14 @@ public class PrepRatingEndpointsTests
     {
         // Arrange
         await using var db = _fakeDb.CreateDbContext();
+        var recipeInsightService = new RecipeInsightService(db);
         var recipe = await db.SeedRecipeAsync();
         var prep = await db.SeedPrepAsync(recipe);
         var request = new UpsertPrepRatingRequest { OverallRating = 5, Liked = true, Dimensions = new() };
 
         // Act
-        var firstResult = await PrepRatingEndpoints.CreatePrepRating(prep.Id, request, db, _userContext, _validator);
-        var secondResult = await PrepRatingEndpoints.CreatePrepRating(prep.Id, request, db, _userContext, _validator);
+        var firstResult = await PrepRatingEndpoints.CreatePrepRating(prep.Id, request, db, _userContext, recipeInsightService, _validator);
+        var secondResult = await PrepRatingEndpoints.CreatePrepRating(prep.Id, request, db, _userContext, recipeInsightService, _validator);
 
         // Assert
         Assert.IsType<Created<Guid>>(firstResult.Result);
@@ -87,6 +90,7 @@ public class PrepRatingEndpointsTests
     {
         // Arrange
         await using var db = _fakeDb.CreateDbContext();
+        var recipeInsightService = new RecipeInsightService(db);
         await db.SeedDefaultRatingDimensionsAsync();
         var recipe = await db.SeedRecipeAsync();
         var prep = await db.SeedPrepAsync(recipe);
@@ -101,7 +105,7 @@ public class PrepRatingEndpointsTests
         };
 
         // Act
-        var result = await PrepRatingEndpoints.CreatePrepRating(prep.Id, request, db, _userContext, _validator);
+        var result = await PrepRatingEndpoints.CreatePrepRating(prep.Id, request, db, _userContext, recipeInsightService, _validator);
 
         // Assert
         Assert.IsType<ValidationProblem>(result.Result);
@@ -112,13 +116,13 @@ public class PrepRatingEndpointsTests
     {
         // Arrange
         await using var db = _fakeDb.CreateDbContext();
+        var recipeInsightService = new RecipeInsightService(db);
         var recipe = await db.SeedRecipeAsync();
         var prep = await db.SeedPrepAsync(recipe);
         var request = new UpsertPrepRatingRequest { OverallRating = 5, Dimensions = new() };
 
         // Act
-        var result = await PrepRatingEndpoints.UpdatePrepRating(prep.Id, Guid.NewGuid(), request, db, _userContext,
-            _validator);
+        var result = await PrepRatingEndpoints.UpdatePrepRating(prep.Id, Guid.NewGuid(), request, db, _userContext, recipeInsightService, _validator);
 
         // Assert
         Assert.IsType<NotFound>(result.Result);
@@ -129,6 +133,7 @@ public class PrepRatingEndpointsTests
     {
         // Arrange
         await using var db = _fakeDb.CreateDbContext();
+        var recipeInsightService = new RecipeInsightService(db);
         await db.SeedDefaultRatingDimensionsAsync();
         var recipe = await db.SeedRecipeAsync();
         var prep = await db.SeedPrepAsync(recipe);
@@ -144,8 +149,7 @@ public class PrepRatingEndpointsTests
             WhatToChange = "Improve texture",
             AdditionalNotes = "Test update."
         };
-        var result = await PrepRatingEndpoints.UpdatePrepRating(prep.Id, rating.Id, updateRequest, db, _userContext,
-            _validator);
+        var result = await PrepRatingEndpoints.UpdatePrepRating(prep.Id, rating.Id, updateRequest, db, _userContext, recipeInsightService, _validator);
 
         // Assert
         Assert.IsType<NoContent>(result.Result);
@@ -156,14 +160,14 @@ public class PrepRatingEndpointsTests
     {
         // Arrange
         await using var db = _fakeDb.CreateDbContext();
+        var recipeInsightService = new RecipeInsightService(db);
         var recipe = await db.SeedRecipeAsync();
         var prep = await db.SeedPrepAsync(recipe);
         var rating = await db.SeedPrepRatingAsync(prep.Id, _userContext.InternalId!.Value);
         var invalidRequest = new UpsertPrepRatingRequest { OverallRating = 0, Liked = true, Dimensions = new() };
 
         // Act
-        var result = await PrepRatingEndpoints.UpdatePrepRating(prep.Id, rating.Id, invalidRequest, db, _userContext,
-            _validator);
+        var result = await PrepRatingEndpoints.UpdatePrepRating(prep.Id, rating.Id, invalidRequest, db, _userContext, recipeInsightService, _validator);
 
         // Assert
         Assert.IsType<ValidationProblem>(result.Result);

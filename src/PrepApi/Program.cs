@@ -91,6 +91,7 @@ app.MapRecipeEndpoints();
 app.MapTagEndpoints();
 app.MapPrepEndpoints();
 app.MapUserEndpoints();
+app.MapIngredientEndpoints();
 app.MapHealthChecks("/health");
 
 app.Run();

@@ -17,6 +17,8 @@ public static class Extensions
         builder.Services.AddAzureOpenAiServices(builder.Configuration);
 
         builder.Services.AddScoped<PrepService>();
+        builder.Services.AddScoped<RecipeInsightService>();
+        builder.Services.AddHttpClient<UsdaApiService>();
 
         builder.Services.AddSingleton<ITaskQueue, InMemoryTaskQueue>();
 

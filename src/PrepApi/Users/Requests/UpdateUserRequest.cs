@@ -1,4 +1,4 @@
-﻿namespace PrepApi.Users;
+﻿namespace PrepApi.Users.Requests;
 
 public class UpdateUserRequest
 {

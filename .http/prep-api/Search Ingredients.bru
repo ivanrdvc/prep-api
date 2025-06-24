@@ -1,0 +1,15 @@
+meta {
+  name: Search Ingredients
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{api_base_url}}/api/ingredients/search?query=tomato
+  body: none
+  auth: inherit
+}
+
+params:query {
+  query: tomato
+}
