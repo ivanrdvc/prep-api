@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using PrepApi.Ingredients;
 using PrepApi.Preps.Entities;
 using PrepApi.Recipes.Entities;
-using PrepApi.Shared.Dtos;
 using PrepApi.Shared.Services;
 using PrepApi.Users;
 
@@ -314,175 +313,53 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
     {
         optionsBuilder.UseAsyncSeeding(async (context, _, cancellationToken) =>
         {
-            if (context is PrepDb prepDbContext)
+            if (context is not PrepDb db) return;
+
+            // TODO: Delete
+            var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            if (env != "Development") return;
+
+            if (await db.Users.AnyAsync(cancellationToken)) return;
+
+            var seedPath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "seed");
+            var options = new JsonSerializerOptions
             {
-                if (await prepDbContext.Recipes.AnyAsync(cancellationToken))
-                {
-                    return;
-                }
+                PropertyNameCaseInsensitive = true,
+                Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
+            };
 
-                var flourId = new Guid("11111111-1111-1111-1111-111111111111");
-                var butterId = new Guid("22222222-2222-2222-2222-222222222222");
-                var sugarId = new Guid("33333333-3333-3333-3333-333333333333");
-                var saltId = new Guid("44444444-4444-4444-4444-444444444444");
+            var user = JsonSerializer.Deserialize<User>(
+                await File.ReadAllTextAsync(Path.Combine(seedPath, "user.json"), cancellationToken), options)!;
+            var ingredients = JsonSerializer.Deserialize<Ingredient[]>(
+                await File.ReadAllTextAsync(Path.Combine(seedPath, "ingredients.json"), cancellationToken), options)!;
+            var ratingDimensions = JsonSerializer.Deserialize<RatingDimension[]>(
+                await File.ReadAllTextAsync(Path.Combine(seedPath, "rating-dimensions.json"), cancellationToken), options)!;
+            var tags = JsonSerializer.Deserialize<Tag[]>(
+                await File.ReadAllTextAsync(Path.Combine(seedPath, "tags.json"), cancellationToken), options)!;
+            var recipe = JsonSerializer.Deserialize<Recipe>(
+                await File.ReadAllTextAsync(Path.Combine(seedPath, "recipe.json"), cancellationToken), options)!;
+            var recipeIngredients = JsonSerializer.Deserialize<RecipeIngredient[]>(
+                await File.ReadAllTextAsync(Path.Combine(seedPath, "recipe-ingredients.json"), cancellationToken), options)!;
+            var recipeTags = JsonSerializer.Deserialize<RecipeTag[]>(
+                await File.ReadAllTextAsync(Path.Combine(seedPath, "recipe-tags.json"), cancellationToken), options)!;
+            var prep = JsonSerializer.Deserialize<Prep>(
+                await File.ReadAllTextAsync(Path.Combine(seedPath, "prep.json"), cancellationToken), options)!;
+            var prepIngredients = JsonSerializer.Deserialize<PrepIngredient[]>(
+                await File.ReadAllTextAsync(Path.Combine(seedPath, "prep-ingredients.json"), cancellationToken), options)!;
 
-                var sweetTagId = new Guid("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
-                var basicTagId = new Guid("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+            foreach (var tag in tags) tag.UserId = user.Id;
 
-                var recipeId = new Guid("55555555-5555-5555-5555-555555555555");
-                var prepId = new Guid("66666666-6666-6666-6666-666666666666");
+            await db.Users.AddAsync(user, cancellationToken);
+            await db.Ingredients.AddRangeAsync(ingredients, cancellationToken);
+            await db.RatingDimensions.AddRangeAsync(ratingDimensions, cancellationToken);
+            await db.Tags.AddRangeAsync(tags, cancellationToken);
+            await db.Recipes.AddAsync(recipe, cancellationToken);
+            await db.RecipeIngredients.AddRangeAsync(recipeIngredients, cancellationToken);
+            await db.RecipeTags.AddRangeAsync(recipeTags, cancellationToken);
+            await db.Preps.AddAsync(prep, cancellationToken);
+            await db.PrepIngredients.AddRangeAsync(prepIngredients, cancellationToken);
 
-                // Seed User
-                var seedUser = new User
-                {
-                    ExternalId = "SeedUser",
-                    Email = "seed@example.com",
-                    FirstName = "Seed",
-                    LastName = "User",
-                };
-                prepDbContext.Users.Add(seedUser);
-
-                // Seed Ingredients (shared - UserId = null)
-                prepDbContext.Ingredients.AddRange(
-                    new Ingredient { Id = flourId, Name = "Flour", UserId = null },
-                    new Ingredient { Id = butterId, Name = "Butter", UserId = null },
-                    new Ingredient { Id = sugarId, Name = "Sugar", UserId = null },
-                    new Ingredient { Id = saltId, Name = "Salt", UserId = null }
-                );
-
-                // Seed Tags
-                prepDbContext.Tags.AddRange(
-                    new Tag { Id = sweetTagId, Name = "Sweet", UserId = seedUser.Id },
-                    new Tag { Id = basicTagId, Name = "Basic", UserId = seedUser.Id }
-                );
-
-                var recipeSteps = new List<StepDto>
-                {
-                    new() { Order = 1, Description = "Mix dry ingredients." },
-                    new() { Order = 2, Description = "Add wet ingredients." },
-                    new() { Order = 3, Description = "Cook until done." }
-                };
-
-                // Seed Recipe
-                var recipe = new Recipe
-                {
-                    Id = recipeId,
-                    Name = "Seeded Recipe",
-                    UserId = seedUser.Id,
-                    Description = "Basic recipe description.",
-                    PrepTimeMinutes = 5,
-                    CookTimeMinutes = 10,
-                    Yield = "8 servings",
-                    StepsJson = JsonSerializer.Serialize(recipeSteps),
-                };
-                prepDbContext.Recipes.Add(recipe);
-
-                // Seed RecipeIngredients
-                prepDbContext.RecipeIngredients.AddRange(
-                    new RecipeIngredient
-                        { RecipeId = recipeId, IngredientId = flourId, Quantity = 2, Unit = Unit.Whole },
-                    new RecipeIngredient
-                        { RecipeId = recipeId, IngredientId = butterId, Quantity = 3, Unit = Unit.Gram },
-                    new RecipeIngredient
-                        { RecipeId = recipeId, IngredientId = sugarId, Quantity = 4, Unit = Unit.Kilogram },
-                    new RecipeIngredient
-                        { RecipeId = recipeId, IngredientId = saltId, Quantity = 0.5m, Unit = Unit.Milliliter }
-                );
-
-                // Seed Recipe Tags
-                prepDbContext.RecipeTags.AddRange(
-                    new RecipeTag { RecipeId = recipeId, TagId = sweetTagId },
-                    new RecipeTag { RecipeId = recipeId, TagId = basicTagId }
-                );
-
-                // Create prep steps (slightly modified from recipe)
-                var prepSteps = new List<StepDto>
-                {
-                    new() { Order = 1, Description = "Mix dry ingredients in a large bowl." },
-                    new() { Order = 2, Description = "Add wet ingredients slowly while stirring." },
-                    new() { Order = 3, Description = "Cook until golden brown." }
-                };
-
-                // Seed Prep
-                var prep = new Prep
-                {
-                    Id = prepId,
-                    RecipeId = recipeId,
-                    UserId = seedUser.Id,
-                    SummaryNotes = "Made this with a bit more butter than called for.",
-                    PrepTimeMinutes = 7,
-                    CookTimeMinutes = 12,
-                    StepsJson = JsonSerializer.Serialize(prepSteps),
-                    CreatedNewRecipeId = null
-                };
-                prepDbContext.Preps.Add(prep);
-
-                // Seed PrepIngredients
-                prepDbContext.PrepIngredients.AddRange(
-                    new PrepIngredient
-                    {
-                        Id = Guid.NewGuid(),
-                        PrepId = prepId,
-                        IngredientId = flourId,
-                        Quantity = 2,
-                        Unit = Unit.Whole,
-                        Status = PrepIngredientStatus.Kept
-                    },
-                    new PrepIngredient
-                    {
-                        Id = Guid.NewGuid(),
-                        PrepId = prepId,
-                        IngredientId = butterId,
-                        Quantity = 4,
-                        Unit = Unit.Gram,
-                        Notes = "Used more butter",
-                        Status = PrepIngredientStatus.Modified
-                    },
-                    new PrepIngredient
-                    {
-                        Id = Guid.NewGuid(),
-                        PrepId = prepId,
-                        IngredientId = sugarId,
-                        Quantity = 4,
-                        Unit = Unit.Kilogram,
-                        Status = PrepIngredientStatus.Kept
-                    },
-                    new PrepIngredient
-                    {
-                        Id = Guid.NewGuid(),
-                        PrepId = prepId,
-                        IngredientId = saltId,
-                        Quantity = 0.5m,
-                        Unit = Unit.Milliliter,
-                        Status = PrepIngredientStatus.Kept
-                    }
-                );
-
-                // Seed  Rating Dimensions
-                prepDbContext.RatingDimensions.AddRange(new RatingDimension
-                    {
-                        Key = "taste",
-                        DisplayName = "Taste",
-                        Description = "How good did the recipe taste?",
-                        SortOrder = 10,
-                    },
-                    new RatingDimension
-                    {
-                        Key = "texture",
-                        DisplayName = "Texture",
-                        Description = "How was the texture and consistency?",
-                        SortOrder = 20,
-                    },
-                    new RatingDimension
-                    {
-                        Key = "appearance",
-                        DisplayName = "Appearance",
-                        Description = "How did the final dish look?",
-                        SortOrder = 30,
-                    });
-
-                await prepDbContext.SaveChangesAsync(cancellationToken);
-            }
+            await db.SaveChangesAsync(cancellationToken);
         });
     }
 

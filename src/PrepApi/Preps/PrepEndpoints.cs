@@ -152,12 +152,12 @@ public static class PrepEndpoints
         var totalItems = await query.CountAsync();
 
         var itemsOnPage = await query.Select(p => new PrepSummaryDto
-            {
-                Id = p.Id,
-                BaseRecipeName = p.Recipe.Name,
-                SummaryNotes = p.SummaryNotes,
-                PreparedAt = p.CreatedAt
-            })
+        {
+            Id = p.Id,
+            BaseRecipeName = p.Recipe.Name,
+            SummaryNotes = p.SummaryNotes,
+            PreparedAt = p.CreatedAt
+        })
             .Skip(request.PageIndex * request.PageSize)
             .Take(request.PageSize)
             .ToListAsync();

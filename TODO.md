@@ -3,14 +3,13 @@
 ## Features
 - Photos
 
-
 ## Improve
 - Unit system
 - Yield issue
 - Migrations
 - Validations (dotnet10)
 - Seeding
-- UserContext null-forgiving operator usage (userContext.InternalId!.Value) - consider making InternalId required or improve auth flow
+- UserContext null-forgiving operator usage
 
 ## Refactor
 - reduce nesting /src/prepapi -> /prepapi 

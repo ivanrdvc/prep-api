@@ -1,0 +1,9 @@
+{
+  "id": "4b6d8f1e-2c5a-4e9d-8f7b-3a6c9e2d5f8a",
+  "recipeId": "7a9c2e4f-3d6b-4f8e-9c1a-5e7d9b3f6a2c",
+  "summaryNotes": "Made this with a bit more butter than called for.",
+  "prepTimeMinutes": 7,
+  "cookTimeMinutes": 12,
+  "stepsJson": "[{\"Order\":1,\"Description\":\"Mix dry ingredients in a large bowl.\"},{\"Order\":2,\"Description\":\"Add wet ingredients slowly while stirring.\"},{\"Order\":3,\"Description\":\"Cook until golden brown.\"}]",
+  "userId": "2f8e4d3a-1b7c-4e9f-a6d2-8c3f5e9d1a7b"
+}

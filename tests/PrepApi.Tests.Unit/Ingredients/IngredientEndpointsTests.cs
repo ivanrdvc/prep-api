@@ -125,7 +125,7 @@ public class IngredientEndpointsTests
     {
         // Arrange
         await using var context = _fakeDb.CreateDbContext();
-        var ingredientService = new FileBasedIngredientService(context);
+        var ingredientService = new IngredientService(context);
 
         // Act
         var result = await IngredientEndpoints.SearchIngredients(ingredientService, "", _userContext);

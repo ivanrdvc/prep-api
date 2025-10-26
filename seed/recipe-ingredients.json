@@ -1,0 +1,26 @@
+[
+  {
+    "recipeId": "7a9c2e4f-3d6b-4f8e-9c1a-5e7d9b3f6a2c",
+    "ingredientId": "e8bbc33c-acc2-4bf9-8956-f6e713f4c1d8",
+    "quantity": 2,
+    "unit": "Whole"
+  },
+  {
+    "recipeId": "7a9c2e4f-3d6b-4f8e-9c1a-5e7d9b3f6a2c",
+    "ingredientId": "ae175503-f939-4745-a1c4-13457fc3a494",
+    "quantity": 3,
+    "unit": "Gram"
+  },
+  {
+    "recipeId": "7a9c2e4f-3d6b-4f8e-9c1a-5e7d9b3f6a2c",
+    "ingredientId": "f55e4a3a-140a-458c-9d44-f0ce707f1f59",
+    "quantity": 4,
+    "unit": "Kilogram"
+  },
+  {
+    "recipeId": "7a9c2e4f-3d6b-4f8e-9c1a-5e7d9b3f6a2c",
+    "ingredientId": "3185b16f-bf55-449e-bf02-0494c5c09285",
+    "quantity": 0.5,
+    "unit": "Milliliter"
+  }
+]

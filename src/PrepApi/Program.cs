@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using System.Text.Json;
 
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 

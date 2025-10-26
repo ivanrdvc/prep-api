@@ -1,0 +1,33 @@
+meta {
+  name: Update Recipe
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{api_base_url}}/api/recipes/{{recipe_id}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Updated Recipe Name",
+    "description": "Updated description.",
+    "prepTimeMinutes": 10,
+    "cookTimeMinutes": 20,
+    "yield": "4 servings",
+    "steps": [
+      { "description": "Updated step 1", "order": 1 },
+      { "description": "Updated step 2", "order": 2 }
+    ],
+    "ingredients": [
+      {
+        "ingredientId": "{{ingredient_id}}",
+        "quantity": 3,
+        "unit": 2
+      }
+    ],
+    "tagIds": ["{{tag_id}}"]
+  }
+}

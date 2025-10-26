@@ -1,0 +1,15 @@
+meta {
+  name: Get Tags
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{api_base_url}}/api/tags?term=
+  body: none
+  auth: inherit
+}
+
+params:query {
+  term:
+}

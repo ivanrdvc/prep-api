@@ -1,0 +1,11 @@
+meta {
+  name: Set Favorite Variant
+  type: http
+  seq: 6
+}
+
+put {
+  url: {{api_base_url}}/api/recipes/{{recipe_id}}/favorite
+  body: none
+  auth: inherit
+}

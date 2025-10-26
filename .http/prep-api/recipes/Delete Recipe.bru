@@ -1,10 +1,10 @@
 meta {
-  name: Get Recipe
+  name: Delete Recipe
   type: http
-  seq: 2
+  seq: 3
 }
 
-get {
+delete {
   url: {{api_base_url}}/api/recipes/{{recipe_id}}
   body: none
   auth: inherit
