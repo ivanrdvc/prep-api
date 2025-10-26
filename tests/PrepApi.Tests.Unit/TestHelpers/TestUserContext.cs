@@ -1,10 +1,10 @@
 ﻿using System.Security.Claims;
 
 using PrepApi.Shared.Services;
-using PrepApi.Tests.Integration.Helpers;
+using PrepApi.Tests.Integration.TestHelpers;
 using PrepApi.Users;
 
-namespace PrepApi.Tests.Unit.Helpers;
+namespace PrepApi.Tests.Unit.TestHelpers;
 
 public class TestUserContext : IUserContext
 {

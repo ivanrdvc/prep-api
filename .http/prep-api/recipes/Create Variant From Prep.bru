@@ -1,0 +1,18 @@
+meta {
+  name: Create Variant From Prep
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{api_base_url}}/api/recipes/{{prep_id}}/variants
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Variant Recipe Name",
+    "setAsFavorite": true
+  }
+}

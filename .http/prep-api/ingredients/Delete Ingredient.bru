@@ -1,0 +1,11 @@
+meta {
+  name: Delete Ingredient
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{api_base_url}}/api/ingredients/{{ingredient_id}}
+  body: none
+  auth: inherit
+}

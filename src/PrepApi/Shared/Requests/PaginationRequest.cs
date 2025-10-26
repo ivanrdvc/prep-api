@@ -8,7 +8,7 @@ public record PaginationRequest
     public int PageSize { get; init; } = 10;
 
     [DefaultValue(0)]
-    public int PageIndex { get; init; } = 0;
+    public int PageIndex { get; init; }
 
     [DefaultValue(null)]
     public SortOrder? SortOrder { get; init; } = Requests.SortOrder.desc;

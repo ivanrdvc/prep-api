@@ -1,16 +1,15 @@
 # TODOs
 
 ## Features
-- User
 - Photos
 
 ## Improve
 - Unit system
-- Ingredient
 - Yield issue
 - Migrations
 - Validations (dotnet10)
 - Seeding
+- UserContext null-forgiving operator usage
 
 ## Refactor
 - reduce nesting /src/prepapi -> /prepapi 

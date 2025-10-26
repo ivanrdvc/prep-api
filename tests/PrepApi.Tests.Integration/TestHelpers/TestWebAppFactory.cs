@@ -13,7 +13,7 @@ using PrepApi.Data;
 
 using Testcontainers.PostgreSql;
 
-namespace PrepApi.Tests.Integration.Helpers;
+namespace PrepApi.Tests.Integration.TestHelpers;
 
 public class TestWebAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
@@ -52,7 +52,7 @@ public class TestWebAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
 
         base.ConfigureClient(client);
     }
-        
+
     public async Task<PrepDb> CreateScopedDbContextAsync()
     {
         var scope = Services.CreateAsyncScope();

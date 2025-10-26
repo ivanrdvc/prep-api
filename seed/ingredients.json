@@ -1,0 +1,527 @@
+[
+  {
+    "id": "8c211642-898d-48e0-9151-3598503ef5f4",
+    "name": "tomatoes",
+    "category": "vegetables"
+  },
+  {
+    "id": "1a13f306-a8f8-4013-a012-466ec51ffa61",
+    "name": "cherry tomatoes",
+    "category": "vegetables"
+  },
+  {
+    "id": "e8e67a39-38db-4963-a853-5c13a9aecc91",
+    "name": "canned tomatoes",
+    "category": "vegetables"
+  },
+  {
+    "id": "ff4b4a0e-185f-4fba-adf5-d9c331d6f829",
+    "name": "onions",
+    "category": "vegetables"
+  },
+  {
+    "id": "0ac48324-b508-4430-85d9-94ddaefb4e3b",
+    "name": "red onions",
+    "category": "vegetables"
+  },
+  {
+    "id": "01f830a2-0939-40a7-a5fe-1e7e7c9539ad",
+    "name": "garlic",
+    "category": "vegetables"
+  },
+  {
+    "id": "d8682812-43ac-4d4e-85dc-5e8de731312f",
+    "name": "carrots",
+    "category": "vegetables"
+  },
+  {
+    "id": "1d6ff02c-4b57-4943-b3e5-279fd176e25b",
+    "name": "celery",
+    "category": "vegetables"
+  },
+  {
+    "id": "b92bcee0-4f38-42ff-a8c6-739369fb2b61",
+    "name": "bell peppers",
+    "category": "vegetables"
+  },
+  {
+    "id": "4a46d652-e186-4aa7-9d9c-9803857c1e49",
+    "name": "spinach",
+    "category": "vegetables"
+  },
+  {
+    "id": "9dee8435-34bd-46ac-bf33-b37330ec27cd",
+    "name": "broccoli",
+    "category": "vegetables"
+  },
+  {
+    "id": "a4daeed1-1019-44cd-8611-6b73ec884cf9",
+    "name": "cauliflower",
+    "category": "vegetables"
+  },
+  {
+    "id": "ea3ef8c1-9abb-4e7c-b161-a36a25e319ab",
+    "name": "zucchini",
+    "category": "vegetables"
+  },
+  {
+    "id": "3536504b-2165-431d-8f77-24ebff062982",
+    "name": "mushrooms",
+    "category": "vegetables"
+  },
+  {
+    "id": "260f41b6-f2f9-4d60-a9bb-1fa5479f42f6",
+    "name": "potatoes",
+    "category": "vegetables"
+  },
+  {
+    "id": "750eb4d8-9a82-43ae-ac97-be466a8005e3",
+    "name": "sweet potatoes",
+    "category": "vegetables"
+  },
+  {
+    "id": "f958058e-2735-4b65-8886-b6f06c6ec3bd",
+    "name": "lettuce",
+    "category": "vegetables"
+  },
+  {
+    "id": "8712196c-21ed-4504-95d8-597967ef1dc7",
+    "name": "cucumbers",
+    "category": "vegetables"
+  },
+  {
+    "id": "707332c1-db0d-4877-865a-35e2b7675c22",
+    "name": "corn",
+    "category": "vegetables"
+  },
+  {
+    "id": "f6b1e4d9-8875-4660-8df0-34520ee824e5",
+    "name": "green beans",
+    "category": "vegetables"
+  },
+  {
+    "id": "a58d5466-df09-4500-bdc1-51e2097e78c3",
+    "name": "chicken breast",
+    "category": "proteins"
+  },
+  {
+    "id": "ee1f11b8-39e6-489b-9c77-87470bdf4234",
+    "name": "chicken thighs",
+    "category": "proteins"
+  },
+  {
+    "id": "b9e2099e-1ff7-4d18-a7b2-440d9d8851c8",
+    "name": "ground beef",
+    "category": "proteins"
+  },
+  {
+    "id": "9b160375-345a-45cd-9096-f05c341f5e71",
+    "name": "beef steak",
+    "category": "proteins"
+  },
+  {
+    "id": "b9d181c4-e04a-49b1-88dd-a7a62ddcd437",
+    "name": "pork chops",
+    "category": "proteins"
+  },
+  {
+    "id": "e2a9bf27-444f-448c-9353-16c167d0bca2",
+    "name": "ground pork",
+    "category": "proteins"
+  },
+  {
+    "id": "336a65e0-a75a-4be4-9c46-57964f2a9800",
+    "name": "bacon",
+    "category": "proteins"
+  },
+  {
+    "id": "8bbfd9f5-d09a-4a51-998b-019ba54f4e91",
+    "name": "salmon",
+    "category": "proteins"
+  },
+  {
+    "id": "4c8af040-a824-4de9-9ef4-80a75bff5d45",
+    "name": "tuna",
+    "category": "proteins"
+  },
+  {
+    "id": "0331eecd-8709-4f67-a80e-dd348ba9995a",
+    "name": "shrimp",
+    "category": "proteins"
+  },
+  {
+    "id": "c967a71c-227d-4cb7-852f-32f5b299e730",
+    "name": "eggs",
+    "category": "proteins"
+  },
+  {
+    "id": "cde5db0e-e098-45a4-8511-323389c0f986",
+    "name": "egg whites",
+    "category": "proteins"
+  },
+  {
+    "id": "d367de4b-eb32-410e-bf59-abe0c56a5117",
+    "name": "tofu",
+    "category": "proteins"
+  },
+  {
+    "id": "bebd1cba-14a8-4a8c-a71e-e3f987d808fb",
+    "name": "milk",
+    "category": "dairy"
+  },
+  {
+    "id": "8cd2cbac-c6a3-4d18-8013-525b19ce26e4",
+    "name": "heavy cream",
+    "category": "dairy"
+  },
+  {
+    "id": "711add6d-537d-424f-98b7-09193918999f",
+    "name": "sour cream",
+    "category": "dairy"
+  },
+  {
+    "id": "ae175503-f939-4745-a1c4-13457fc3a494",
+    "name": "butter",
+    "category": "dairy"
+  },
+  {
+    "id": "bc21b1f4-c9bb-4bd6-89d7-5f090d932ae7",
+    "name": "cheddar cheese",
+    "category": "dairy"
+  },
+  {
+    "id": "7e6c7758-7d37-4a05-a6ff-44184e411a48",
+    "name": "mozzarella cheese",
+    "category": "dairy"
+  },
+  {
+    "id": "8ab90226-efd2-41b8-b378-769d323ded0f",
+    "name": "parmesan cheese",
+    "category": "dairy"
+  },
+  {
+    "id": "ac13c3f3-a003-449e-8390-3368a6ca6ea5",
+    "name": "cream cheese",
+    "category": "dairy"
+  },
+  {
+    "id": "f2ba028f-73e4-41ce-8f5d-0b0466d771b9",
+    "name": "yogurt",
+    "category": "dairy"
+  },
+  {
+    "id": "8237c762-de3f-4918-8908-a571b2ea3089",
+    "name": "greek yogurt",
+    "category": "dairy"
+  },
+  {
+    "id": "a3f16760-18e9-4fff-9664-92c39442b7cf",
+    "name": "white rice",
+    "category": "grains"
+  },
+  {
+    "id": "1562c5eb-f790-498b-81f0-ce0b6759d031",
+    "name": "brown rice",
+    "category": "grains"
+  },
+  {
+    "id": "3feccf84-de9e-4cd0-a28c-5263ee01cc68",
+    "name": "pasta",
+    "category": "grains"
+  },
+  {
+    "id": "ec475304-1a3a-4e47-9c3f-74c38ca68761",
+    "name": "spaghetti",
+    "category": "grains"
+  },
+  {
+    "id": "2f040c56-bbc4-4edb-8248-53cfec002a77",
+    "name": "penne",
+    "category": "grains"
+  },
+  {
+    "id": "f4b3df45-a317-4cb0-a8ed-c16e4ad7d7b5",
+    "name": "quinoa",
+    "category": "grains"
+  },
+  {
+    "id": "87017592-bb27-4120-a014-975b2f50e5ff",
+    "name": "bread",
+    "category": "grains"
+  },
+  {
+    "id": "e8bbc33c-acc2-4bf9-8956-f6e713f4c1d8",
+    "name": "flour",
+    "category": "grains"
+  },
+  {
+    "id": "8c3b6c3a-3841-444e-9f5d-4b655d6a4086",
+    "name": "whole wheat flour",
+    "category": "grains"
+  },
+  {
+    "id": "273974a5-16cb-4fc3-a119-901b5c1f0119",
+    "name": "oats",
+    "category": "grains"
+  },
+  {
+    "id": "ebfeaf9b-b42d-4d40-8382-1ab6940484c3",
+    "name": "olive oil",
+    "category": "oils"
+  },
+  {
+    "id": "7bd24cae-0820-48d8-aab5-3e6146998f78",
+    "name": "vegetable oil",
+    "category": "oils"
+  },
+  {
+    "id": "16cc610f-087f-4add-bf19-56803c625303",
+    "name": "coconut oil",
+    "category": "oils"
+  },
+  {
+    "id": "f4dc7da0-10ce-4647-8b3a-2a72c035264b",
+    "name": "sesame oil",
+    "category": "oils"
+  },
+  {
+    "id": "3185b16f-bf55-449e-bf02-0494c5c09285",
+    "name": "salt",
+    "category": "seasonings"
+  },
+  {
+    "id": "6ee8ffe1-40e6-4fca-a074-4435a53ac633",
+    "name": "black pepper",
+    "category": "seasonings"
+  },
+  {
+    "id": "bcb961e5-452d-4b51-8710-26039afd2184",
+    "name": "paprika",
+    "category": "seasonings"
+  },
+  {
+    "id": "686237a9-9d88-4078-b297-b6b72979670d",
+    "name": "cumin",
+    "category": "seasonings"
+  },
+  {
+    "id": "843dfddb-2f1c-470a-8457-b2d4aa7dece2",
+    "name": "oregano",
+    "category": "seasonings"
+  },
+  {
+    "id": "fb0de147-008e-417a-af00-79dbfe97697f",
+    "name": "basil",
+    "category": "seasonings"
+  },
+  {
+    "id": "2f937250-78d7-4879-900d-0a0a55cc26bb",
+    "name": "thyme",
+    "category": "seasonings"
+  },
+  {
+    "id": "e957e17c-1d1f-4685-8b6e-40049c359c4b",
+    "name": "rosemary",
+    "category": "seasonings"
+  },
+  {
+    "id": "1f095299-f1dd-47b4-afbf-dc99566e5e73",
+    "name": "parsley",
+    "category": "seasonings"
+  },
+  {
+    "id": "df08617f-38dd-4784-9f9a-7d63d773c6c8",
+    "name": "cilantro",
+    "category": "seasonings"
+  },
+  {
+    "id": "fd0d289b-3c4b-4dd4-9261-5d4e56a40955",
+    "name": "chili powder",
+    "category": "seasonings"
+  },
+  {
+    "id": "5ca295be-96d5-4a68-b4e5-8defa48c33f0",
+    "name": "cayenne pepper",
+    "category": "seasonings"
+  },
+  {
+    "id": "84905121-6388-4e6a-bba9-c3c14b417aa7",
+    "name": "garlic powder",
+    "category": "seasonings"
+  },
+  {
+    "id": "3ea6dea7-dbe7-4b0e-af9e-c36a85ff2704",
+    "name": "onion powder",
+    "category": "seasonings"
+  },
+  {
+    "id": "597b798a-8fb9-415c-b34c-010ef8e95b9f",
+    "name": "tomato sauce",
+    "category": "sauces"
+  },
+  {
+    "id": "c42857fe-2dba-4254-a534-9e0c1edb384b",
+    "name": "tomato paste",
+    "category": "sauces"
+  },
+  {
+    "id": "7d391c88-cda0-4fdd-805b-6f2222626110",
+    "name": "soy sauce",
+    "category": "sauces"
+  },
+  {
+    "id": "3f3a3295-4a61-4618-a527-af8daeee4f54",
+    "name": "hot sauce",
+    "category": "sauces"
+  },
+  {
+    "id": "7cbe214b-ba0f-469f-9703-b1addd1043f4",
+    "name": "worcestershire sauce",
+    "category": "sauces"
+  },
+  {
+    "id": "6f6ba9f6-1b2c-4fff-ab7c-2246a700a8a0",
+    "name": "bbq sauce",
+    "category": "sauces"
+  },
+  {
+    "id": "5f15d9c3-5d54-4b73-b8ac-fd81eff97a31",
+    "name": "ketchup",
+    "category": "condiments"
+  },
+  {
+    "id": "ae7ffd5b-f743-4c74-b53e-809c02981526",
+    "name": "mustard",
+    "category": "condiments"
+  },
+  {
+    "id": "905990e9-ba66-4437-8eb0-86cde2f3d9d9",
+    "name": "mayonnaise",
+    "category": "condiments"
+  },
+  {
+    "id": "aeb541d1-7a64-491f-b2ed-dc61b80b0f4b",
+    "name": "vinegar",
+    "category": "condiments"
+  },
+  {
+    "id": "ba8fed71-8713-4783-8130-5a539e8e8156",
+    "name": "balsamic vinegar",
+    "category": "condiments"
+  },
+  {
+    "id": "fd4ea71c-a979-4c67-b85b-e4bdda340569",
+    "name": "apple cider vinegar",
+    "category": "condiments"
+  },
+  {
+    "id": "f55e4a3a-140a-458c-9d44-f0ce707f1f59",
+    "name": "sugar",
+    "category": "baking"
+  },
+  {
+    "id": "a94bd66b-ed8e-4aef-95aa-80c07ba3d1b1",
+    "name": "brown sugar",
+    "category": "baking"
+  },
+  {
+    "id": "220fc8b3-4aa1-4d02-b1f6-9031f3d41897",
+    "name": "honey",
+    "category": "baking"
+  },
+  {
+    "id": "1b029c4f-a0d2-4647-94c1-fcfe5fe0dac6",
+    "name": "maple syrup",
+    "category": "baking"
+  },
+  {
+    "id": "d224a723-ca16-4455-b65a-6af881472b68",
+    "name": "baking powder",
+    "category": "baking"
+  },
+  {
+    "id": "714e1136-14f3-4465-be88-5aba0139d8ee",
+    "name": "baking soda",
+    "category": "baking"
+  },
+  {
+    "id": "0588d5a6-5acd-4297-ad2f-58bf67b4d30c",
+    "name": "vanilla extract",
+    "category": "baking"
+  },
+  {
+    "id": "51be782a-db2a-4a68-a551-fe6512fc376d",
+    "name": "chicken broth",
+    "category": "liquids"
+  },
+  {
+    "id": "f0454f84-7836-4723-bee3-d08320956c2c",
+    "name": "beef broth",
+    "category": "liquids"
+  },
+  {
+    "id": "5800a3e5-4dc1-4028-a5c0-6c85b59be59a",
+    "name": "vegetable broth",
+    "category": "liquids"
+  },
+  {
+    "id": "2cd05633-72fd-448f-a946-9ac426a1766f",
+    "name": "water",
+    "category": "liquids"
+  },
+  {
+    "id": "7050d7ce-5023-4fc8-b79a-b64c449bb4bc",
+    "name": "black beans",
+    "category": "legumes"
+  },
+  {
+    "id": "55062946-684a-4fef-a909-0b6f7a2a73a4",
+    "name": "kidney beans",
+    "category": "legumes"
+  },
+  {
+    "id": "93d22521-6d1a-4209-af5b-3ec7941c4a98",
+    "name": "chickpeas",
+    "category": "legumes"
+  },
+  {
+    "id": "b57bd3a4-e1f0-41c7-8545-6b01c8e8f171",
+    "name": "lentils",
+    "category": "legumes"
+  },
+  {
+    "id": "869a3db6-1c14-4b63-bbd3-d630e89ae26c",
+    "name": "almonds",
+    "category": "nuts"
+  },
+  {
+    "id": "fa71ee2c-d978-4fbe-9875-4446bfe4f612",
+    "name": "walnuts",
+    "category": "nuts"
+  },
+  {
+    "id": "8e52063d-3969-43a7-a601-7b95fba508d1",
+    "name": "peanut butter",
+    "category": "nuts"
+  },
+  {
+    "id": "7128ca1e-d51f-4414-b7c3-584b2ae8c581",
+    "name": "lemon juice",
+    "category": "citrus"
+  },
+  {
+    "id": "9a29b757-4d1d-4e79-bdab-7a331e279bc4",
+    "name": "lime juice",
+    "category": "citrus"
+  },
+  {
+    "id": "c3cc0675-144d-435a-b944-85622791e707",
+    "name": "lemons",
+    "category": "citrus"
+  },
+  {
+    "id": "441b5225-76a6-4e9a-b000-e19cc9e830ec",
+    "name": "limes",
+    "category": "citrus"
+  }
+]

@@ -1,0 +1,11 @@
+meta {
+  name: Get Prep Ratings
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{api_base_url}}/api/preps/{{prep_id}}/ratings
+  body: none
+  auth: inherit
+}

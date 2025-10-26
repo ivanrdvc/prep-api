@@ -6,15 +6,20 @@ meta {
 
 post {
   url: {{auth_url}}/oauth/token
-  body: formUrlEncoded
+  body: json
   auth: none
 }
 
-body:form-urlencoded {
-  grant_type: client_credentials
-  client_id: {{client_id}}
-  client_secret: {{client_secret}}
-  audience: {{audience}}
+body:json {
+  {
+    "grant_type": "http://auth0.com/oauth/grant-type/password-realm",
+    "username": "{{test_user_email}}",
+    "password": "{{test_user_password}}",
+    "realm": "{{realm}}",
+    "audience": "{{audience}}",
+    "client_id": "{{client_id}}",
+    "client_secret": "{{client_secret}}"
+  }
 }
 
 script:post-response {

@@ -1,0 +1,10 @@
+{
+  "id": "7a9c2e4f-3d6b-4f8e-9c1a-5e7d9b3f6a2c",
+  "name": "Seeded Recipe",
+  "description": "Basic recipe description.",
+  "prepTimeMinutes": 5,
+  "cookTimeMinutes": 10,
+  "yield": "8 servings",
+  "stepsJson": "[{\"Order\":1,\"Description\":\"Mix dry ingredients.\"},{\"Order\":2,\"Description\":\"Add wet ingredients.\"},{\"Order\":3,\"Description\":\"Cook until done.\"}]",
+  "userId": "2f8e4d3a-1b7c-4e9f-a6d2-8c3f5e9d1a7b"
+}

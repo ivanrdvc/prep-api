@@ -2,12 +2,13 @@
 using System.Net.Http.Json;
 
 using PrepApi.Data;
+using PrepApi.Ingredients;
 using PrepApi.Preps;
 using PrepApi.Preps.Entities;
 using PrepApi.Preps.Requests;
 using PrepApi.Shared.Dtos;
 using PrepApi.Shared.Requests;
-using PrepApi.Tests.Integration.Helpers;
+using PrepApi.Tests.Integration.TestHelpers;
 
 namespace PrepApi.Tests.Integration;
 

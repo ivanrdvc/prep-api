@@ -1,0 +1,20 @@
+[
+  {
+    "key": "taste",
+    "displayName": "Taste",
+    "description": "How good did the recipe taste?",
+    "sortOrder": 10
+  },
+  {
+    "key": "texture",
+    "displayName": "Texture",
+    "description": "How was the texture and consistency?",
+    "sortOrder": 20
+  },
+  {
+    "key": "appearance",
+    "displayName": "Appearance",
+    "description": "How did the final dish look?",
+    "sortOrder": 30
+  }
+]

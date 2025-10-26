@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using PrepApi.Data;
+using PrepApi.Ingredients;
 using PrepApi.Preps.Entities;
 using PrepApi.Preps.Requests;
 using PrepApi.Recipes.Entities;
@@ -57,8 +58,10 @@ public static class PrepEndpoints
             return TypedResults.NotFound($"Base Recipe with ID {request.RecipeId} not found.");
         }
 
+        var userId = userContext.InternalId!.Value;
+
         var (ingredients, ingredientValidationError) = await LoadAndValidateIngredientsAsync(
-            db, request.PrepIngredients, recipe);
+            db, request.PrepIngredients, recipe, userId);
 
         if (ingredientValidationError != null)
         {
@@ -68,7 +71,7 @@ public static class PrepEndpoints
         var prep = new Prep
         {
             RecipeId = recipe.Id,
-            UserId = userContext.InternalId!.Value,
+            UserId = userId,
             SummaryNotes = request.SummaryNotes,
             PrepTimeMinutes = request.PrepTimeMinutes,
             CookTimeMinutes = request.CookTimeMinutes,
@@ -98,11 +101,13 @@ public static class PrepEndpoints
             return TypedResults.ValidationProblem(validationResult.ToDictionary());
         }
 
+        var userId = userContext.InternalId!.Value;
+
         var prep = await db.Preps
             .Include(p => p.PrepIngredients)
             .Include(p => p.Recipe)
             .ThenInclude(r => r.RecipeIngredients)
-            .FirstOrDefaultAsync(p => p.Id == id && p.UserId == userContext.InternalId);
+            .FirstOrDefaultAsync(p => p.Id == id && p.UserId == userId);
 
         if (prep is null)
         {
@@ -110,7 +115,7 @@ public static class PrepEndpoints
         }
 
         var (ingredients, ingredientValidationError) =
-            await LoadAndValidateIngredientsAsync(db, request.PrepIngredients, prep.Recipe);
+            await LoadAndValidateIngredientsAsync(db, request.PrepIngredients, prep.Recipe, userId);
         if (ingredientValidationError != null)
         {
             return ingredientValidationError;
@@ -209,7 +214,8 @@ public static class PrepEndpoints
         LoadAndValidateIngredientsAsync(
             PrepDb db,
             IEnumerable<PrepIngredientInputDto> requestedIngredients,
-            Recipe recipe)
+            Recipe recipe,
+            Guid userId)
     {
         var requestedIngredientIds = requestedIngredients.Select(i => i.IngredientId).Distinct().ToList();
         var recipeIngredientIds = recipe.RecipeIngredients.Select(ri => ri.IngredientId).ToList();
@@ -220,8 +226,10 @@ public static class PrepEndpoints
             return (new Dictionary<Guid, Ingredient>(), null);
         }
 
+        // Check that ingredients exist AND user has access to them (shared or owned by user)
         var ingredients = await db.Ingredients
-            .Where(i => allIngredientIds.Contains(i.Id))
+            .Where(i => allIngredientIds.Contains(i.Id) &&
+                        (i.UserId == null || i.UserId == userId))
             .ToDictionaryAsync(i => i.Id, i => i);
 
         var missingIngredients = requestedIngredientIds.Except(ingredients.Keys).ToList();
@@ -232,7 +240,7 @@ public static class PrepEndpoints
 
         var validationError = TypedResults.ValidationProblem(new Dictionary<string, string[]>
         {
-            { "PrepIngredients", ["One or more specified ingredients do not exist."] }
+            { "PrepIngredients", ["One or more specified ingredients do not exist or you don't have access to them."] }
         });
         return (null, validationError);
     }

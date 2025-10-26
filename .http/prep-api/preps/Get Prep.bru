@@ -1,0 +1,11 @@
+meta {
+  name: Get Prep
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{api_base_url}}/api/preps/{{prep_id}}
+  body: none
+  auth: inherit
+}

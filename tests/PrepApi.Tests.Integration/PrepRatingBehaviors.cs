@@ -2,8 +2,9 @@ using System.Net;
 using System.Net.Http.Json;
 
 using PrepApi.Data;
+using PrepApi.Ingredients;
 using PrepApi.Preps.Requests;
-using PrepApi.Tests.Integration.Helpers;
+using PrepApi.Tests.Integration.TestHelpers;
 
 namespace PrepApi.Tests.Integration;
 

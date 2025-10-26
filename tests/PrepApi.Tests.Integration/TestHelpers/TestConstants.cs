@@ -1,4 +1,4 @@
-﻿namespace PrepApi.Tests.Integration.Helpers;
+﻿namespace PrepApi.Tests.Integration.TestHelpers;
 
 public static class TestConstants
 {

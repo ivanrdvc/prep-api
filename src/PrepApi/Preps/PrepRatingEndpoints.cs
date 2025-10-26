@@ -31,6 +31,7 @@ public static class PrepRatingEndpoints
             UpsertPrepRatingRequest request,
             PrepDb db,
             IUserContext userContext,
+            RecipeInsightService recipeInsightService,
             IValidator<UpsertPrepRatingRequest> validator)
     {
         var validationResult = await validator.ValidateAsync(request);
@@ -85,8 +86,7 @@ public static class PrepRatingEndpoints
         await db.PrepRatings.AddAsync(rating);
         await db.SaveChangesAsync();
 
-        var handler = new RecipeInsightService(db);
-        await handler.CalculateAndUpsertInsights(prepInfo.RecipeId);
+        await recipeInsightService.CalculateAndUpsertInsights(prepInfo.RecipeId);
 
         return TypedResults.Created($"/api/preps/{prepId}/ratings", rating.Id);
     }
@@ -97,6 +97,7 @@ public static class PrepRatingEndpoints
         UpsertPrepRatingRequest request,
         PrepDb db,
         IUserContext userContext,
+        RecipeInsightService recipeInsightService,
         IValidator<UpsertPrepRatingRequest> validator)
     {
         var validationResult = await validator.ValidateAsync(request);
@@ -135,8 +136,7 @@ public static class PrepRatingEndpoints
 
         await db.SaveChangesAsync();
 
-        var handler = new RecipeInsightService(db);
-        await handler.CalculateAndUpsertInsights(ratingInfo.RecipeId);
+        await recipeInsightService.CalculateAndUpsertInsights(ratingInfo.RecipeId);
 
         return TypedResults.NoContent();
     }

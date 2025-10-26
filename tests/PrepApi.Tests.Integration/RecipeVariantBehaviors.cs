@@ -4,7 +4,7 @@ using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
 
 using PrepApi.Recipes.Requests;
-using PrepApi.Tests.Integration.Helpers;
+using PrepApi.Tests.Integration.TestHelpers;
 
 namespace PrepApi.Tests.Integration;
 

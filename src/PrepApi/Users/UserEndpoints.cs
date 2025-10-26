@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 using PrepApi.Data;
 using PrepApi.Shared.Services;
+using PrepApi.Users.Requests;
 
 namespace PrepApi.Users;
 

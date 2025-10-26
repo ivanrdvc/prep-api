@@ -1,0 +1,26 @@
+meta {
+  name: Create Prep Rating
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{api_base_url}}/api/preps/{{prep_id}}/ratings
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "liked": true,
+    "overallRating": 4,
+    "dimensions": {
+      "taste": 5,
+      "texture": 4,
+      "appearance": 3
+    },
+    "whatWorkedWell": "Great flavor",
+    "whatToChange": "Cook a bit longer",
+    "additionalNotes": "Will make again"
+  }
+}

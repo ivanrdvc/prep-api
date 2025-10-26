@@ -3,7 +3,7 @@
 using PrepApi.Data;
 using PrepApi.Shared.Services;
 
-namespace PrepApi.Tests.Unit.Helpers;
+namespace PrepApi.Tests.Unit.TestHelpers;
 
 public class FakeDb(IUserContext userContext) : IDbContextFactory<PrepDb>
 {

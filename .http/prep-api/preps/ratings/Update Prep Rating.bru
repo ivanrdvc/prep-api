@@ -1,0 +1,26 @@
+meta {
+  name: Update Prep Rating
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{api_base_url}}/api/preps/{{prep_id}}/ratings/{{rating_id}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "liked": true,
+    "overallRating": 5,
+    "dimensions": {
+      "taste": 5,
+      "texture": 5,
+      "appearance": 4
+    },
+    "whatWorkedWell": "Perfect flavor and texture",
+    "whatToChange": "Nothing",
+    "additionalNotes": "Best version yet"
+  }
+}

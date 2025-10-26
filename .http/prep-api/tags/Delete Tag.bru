@@ -1,0 +1,11 @@
+meta {
+  name: Delete Tag
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{api_base_url}}/api/tags/{{tag_id}}
+  body: none
+  auth: inherit
+}
