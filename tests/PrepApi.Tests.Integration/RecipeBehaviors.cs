@@ -7,11 +7,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 using PrepApi.Data;
+using PrepApi.Ingredients;
 using PrepApi.Recipes;
 using PrepApi.Recipes.Entities;
 using PrepApi.Recipes.Requests;
 using PrepApi.Shared.Dtos;
-using PrepApi.Tests.Integration.Helpers;
+using PrepApi.Tests.Integration.TestHelpers;
 
 namespace PrepApi.Tests.Integration;
 

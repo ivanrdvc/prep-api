@@ -5,8 +5,8 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using PrepApi.Preps;
 using PrepApi.Preps.Requests;
 using PrepApi.Shared.Services;
-using PrepApi.Tests.Integration.Helpers;
-using PrepApi.Tests.Unit.Helpers;
+using PrepApi.Tests.Integration.TestHelpers;
+using PrepApi.Tests.Unit.TestHelpers;
 
 namespace PrepApi.Tests.Unit.Preps;
 

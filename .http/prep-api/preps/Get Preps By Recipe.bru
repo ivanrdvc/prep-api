@@ -1,0 +1,17 @@
+meta {
+  name: Get Preps By Recipe
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{api_base_url}}/api/preps/recipe/{{recipe_id}}?pageIndex=0&pageSize=10&sortOrder=desc
+  body: none
+  auth: inherit
+}
+
+params:query {
+  pageIndex: 0
+  pageSize: 10
+  sortOrder: desc
+}

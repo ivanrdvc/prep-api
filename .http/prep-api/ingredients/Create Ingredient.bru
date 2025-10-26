@@ -1,0 +1,17 @@
+meta {
+  name: Create Ingredient
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{api_base_url}}/api/ingredients/
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Tomato"
+  }
+}

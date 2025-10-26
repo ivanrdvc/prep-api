@@ -1,0 +1,18 @@
+meta {
+  name: Update Ingredient
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{api_base_url}}/api/ingredients/{{ingredient_id}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Cherry Tomato",
+    "category": "Vegetables"
+  }
+}

@@ -1,0 +1,42 @@
+meta {
+  name: Update Prep
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{api_base_url}}/api/preps/{{prep_id}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "recipeId": "00000000-0000-0000-0000-000000000000",
+    "summaryNotes": "Updated notes - turned out great!",
+    "prepTimeMinutes": 20,
+    "cookTimeMinutes": 35,
+    "steps": [
+      {
+        "description": "Chop vegetables finely",
+        "order": 1
+      },
+      {
+        "description": "Cook in pan on medium heat",
+        "order": 2
+      },
+      {
+        "description": "Season to taste",
+        "order": 3
+      }
+    ],
+    "prepIngredients": [
+      {
+        "ingredientId": "00000000-0000-0000-0000-000000000000",
+        "quantity": 2.5,
+        "unit": 1,
+        "notes": "Fresh is best"
+      }
+    ]
+  }
+}

@@ -3,12 +3,13 @@
 using Microsoft.EntityFrameworkCore;
 
 using PrepApi.Data;
+using PrepApi.Ingredients;
 using PrepApi.Preps.Entities;
 using PrepApi.Recipes.Entities;
 using PrepApi.Shared.Dtos;
 using PrepApi.Users;
 
-namespace PrepApi.Tests.Integration.Helpers;
+namespace PrepApi.Tests.Integration.TestHelpers;
 
 /// <summary>
 /// Extension methods for PrepDb to seed test data.
@@ -47,7 +48,7 @@ public static class PrepDbTestExtensions
         var ingredients = names.Select(name => new Ingredient
         {
             Name = name,
-            UserId = Guid.Empty,
+            UserId = null, // null = shared ingredient
         }).ToList();
 
         await dbContext.Ingredients.AddRangeAsync(ingredients);
@@ -80,11 +81,11 @@ public static class PrepDbTestExtensions
             PrepTimeMinutes = prepTimeMinutes,
             CookTimeMinutes = cookTimeMinutes,
             Yield = yield ?? "4 servings",
-            StepsJson = JsonSerializer.Serialize(steps ?? new List<StepDto>
-            {
+            StepsJson = JsonSerializer.Serialize(steps ??
+            [
                 new() { Order = 1, Description = $"Prepare {name} using provided ingredients." },
                 new() { Order = 2, Description = "Cook/assemble as needed." }
-            }),
+            ]),
             CreatedBy = actualUserId,
             OriginalRecipeId = originalRecipeId,
             IsFavoriteVariant = isFavoriteVariant,
@@ -120,8 +121,8 @@ public static class PrepDbTestExtensions
         int? prepTimeMinutes = 5,
         int? cookTimeMinutes = 10,
         List<StepDto>? steps = null,
-        List<(Ingredient Ingredient, decimal? Quantity, Unit? Unit
-            , string? Notes, PrepIngredientStatus Status)>? ingredients = null)
+        List<(Ingredient Ingredient, decimal? Quantity, Unit? Unit, string? Notes, PrepIngredientStatus Status)>? ingredients =
+            null)
     {
         var prepSteps = steps ?? [new() { Order = 1, Description = "Default prep step." }];
 

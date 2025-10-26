@@ -187,6 +187,12 @@ csharp_space_between_square_brackets = false
 csharp_preserve_single_line_blocks = true
 csharp_preserve_single_line_statements = true
 
+# ReSharper/Rider attribute preferences
+# Keep parameter attributes like [FromServices] on same line
+csharp_max_attribute_length_for_same_line = 140
+resharper_max_attribute_length_for_same_line = 140
+resharper_keep_existing_attribute_arrangement = false
+
 #### Naming styles ####
 [*.{cs,vb}]
 

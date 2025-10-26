@@ -2,6 +2,7 @@
 
 using Microsoft.EntityFrameworkCore;
 
+using PrepApi.Ingredients;
 using PrepApi.Preps.Entities;
 using PrepApi.Recipes.Entities;
 using PrepApi.Shared.Dtos;
@@ -145,9 +146,26 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
-        modelBuilder.Entity<Ingredient>(entity => entity.Property(p => p.Name)
-            .IsRequired()
-            .HasMaxLength(256));
+        modelBuilder.Entity<Ingredient>(entity =>
+        {
+            entity.Property(p => p.Name)
+                .IsRequired()
+                .HasMaxLength(256);
+
+            entity.Property(i => i.Category)
+                .HasMaxLength(100)
+                .IsRequired(false);
+
+            entity.Property(i => i.UserId).IsRequired(false);
+            entity.HasIndex(i => i.UserId);
+            entity.HasIndex(i => new { i.Name, i.UserId }).IsUnique(); // Ensures unique names per user or shared
+
+            entity.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(i => i.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired(false);
+        });
 
         modelBuilder.Entity<Prep>(entity =>
         {
@@ -294,179 +312,178 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder
-            .UseAsyncSeeding(async (context, _, cancellationToken) =>
+        optionsBuilder.UseAsyncSeeding(async (context, _, cancellationToken) =>
+        {
+            if (context is PrepDb prepDbContext)
             {
-                if (context is PrepDb prepDbContext)
+                if (await prepDbContext.Recipes.AnyAsync(cancellationToken))
                 {
-                    if (await prepDbContext.Recipes.AnyAsync(cancellationToken))
-                    {
-                        return;
-                    }
+                    return;
+                }
 
-                    var flourId = new Guid("11111111-1111-1111-1111-111111111111");
-                    var butterId = new Guid("22222222-2222-2222-2222-222222222222");
-                    var sugarId = new Guid("33333333-3333-3333-3333-333333333333");
-                    var saltId = new Guid("44444444-4444-4444-4444-444444444444");
+                var flourId = new Guid("11111111-1111-1111-1111-111111111111");
+                var butterId = new Guid("22222222-2222-2222-2222-222222222222");
+                var sugarId = new Guid("33333333-3333-3333-3333-333333333333");
+                var saltId = new Guid("44444444-4444-4444-4444-444444444444");
 
-                    var sweetTagId = new Guid("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
-                    var basicTagId = new Guid("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+                var sweetTagId = new Guid("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+                var basicTagId = new Guid("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
 
-                    var recipeId = new Guid("55555555-5555-5555-5555-555555555555");
-                    var prepId = new Guid("66666666-6666-6666-6666-666666666666");
+                var recipeId = new Guid("55555555-5555-5555-5555-555555555555");
+                var prepId = new Guid("66666666-6666-6666-6666-666666666666");
 
-                    // Seed Ingredients
-                    prepDbContext.Ingredients.AddRange(
-                        new Ingredient { Id = flourId, Name = "Flour" },
-                        new Ingredient { Id = butterId, Name = "Butter" },
-                        new Ingredient { Id = sugarId, Name = "Sugar" },
-                        new Ingredient { Id = saltId, Name = "Salt" }
-                    );
+                // Seed User
+                var seedUser = new User
+                {
+                    ExternalId = "SeedUser",
+                    Email = "seed@example.com",
+                    FirstName = "Seed",
+                    LastName = "User",
+                };
+                prepDbContext.Users.Add(seedUser);
 
-                    // Seed User
-                    var seedUser = new User
-                    {
-                        ExternalId = "SeedUser",
-                        Email = "seed@example.com",
-                        FirstName = "Seed",
-                        LastName = "User",
-                    };
-                    prepDbContext.Users.Add(seedUser);
+                // Seed Ingredients (shared - UserId = null)
+                prepDbContext.Ingredients.AddRange(
+                    new Ingredient { Id = flourId, Name = "Flour", UserId = null },
+                    new Ingredient { Id = butterId, Name = "Butter", UserId = null },
+                    new Ingredient { Id = sugarId, Name = "Sugar", UserId = null },
+                    new Ingredient { Id = saltId, Name = "Salt", UserId = null }
+                );
 
-                    // Seed Tags
-                    prepDbContext.Tags.AddRange(
-                        new Tag { Id = sweetTagId, Name = "Sweet", UserId = seedUser.Id },
-                        new Tag { Id = basicTagId, Name = "Basic", UserId = seedUser.Id }
-                    );
+                // Seed Tags
+                prepDbContext.Tags.AddRange(
+                    new Tag { Id = sweetTagId, Name = "Sweet", UserId = seedUser.Id },
+                    new Tag { Id = basicTagId, Name = "Basic", UserId = seedUser.Id }
+                );
 
-                    var recipeSteps = new List<StepDto>
-                    {
-                        new() { Order = 1, Description = "Mix dry ingredients." },
-                        new() { Order = 2, Description = "Add wet ingredients." },
-                        new() { Order = 3, Description = "Cook until done." }
-                    };
+                var recipeSteps = new List<StepDto>
+                {
+                    new() { Order = 1, Description = "Mix dry ingredients." },
+                    new() { Order = 2, Description = "Add wet ingredients." },
+                    new() { Order = 3, Description = "Cook until done." }
+                };
 
-                    // Seed Recipe
-                    var recipe = new Recipe
-                    {
-                        Id = recipeId,
-                        Name = "Seeded Recipe",
-                        UserId = seedUser.Id,
-                        Description = "Basic recipe description.",
-                        PrepTimeMinutes = 5,
-                        CookTimeMinutes = 10,
-                        Yield = "8 servings",
-                        StepsJson = JsonSerializer.Serialize(recipeSteps),
-                    };
-                    prepDbContext.Recipes.Add(recipe);
+                // Seed Recipe
+                var recipe = new Recipe
+                {
+                    Id = recipeId,
+                    Name = "Seeded Recipe",
+                    UserId = seedUser.Id,
+                    Description = "Basic recipe description.",
+                    PrepTimeMinutes = 5,
+                    CookTimeMinutes = 10,
+                    Yield = "8 servings",
+                    StepsJson = JsonSerializer.Serialize(recipeSteps),
+                };
+                prepDbContext.Recipes.Add(recipe);
 
-                    // Seed RecipeIngredients
-                    prepDbContext.RecipeIngredients.AddRange(
-                        new RecipeIngredient
+                // Seed RecipeIngredients
+                prepDbContext.RecipeIngredients.AddRange(
+                    new RecipeIngredient
                         { RecipeId = recipeId, IngredientId = flourId, Quantity = 2, Unit = Unit.Whole },
-                        new RecipeIngredient
+                    new RecipeIngredient
                         { RecipeId = recipeId, IngredientId = butterId, Quantity = 3, Unit = Unit.Gram },
-                        new RecipeIngredient
+                    new RecipeIngredient
                         { RecipeId = recipeId, IngredientId = sugarId, Quantity = 4, Unit = Unit.Kilogram },
-                        new RecipeIngredient
+                    new RecipeIngredient
                         { RecipeId = recipeId, IngredientId = saltId, Quantity = 0.5m, Unit = Unit.Milliliter }
-                    );
+                );
 
-                    // Seed Recipe Tags
-                    prepDbContext.RecipeTags.AddRange(
-                        new RecipeTag { RecipeId = recipeId, TagId = sweetTagId },
-                        new RecipeTag { RecipeId = recipeId, TagId = basicTagId }
-                    );
+                // Seed Recipe Tags
+                prepDbContext.RecipeTags.AddRange(
+                    new RecipeTag { RecipeId = recipeId, TagId = sweetTagId },
+                    new RecipeTag { RecipeId = recipeId, TagId = basicTagId }
+                );
 
-                    // Create prep steps (slightly modified from recipe)
-                    var prepSteps = new List<StepDto>
+                // Create prep steps (slightly modified from recipe)
+                var prepSteps = new List<StepDto>
+                {
+                    new() { Order = 1, Description = "Mix dry ingredients in a large bowl." },
+                    new() { Order = 2, Description = "Add wet ingredients slowly while stirring." },
+                    new() { Order = 3, Description = "Cook until golden brown." }
+                };
+
+                // Seed Prep
+                var prep = new Prep
+                {
+                    Id = prepId,
+                    RecipeId = recipeId,
+                    UserId = seedUser.Id,
+                    SummaryNotes = "Made this with a bit more butter than called for.",
+                    PrepTimeMinutes = 7,
+                    CookTimeMinutes = 12,
+                    StepsJson = JsonSerializer.Serialize(prepSteps),
+                    CreatedNewRecipeId = null
+                };
+                prepDbContext.Preps.Add(prep);
+
+                // Seed PrepIngredients
+                prepDbContext.PrepIngredients.AddRange(
+                    new PrepIngredient
                     {
-                        new() { Order = 1, Description = "Mix dry ingredients in a large bowl." },
-                        new() { Order = 2, Description = "Add wet ingredients slowly while stirring." },
-                        new() { Order = 3, Description = "Cook until golden brown." }
-                    };
-
-                    // Seed Prep
-                    var prep = new Prep
+                        Id = Guid.NewGuid(),
+                        PrepId = prepId,
+                        IngredientId = flourId,
+                        Quantity = 2,
+                        Unit = Unit.Whole,
+                        Status = PrepIngredientStatus.Kept
+                    },
+                    new PrepIngredient
                     {
-                        Id = prepId,
-                        RecipeId = recipeId,
-                        UserId = seedUser.Id,
-                        SummaryNotes = "Made this with a bit more butter than called for.",
-                        PrepTimeMinutes = 7,
-                        CookTimeMinutes = 12,
-                        StepsJson = JsonSerializer.Serialize(prepSteps),
-                        CreatedNewRecipeId = null
-                    };
-                    prepDbContext.Preps.Add(prep);
+                        Id = Guid.NewGuid(),
+                        PrepId = prepId,
+                        IngredientId = butterId,
+                        Quantity = 4,
+                        Unit = Unit.Gram,
+                        Notes = "Used more butter",
+                        Status = PrepIngredientStatus.Modified
+                    },
+                    new PrepIngredient
+                    {
+                        Id = Guid.NewGuid(),
+                        PrepId = prepId,
+                        IngredientId = sugarId,
+                        Quantity = 4,
+                        Unit = Unit.Kilogram,
+                        Status = PrepIngredientStatus.Kept
+                    },
+                    new PrepIngredient
+                    {
+                        Id = Guid.NewGuid(),
+                        PrepId = prepId,
+                        IngredientId = saltId,
+                        Quantity = 0.5m,
+                        Unit = Unit.Milliliter,
+                        Status = PrepIngredientStatus.Kept
+                    }
+                );
 
-                    // Seed PrepIngredients
-                    prepDbContext.PrepIngredients.AddRange(
-                        new PrepIngredient
-                        {
-                            Id = Guid.NewGuid(),
-                            PrepId = prepId,
-                            IngredientId = flourId,
-                            Quantity = 2,
-                            Unit = Unit.Whole,
-                            Status = PrepIngredientStatus.Kept
-                        },
-                        new PrepIngredient
-                        {
-                            Id = Guid.NewGuid(),
-                            PrepId = prepId,
-                            IngredientId = butterId,
-                            Quantity = 4,
-                            Unit = Unit.Gram,
-                            Notes = "Used more butter",
-                            Status = PrepIngredientStatus.Modified
-                        },
-                        new PrepIngredient
-                        {
-                            Id = Guid.NewGuid(),
-                            PrepId = prepId,
-                            IngredientId = sugarId,
-                            Quantity = 4,
-                            Unit = Unit.Kilogram,
-                            Status = PrepIngredientStatus.Kept
-                        },
-                        new PrepIngredient
-                        {
-                            Id = Guid.NewGuid(),
-                            PrepId = prepId,
-                            IngredientId = saltId,
-                            Quantity = 0.5m,
-                            Unit = Unit.Milliliter,
-                            Status = PrepIngredientStatus.Kept
-                        }
-                    );
-
-                    // Seed  Rating Dimensions
-                    prepDbContext.RatingDimensions.AddRange(new RatingDimension
+                // Seed  Rating Dimensions
+                prepDbContext.RatingDimensions.AddRange(new RatingDimension
                     {
                         Key = "taste",
                         DisplayName = "Taste",
                         Description = "How good did the recipe taste?",
                         SortOrder = 10,
                     },
-                        new RatingDimension
-                        {
-                            Key = "texture",
-                            DisplayName = "Texture",
-                            Description = "How was the texture and consistency?",
-                            SortOrder = 20,
-                        },
-                        new RatingDimension
-                        {
-                            Key = "appearance",
-                            DisplayName = "Appearance",
-                            Description = "How did the final dish look?",
-                            SortOrder = 30,
-                        });
+                    new RatingDimension
+                    {
+                        Key = "texture",
+                        DisplayName = "Texture",
+                        Description = "How was the texture and consistency?",
+                        SortOrder = 20,
+                    },
+                    new RatingDimension
+                    {
+                        Key = "appearance",
+                        DisplayName = "Appearance",
+                        Description = "How did the final dish look?",
+                        SortOrder = 30,
+                    });
 
-                    await prepDbContext.SaveChangesAsync(cancellationToken);
-                }
-            });
+                await prepDbContext.SaveChangesAsync(cancellationToken);
+            }
+        });
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = new())

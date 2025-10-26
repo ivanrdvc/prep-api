@@ -12,8 +12,8 @@ using PrepApi.Preps.Requests;
 using PrepApi.Shared.Dtos;
 using PrepApi.Shared.Requests;
 using PrepApi.Shared.Services;
-using PrepApi.Tests.Integration.Helpers;
-using PrepApi.Tests.Unit.Helpers;
+using PrepApi.Tests.Integration.TestHelpers;
+using PrepApi.Tests.Unit.TestHelpers;
 
 namespace PrepApi.Tests.Unit.Preps;
 
@@ -150,6 +150,7 @@ public class PrepEndpointsTests
         var request = CreateUpsertPrepRequest(db, prep.RecipeId);
 
         var differentUserContext = Substitute.For<IUserContext>();
+        differentUserContext.InternalId.Returns(Guid.NewGuid());
 
         // Act
         var result = await PrepEndpoints.UpdatePrep(prep.Id, request, db, differentUserContext, _prepService, _validator);

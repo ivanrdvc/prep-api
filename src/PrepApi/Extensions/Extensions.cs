@@ -19,7 +19,7 @@ public static class Extensions
         builder.Services.AddScoped<PrepService>();
         builder.Services.AddScoped<RecipeInsightService>();
 
-        builder.Services.AddSingleton<IIngredientService, FileBasedIngredientService>();
+        builder.Services.AddScoped<IIngredientService, FileBasedIngredientService>();
 
         builder.Services.AddHostedService<SupabaseKeepAliveService>();
     }

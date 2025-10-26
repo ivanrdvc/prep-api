@@ -1,4 +1,5 @@
 ﻿using PrepApi.Data;
+using PrepApi.Ingredients;
 using PrepApi.Preps.Entities;
 using PrepApi.Recipes.Entities;
 

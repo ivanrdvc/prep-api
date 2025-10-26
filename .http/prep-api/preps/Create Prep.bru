@@ -1,0 +1,38 @@
+meta {
+  name: Create Prep
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{api_base_url}}/api/preps/
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "recipeId": "00000000-0000-0000-0000-000000000000",
+    "summaryNotes": "Great dish, easy to make",
+    "prepTimeMinutes": 15,
+    "cookTimeMinutes": 30,
+    "steps": [
+      {
+        "description": "Chop vegetables",
+        "order": 1
+      },
+      {
+        "description": "Cook in pan",
+        "order": 2
+      }
+    ],
+    "prepIngredients": [
+      {
+        "ingredientId": "00000000-0000-0000-0000-000000000000",
+        "quantity": 2,
+        "unit": 1,
+        "notes": "Fresh is best"
+      }
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+meta {
+  name: Delete Prep
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{api_base_url}}/api/preps/{{prep_id}}
+  body: none
+  auth: inherit
+}
