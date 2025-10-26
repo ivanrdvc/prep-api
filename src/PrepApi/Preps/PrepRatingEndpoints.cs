@@ -3,6 +3,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
+using PrepApi.Authorization;
 using PrepApi.Data;
 using PrepApi.Preps.Entities;
 using PrepApi.Preps.Requests;
@@ -14,9 +15,9 @@ public static class PrepRatingEndpoints
 {
     public static IEndpointRouteBuilder MapPrepRatingEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("{prepId:guid}/ratings")
-            .RequireAuthorization()
-            .WithTags("Prep Ratings");
+        var group = app.MapGroup("{prepId:guid}/ratings");
+        group.WithTags("Prep Ratings");
+        group.RequireAuthorization(pb => pb.RequireCurrentUser());
 
         group.MapPost("/", CreatePrepRating);
         group.MapPut("/{id:guid}", UpdatePrepRating);
@@ -74,7 +75,7 @@ public static class PrepRatingEndpoints
         var rating = new PrepRating
         {
             PrepId = prepId,
-            UserId = userContext.InternalId!.Value,
+            UserId = userContext.InternalId,
             Liked = request.Liked,
             OverallRating = request.OverallRating,
             Dimensions = request.Dimensions,

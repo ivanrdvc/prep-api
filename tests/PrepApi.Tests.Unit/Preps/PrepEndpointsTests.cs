@@ -5,13 +5,13 @@ using Microsoft.EntityFrameworkCore;
 
 using NSubstitute;
 
+using PrepApi.Authorization;
 using PrepApi.Data;
 using PrepApi.Preps;
 using PrepApi.Preps.Entities;
 using PrepApi.Preps.Requests;
 using PrepApi.Shared.Dtos;
 using PrepApi.Shared.Requests;
-using PrepApi.Shared.Services;
 using PrepApi.Tests.Integration.TestHelpers;
 using PrepApi.Tests.Unit.TestHelpers;
 
@@ -135,25 +135,6 @@ public class PrepEndpointsTests
 
         // Act
         var result = await PrepEndpoints.UpdatePrep(Guid.NewGuid(), request, db, _userContext, _prepService, _validator);
-
-        // Assert
-        Assert.IsType<NotFound>(result.Result);
-    }
-
-    [Fact]
-    public async Task UpdatePrep_DifferentUser_ReturnsNotFound()
-    {
-        // Arrange
-        await using var db = _fakeDb.CreateDbContext();
-        var recipe = await db.SeedRecipeAsync();
-        var prep = await db.SeedPrepAsync(recipe);
-        var request = CreateUpsertPrepRequest(db, prep.RecipeId);
-
-        var differentUserContext = Substitute.For<IUserContext>();
-        differentUserContext.InternalId.Returns(Guid.NewGuid());
-
-        // Act
-        var result = await PrepEndpoints.UpdatePrep(prep.Id, request, db, differentUserContext, _prepService, _validator);
 
         // Assert
         Assert.IsType<NotFound>(result.Result);

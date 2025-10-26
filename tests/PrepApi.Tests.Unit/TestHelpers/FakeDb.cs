@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
+using PrepApi.Authorization;
 using PrepApi.Data;
-using PrepApi.Shared.Services;
 
 namespace PrepApi.Tests.Unit.TestHelpers;
 

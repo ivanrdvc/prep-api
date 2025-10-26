@@ -6,13 +6,13 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+using PrepApi.Authorization;
 using PrepApi.Data;
 using PrepApi.Ingredients;
 using PrepApi.Preps.Entities;
 using PrepApi.Preps.Requests;
 using PrepApi.Recipes.Entities;
 using PrepApi.Shared.Requests;
-using PrepApi.Shared.Services;
 
 namespace PrepApi.Preps;
 
@@ -20,9 +20,9 @@ public static class PrepEndpoints
 {
     public static IEndpointRouteBuilder MapPrepEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("api/preps")
-            .WithTags("Preps")
-            .RequireAuthorization();
+        var group = app.MapGroup("api/preps");
+        group.WithTags("Preps");
+        group.RequireAuthorization(pb => pb.RequireCurrentUser());
 
         group.MapPost("/", CreatePrep);
         group.MapPut("{id:guid}", UpdatePrep);
@@ -58,7 +58,7 @@ public static class PrepEndpoints
             return TypedResults.NotFound($"Base Recipe with ID {request.RecipeId} not found.");
         }
 
-        var userId = userContext.InternalId!.Value;
+        var userId = userContext.InternalId;
 
         var (ingredients, ingredientValidationError) = await LoadAndValidateIngredientsAsync(
             db, request.PrepIngredients, recipe, userId);
@@ -101,7 +101,7 @@ public static class PrepEndpoints
             return TypedResults.ValidationProblem(validationResult.ToDictionary());
         }
 
-        var userId = userContext.InternalId!.Value;
+        var userId = userContext.InternalId;
 
         var prep = await db.Preps
             .Include(p => p.PrepIngredients)

@@ -2,10 +2,10 @@
 
 using Microsoft.EntityFrameworkCore;
 
+using PrepApi.Authorization;
 using PrepApi.Ingredients;
 using PrepApi.Preps.Entities;
 using PrepApi.Recipes.Entities;
-using PrepApi.Shared.Services;
 using PrepApi.Users;
 
 namespace PrepApi.Data;
@@ -367,7 +367,7 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
     {
         var timestamp = DateTimeOffset.UtcNow;
         var systemUser = new Guid("00000000-0000-0000-0000-000000000001");
-        var userId = userContext.InternalId ?? systemUser;
+        var userId = userContext.User is not null ? userContext.InternalId : systemUser;
 
         foreach (var entry in ChangeTracker.Entries<Entity>())
         {

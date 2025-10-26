@@ -2,9 +2,9 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+using PrepApi.Authorization;
 using PrepApi.Data;
 using PrepApi.Ingredients.Requests;
-using PrepApi.Shared.Services;
 
 namespace PrepApi.Ingredients;
 
@@ -12,9 +12,9 @@ public static class IngredientEndpoints
 {
     public static IEndpointRouteBuilder MapIngredientEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("api/ingredients")
-            .WithTags("Ingredients")
-            .RequireAuthorization();
+        var group = app.MapGroup("api/ingredients");
+        group.WithTags("Ingredients");
+        group.RequireAuthorization(pb => pb.RequireCurrentUser());
 
         group.MapGet("search", SearchIngredients);
         group.MapPost("/", CreateIngredient);
@@ -32,7 +32,7 @@ public static class IngredientEndpoints
         if (string.IsNullOrWhiteSpace(query))
             return TypedResults.BadRequest("Query is required.");
 
-        var userId = userContext.InternalId!.Value;
+        var userId = userContext.InternalId;
         var results = await ingredientService.SearchAsync(query, userId);
 
         return TypedResults.Ok(results);
@@ -46,7 +46,7 @@ public static class IngredientEndpoints
         if (string.IsNullOrWhiteSpace(request.Name))
             return TypedResults.BadRequest("Name is required.");
 
-        var userId = userContext.InternalId!.Value;
+        var userId = userContext.InternalId;
 
         var exists = await db.Ingredients
             .AnyAsync(i => i.Name == request.Name && i.UserId == userId);
@@ -77,7 +77,7 @@ public static class IngredientEndpoints
         if (string.IsNullOrWhiteSpace(request.Name))
             return TypedResults.BadRequest("Name is required.");
 
-        var userId = userContext.InternalId!.Value;
+        var userId = userContext.InternalId;
 
         var ingredient = await db.Ingredients
             .FirstOrDefaultAsync(i => i.Id == id && i.UserId == userId);
@@ -111,7 +111,7 @@ public static class IngredientEndpoints
         PrepDb db,
         IUserContext userContext)
     {
-        var userId = userContext.InternalId!.Value;
+        var userId = userContext.InternalId;
 
         var ingredient = await db.Ingredients
             .FirstOrDefaultAsync(i => i.Id == id && i.UserId == userId);
@@ -130,7 +130,7 @@ public static class IngredientEndpoints
         IUserContext userContext,
         [AsParameters] GetIngredientsRequest request)
     {
-        var userId = userContext.InternalId!.Value;
+        var userId = userContext.InternalId;
 
         var take = Math.Min(request.Take, 100);
 

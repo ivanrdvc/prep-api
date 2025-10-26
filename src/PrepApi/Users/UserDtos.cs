@@ -2,7 +2,7 @@
 
 public record UserDto
 {
-    public required string Id { get; init; }
+    public required Guid Id { get; init; }
     public string? Email { get; init; }
     public string? FirstName { get; init; }
     public string? LastName { get; init; }
@@ -10,7 +10,7 @@ public record UserDto
 
     public static UserDto FromUser(User user) => new()
     {
-        Id = user.ExternalId,
+        Id = user.Id,
         Email = user.Email,
         FirstName = user.FirstName,
         LastName = user.LastName,

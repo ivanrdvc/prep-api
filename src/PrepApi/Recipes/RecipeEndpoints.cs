@@ -6,11 +6,10 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+using PrepApi.Authorization;
 using PrepApi.Data;
-using PrepApi.Ingredients;
 using PrepApi.Recipes.Entities;
 using PrepApi.Recipes.Requests;
-using PrepApi.Shared.Services;
 
 namespace PrepApi.Recipes;
 
@@ -18,9 +17,9 @@ public static class RecipeEndpoints
 {
     public static IEndpointRouteBuilder MapRecipeEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("api/recipes")
-            .WithTags("Recipes")
-            .RequireAuthorization();
+        var group = app.MapGroup("api/recipes");
+        group.WithTags("Recipes");
+        group.RequireAuthorization(pb => pb.RequireCurrentUser());
 
         group.MapPost("/", CreateRecipe);
         group.MapGet("/{id:guid}", GetRecipe);
@@ -70,7 +69,7 @@ public static class RecipeEndpoints
             return TypedResults.ValidationProblem(validationResult.ToDictionary());
         }
 
-        var userId = userContext.InternalId!.Value;
+        var userId = userContext.InternalId;
 
         var ingredientProblem = await ValidateRecipeIngredientsAsync(db, request.Ingredients, userId);
         if (ingredientProblem != null)
@@ -107,7 +106,7 @@ public static class RecipeEndpoints
             })
         ];
 
-        recipe.RecipeTags = await CreateRecipeTagsFromIdsAsync(db, request.TagIds, userContext.InternalId!.Value);
+        recipe.RecipeTags = await CreateRecipeTagsFromIdsAsync(db, request.TagIds, userContext.InternalId);
 
         await db.SaveChangesAsync();
 
@@ -144,7 +143,7 @@ public static class RecipeEndpoints
             return TypedResults.ValidationProblem(validationResult.ToDictionary());
         }
 
-        var userId = userContext.InternalId!.Value;
+        var userId = userContext.InternalId;
 
         var ingredientProblem = await ValidateRecipeIngredientsAsync(db, request.Ingredients, userId);
         if (ingredientProblem != null)
@@ -167,7 +166,7 @@ public static class RecipeEndpoints
                 Quantity = ingredientDto.Quantity,
                 Unit = ingredientDto.Unit
             }).ToList(),
-            RecipeTags = await CreateRecipeTagsFromIdsAsync(db, request.TagIds, userContext.InternalId.Value)
+            RecipeTags = await CreateRecipeTagsFromIdsAsync(db, request.TagIds, userContext.InternalId)
         };
 
         await db.Recipes.AddAsync(recipe);
@@ -213,7 +212,7 @@ public static class RecipeEndpoints
         {
             Name = request.Name,
             Description = originalRecipe.Description,
-            UserId = userContext.InternalId!.Value,
+            UserId = userContext.InternalId,
             PrepTimeMinutes = prep.PrepTimeMinutes ?? originalRecipe.PrepTimeMinutes,
             CookTimeMinutes = prep.CookTimeMinutes ?? originalRecipe.CookTimeMinutes,
             Yield = originalRecipe.Yield, // should start with original or new yield?

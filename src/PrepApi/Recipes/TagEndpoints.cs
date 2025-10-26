@@ -4,10 +4,10 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+using PrepApi.Authorization;
 using PrepApi.Data;
 using PrepApi.Recipes.Entities;
 using PrepApi.Recipes.Requests;
-using PrepApi.Shared.Services;
 
 namespace PrepApi.Recipes;
 
@@ -15,9 +15,9 @@ public static class TagEndpoints
 {
     public static IEndpointRouteBuilder MapTagEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("api/tags")
-            .WithTags("Tags")
-            .RequireAuthorization();
+        var group = app.MapGroup("api/tags");
+        group.WithTags("Tags");
+        group.RequireAuthorization(pb => pb.RequireCurrentUser());
 
         group.MapPost("/", CreateTag);
         group.MapGet("/", GetTags);
@@ -28,8 +28,7 @@ public static class TagEndpoints
     }
 
     private static async Task<Results<Created<TagDto>, ValidationProblem>> CreateTag(
-        [FromBody]
-        UpsertTagRequest request,
+        [FromBody] UpsertTagRequest request,
         PrepDb db,
         IUserContext userContext,
         IValidator<UpsertTagRequest> validator)
@@ -40,7 +39,7 @@ public static class TagEndpoints
             return TypedResults.ValidationProblem(validationResult.ToDictionary());
         }
 
-        var validationProblem = await CheckForDuplicateTag(db, request.Name, userContext.InternalId!.Value);
+        var validationProblem = await CheckForDuplicateTag(db, request.Name, userContext.InternalId);
         if (validationProblem is not null)
         {
             return validationProblem;
@@ -49,7 +48,7 @@ public static class TagEndpoints
         var tag = new Tag
         {
             Name = request.Name,
-            UserId = userContext.InternalId!.Value
+            UserId = userContext.InternalId
         };
 
         await db.Tags.AddAsync(tag);
@@ -100,7 +99,7 @@ public static class TagEndpoints
             return TypedResults.NotFound();
         }
 
-        var validationProblem = await CheckForDuplicateTag(db, request.Name, userContext.InternalId!.Value, id);
+        var validationProblem = await CheckForDuplicateTag(db, request.Name, userContext.InternalId, id);
         if (validationProblem is not null)
         {
             return validationProblem;

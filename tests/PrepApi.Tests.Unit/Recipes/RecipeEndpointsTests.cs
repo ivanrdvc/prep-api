@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 
+using PrepApi.Authorization;
 using PrepApi.Recipes;
 using PrepApi.Recipes.Requests;
-using PrepApi.Shared.Services;
 using PrepApi.Tests.Integration.TestHelpers;
 using PrepApi.Tests.Unit.TestHelpers;
 

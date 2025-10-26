@@ -2,10 +2,9 @@
 
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
+using PrepApi.Authorization;
 using PrepApi.Data;
-using PrepApi.Shared.Services;
 using PrepApi.Users.Requests;
 
 namespace PrepApi.Users;
@@ -14,31 +13,25 @@ public static class UserEndpoints
 {
     public static IEndpointRouteBuilder MapUserEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("api/users")
-            .WithTags("Users")
-            .RequireAuthorization();
+        var group = app.MapGroup("api/users");
+        group.WithTags("Users");
 
-        group.MapGet("/me", GetCurrentUser);
-        group.MapPost("/", CreateCurrentUser);
-        group.MapPut("/me", UpdateCurrentUser);
+        group.MapGet("/me", GetCurrentUser)
+            .RequireAuthorization(pb => pb.RequireCurrentUser());
+        group.MapPut("/me", UpdateCurrentUser)
+            .RequireAuthorization(pb => pb.RequireCurrentUser());
+
+        group.MapPost("/", CreateCurrentUser)
+            .RequireAuthorization();
 
         return group;
     }
 
-    public static async Task<Results<Ok<UserDto>, NotFound>> GetCurrentUser(
-        PrepDb db,
-        IUserContext userContext)
+    public static Task<Ok<UserDto>> GetCurrentUser(IUserContext userContext)
     {
-        var user = await db.Users
-            .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Id == userContext.InternalId);
-
-        if (user is null)
-        {
-            return TypedResults.NotFound();
-        }
-
-        return TypedResults.Ok(UserDto.FromUser(user));
+        // User is guaranteed to exist by RequireCurrentUser policy
+        // Already loaded by ClaimsTransformation, no DB query needed
+        return Task.FromResult(TypedResults.Ok(UserDto.FromUser(userContext.User!)));
     }
 
     public static async Task<Results<Created<UserDto>, Conflict>> CreateCurrentUser(
@@ -76,18 +69,12 @@ public static class UserEndpoints
         return TypedResults.Created("/api/users/me", userDto);
     }
 
-    public static async Task<Results<NoContent, NotFound, ValidationProblem>> UpdateCurrentUser(
+    public static async Task<Results<NoContent, ValidationProblem>> UpdateCurrentUser(
         [FromBody] UpdateUserRequest request,
         PrepDb db,
         IUserContext userContext)
     {
-        var user = await db.Users
-            .FirstOrDefaultAsync(u => u.Id == userContext.InternalId);
-
-        if (user is null)
-        {
-            return TypedResults.NotFound();
-        }
+        var user = userContext.User!;
 
         user.FirstName = request.FirstName;
         user.LastName = request.LastName;

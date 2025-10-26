@@ -8,12 +8,12 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
+using PrepApi.Authorization;
 using PrepApi.Data;
 using PrepApi.Extensions;
 using PrepApi.Ingredients;
 using PrepApi.Preps;
 using PrepApi.Recipes;
-using PrepApi.Shared.Services;
 using PrepApi.Users;
 
 using Scalar.AspNetCore;
@@ -52,7 +52,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorizationBuilder().AddCurrentUserHandler();
 
 builder.Services.AddHealthChecks().AddDbContextCheck<PrepDb>("Database");
 
