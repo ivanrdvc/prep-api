@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 
@@ -10,6 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 
 using PrepApi.Data;
 using PrepApi.Extensions;
+using PrepApi.Ingredients;
 using PrepApi.Preps;
 using PrepApi.Recipes;
 using PrepApi.Shared.Services;
@@ -21,7 +23,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddAppServices();
 
-if (!builder.Environment.IsEnvironment("Development"))
+if (!builder.Environment.IsEnvironment(Environments.Development))
 {
     builder.Services.AddOpenTelemetry().UseAzureMonitor();
 }

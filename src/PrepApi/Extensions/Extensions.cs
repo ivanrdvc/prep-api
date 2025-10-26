@@ -4,8 +4,8 @@ using Azure.AI.OpenAI;
 
 using Microsoft.Extensions.AI;
 
+using PrepApi.Ingredients;
 using PrepApi.Preps;
-using PrepApi.Shared.Queue;
 using PrepApi.Shared.Services;
 
 namespace PrepApi.Extensions;
@@ -18,12 +18,10 @@ public static class Extensions
 
         builder.Services.AddScoped<PrepService>();
         builder.Services.AddScoped<RecipeInsightService>();
-        builder.Services.AddHttpClient<UsdaApiService>();
 
-        builder.Services.AddSingleton<ITaskQueue, InMemoryTaskQueue>();
+        builder.Services.AddSingleton<IIngredientService, FileBasedIngredientService>();
 
         builder.Services.AddHostedService<SupabaseKeepAliveService>();
-        builder.Services.AddHostedService<TaskProcessor>();
     }
 
     private static void AddAzureOpenAiServices(this IServiceCollection services, IConfiguration configuration)

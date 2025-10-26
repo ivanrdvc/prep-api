@@ -1,7 +1,6 @@
-using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace PrepApi.Shared.Services;
+namespace PrepApi.Ingredients;
 
 public class UsdaFoodSearchResponse
 {

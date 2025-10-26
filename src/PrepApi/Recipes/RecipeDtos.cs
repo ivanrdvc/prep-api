@@ -14,7 +14,7 @@ public record RecipeDto
     public required int PrepTimeMinutes { get; init; }
     public required int CookTimeMinutes { get; init; }
     public string? Yield { get; init; }
-    public required List<IngredientDto> Ingredients { get; init; }
+    public required List<RecipeIngredientDto> Ingredients { get; init; }
     public required List<StepDto> Steps { get; init; }
     public List<TagDto> Tags { get; init; } = [];
     public required DateTimeOffset CreatedAt { get; init; }
@@ -25,7 +25,7 @@ public record RecipeDto
 
     public static RecipeDto FromRecipe(Recipe recipe)
     {
-        var ingredients = recipe.RecipeIngredients.Select(ri => new IngredientDto
+        var ingredients = recipe.RecipeIngredients.Select(ri => new RecipeIngredientDto
         {
             IngredientId = ri.IngredientId,
             Name = ri.Ingredient?.Name ?? string.Empty,
@@ -75,7 +75,7 @@ public record TagDto
     }
 }
 
-public record IngredientDto
+public record RecipeIngredientDto
 {
     public required Guid IngredientId { get; init; }
     public required string Name { get; init; }

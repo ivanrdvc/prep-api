@@ -30,4 +30,14 @@
         <InternalsVisibleTo Include="PrepApi.Tests.Integration" />
     </ItemGroup>
 
+    <ItemGroup>
+        <None Update="Data\ingredients.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Ingredients\" />
+    </ItemGroup>
+
 </Project>
