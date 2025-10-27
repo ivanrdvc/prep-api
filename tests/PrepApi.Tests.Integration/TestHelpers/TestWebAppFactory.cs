@@ -53,10 +53,10 @@ public class TestWebAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
         base.ConfigureClient(client);
     }
 
-    public async Task<PrepDb> CreateScopedDbContextAsync()
+    public Task<PrepDb> CreateScopedDbContextAsync()
     {
         var scope = Services.CreateAsyncScope();
-        return scope.ServiceProvider.GetRequiredService<PrepDb>();
+        return Task.FromResult(scope.ServiceProvider.GetRequiredService<PrepDb>());
     }
 
     public async Task InitializeAsync()
