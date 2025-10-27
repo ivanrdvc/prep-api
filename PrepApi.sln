@@ -23,6 +23,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{48A3C135-E
 		docs\index.md = docs\index.md
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "github", "github", "{48757744-86F6-410D-BBE8-5A25C6B019CE}"
+	ProjectSection(SolutionItems) = preProject
+		.github\instructions\integration-tests.instructions.md = .github\instructions\integration-tests.instructions.md
+		.github\workflows\main_prep-api.yml = .github\workflows\main_prep-api.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,5 +53,6 @@ Global
 		{A08F7239-01F8-4328-AB16-2BA71F04A2CE} = {E35F7946-B93D-4870-BD53-74782B032A4A}
 		{41CAE196-811D-4E5F-9B72-A1BA06154B4F} = {E35F7946-B93D-4870-BD53-74782B032A4A}
 		{48A3C135-E4D7-4A6F-B0ED-D1D6F5FB8494} = {191ED420-0D6F-41E2-9B21-F5E10C9FD890}
+		{48757744-86F6-410D-BBE8-5A25C6B019CE} = {191ED420-0D6F-41E2-9B21-F5E10C9FD890}
 	EndGlobalSection
 EndGlobal
