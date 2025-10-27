@@ -78,7 +78,7 @@ public class IngredientEndpointsTests
         var request = new GetIngredientsRequest { Skip = 0, Take = 10 };
 
         // Act
-        var result = await IngredientEndpoints.GetUserIngredients(context, _userContext, request);
+        var result = await IngredientEndpoints.GetUserIngredients(context, request);
 
         // Assert
         var ingredients = result.Value;
@@ -97,7 +97,7 @@ public class IngredientEndpointsTests
         var request = new GetIngredientsRequest { Skip = 0, Take = 10, Name = "Fl" };
 
         // Act
-        var result = await IngredientEndpoints.GetUserIngredients(context, _userContext, request);
+        var result = await IngredientEndpoints.GetUserIngredients(context, request);
 
         // Assert
         var ingredients = result.Value;
@@ -114,7 +114,7 @@ public class IngredientEndpointsTests
         var request = new GetIngredientsRequest { Skip = 0, Take = 2000 };
 
         // Act
-        var result = await IngredientEndpoints.GetUserIngredients(context, _userContext, request);
+        var result = await IngredientEndpoints.GetUserIngredients(context, request);
 
         // Assert - Should limit to 1000 max
         Assert.NotNull(result.Value);
@@ -128,7 +128,7 @@ public class IngredientEndpointsTests
         var ingredientService = new IngredientService(context);
 
         // Act
-        var result = await IngredientEndpoints.SearchIngredients(ingredientService, "", _userContext);
+        var result = await IngredientEndpoints.SearchIngredients(ingredientService, "");
 
         // Assert
         Assert.IsType<BadRequest<string>>(result.Result);

@@ -47,7 +47,7 @@ public static class PrepRatingEndpoints
             {
                 p.Id,
                 p.RecipeId,
-                ExistingRating = p.Ratings.FirstOrDefault(r => r.UserId == userContext.InternalId)
+                ExistingRating = p.Ratings.FirstOrDefault()
             })
             .AsNoTracking()
             .FirstOrDefaultAsync();
@@ -108,7 +108,7 @@ public static class PrepRatingEndpoints
         }
 
         var ratingInfo = await db.PrepRatings
-            .Where(r => r.Id == id && r.PrepId == prepId && r.UserId == userContext.InternalId)
+            .Where(r => r.Id == id && r.PrepId == prepId)
             .Select(r => new
             {
                 Rating = r,

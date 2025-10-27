@@ -143,6 +143,7 @@ public class RecipeBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebA
         await using var assertScope = factory.Services.CreateAsyncScope();
         var dbContextAssert = assertScope.ServiceProvider.GetRequiredService<PrepDb>();
         var recipeInDb = await dbContextAssert.Recipes
+            .IgnoreQueryFilters()
             .Include(r => r.RecipeIngredients)
             .Include(r => r.RecipeTags)
             .ThenInclude(rt => rt.Tag)
@@ -226,6 +227,7 @@ public class RecipeBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebA
 
         await using var assertContext = await factory.CreateScopedDbContextAsync();
         var recipeInDbAfterDelete = await assertContext.Recipes
+            .IgnoreQueryFilters()
             .AsNoTracking()
             .FirstOrDefaultAsync(r => r.Id == recipeIdToDelete);
 
@@ -296,6 +298,7 @@ public class RecipeBehaviors(TestWebAppFactory factory) : IClassFixture<TestWebA
         await using var assertScope = factory.Services.CreateAsyncScope();
         var dbContextAssert = assertScope.ServiceProvider.GetRequiredService<PrepDb>();
         var updatedRecipeInDb = await dbContextAssert.Recipes
+            .IgnoreQueryFilters()
             .Include(r => r.RecipeIngredients)
             .Include(r => r.RecipeTags)
             .ThenInclude(rt => rt.Tag)

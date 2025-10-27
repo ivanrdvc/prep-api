@@ -59,12 +59,10 @@ public static class TagEndpoints
 
     private static async Task<Ok<List<TagDto>>> GetTags(
         [FromQuery] string? term,
-        PrepDb db,
-        IUserContext userContext)
+        PrepDb db)
     {
         var query = db.Tags
-            .AsNoTracking()
-            .Where(t => t.UserId == userContext.InternalId);
+            .AsNoTracking();
 
         if (!string.IsNullOrWhiteSpace(term))
         {
@@ -92,14 +90,14 @@ public static class TagEndpoints
         }
 
         var tag = await db.Tags
-            .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userContext.InternalId);
+            .FirstOrDefaultAsync(t => t.Id == id);
 
         if (tag is null)
         {
             return TypedResults.NotFound();
         }
 
-        var validationProblem = await CheckForDuplicateTag(db, request.Name, userContext.InternalId, id);
+        var validationProblem = await CheckForDuplicateTag(db, request.Name, userContext.InternalId);
         if (validationProblem is not null)
         {
             return validationProblem;
@@ -113,11 +111,10 @@ public static class TagEndpoints
 
     private static async Task<Results<NoContent, NotFound>> DeleteTag(
         [FromRoute] Guid id,
-        PrepDb db,
-        IUserContext userContext)
+        PrepDb db)
     {
         var tag = await db.Tags
-            .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userContext.InternalId);
+            .FirstOrDefaultAsync(t => t.Id == id);
 
         if (tag is null)
         {
@@ -133,12 +130,11 @@ public static class TagEndpoints
     private static async Task<ValidationProblem?> CheckForDuplicateTag(
         PrepDb db,
         string tagName,
-        Guid userId,
         Guid? excludeId = null)
     {
         var query = db.Tags
             .AsNoTracking()
-            .Where(t => t.Name == tagName && t.UserId == userId);
+            .Where(t => t.Name == tagName);
 
         if (excludeId.HasValue)
         {
