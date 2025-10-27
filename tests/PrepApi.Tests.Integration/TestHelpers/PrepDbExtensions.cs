@@ -162,6 +162,7 @@ public static class PrepDbTestExtensions
         foreach (var name in names)
         {
             var existingTag = await dbContext.Tags
+                .IgnoreQueryFilters()
                 .FirstOrDefaultAsync(t => t.UserId == userId && t.Name == name);
 
             if (existingTag != null)
@@ -237,6 +238,7 @@ public static class PrepDbTestExtensions
         bool isFavoriteVariant = false)
     {
         var baseRecipe = await dbContext.Recipes
+            .IgnoreQueryFilters()
             .Include(r => r.RecipeIngredients)
             .FirstOrDefaultAsync(r => r.Id == originalRecipeId);
 

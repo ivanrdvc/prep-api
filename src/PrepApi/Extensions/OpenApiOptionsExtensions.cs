@@ -10,7 +10,7 @@ public static class OpenApiOptionsExtensions
     {
         const string schemeName = "Bearer";
 
-        var scheme = new OpenApiSecurityScheme()
+        var scheme = new OpenApiSecurityScheme
         {
             Type = SecuritySchemeType.Http,
             Name = schemeName,

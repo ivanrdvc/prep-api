@@ -2,9 +2,9 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+using PrepApi.Authorization;
 using PrepApi.Data;
 using PrepApi.Ingredients.Requests;
-using PrepApi.Shared.Services;
 
 namespace PrepApi.Ingredients;
 
@@ -12,9 +12,9 @@ public static class IngredientEndpoints
 {
     public static IEndpointRouteBuilder MapIngredientEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("api/ingredients")
-            .WithTags("Ingredients")
-            .RequireAuthorization();
+        var group = app.MapGroup("api/ingredients");
+        group.WithTags("Ingredients");
+        group.RequireAuthorization(pb => pb.RequireCurrentUser());
 
         group.MapGet("search", SearchIngredients);
         group.MapPost("/", CreateIngredient);
@@ -26,14 +26,12 @@ public static class IngredientEndpoints
 
     public static async Task<Results<Ok<List<IngredientDto>>, BadRequest<string>>> SearchIngredients(
         [FromServices] IIngredientService ingredientService,
-        [FromQuery] string query,
-        IUserContext userContext)
+        [FromQuery] string query)
     {
         if (string.IsNullOrWhiteSpace(query))
             return TypedResults.BadRequest("Query is required.");
 
-        var userId = userContext.InternalId!.Value;
-        var results = await ingredientService.SearchAsync(query, userId);
+        var results = await ingredientService.SearchAsync(query);
 
         return TypedResults.Ok(results);
     }
@@ -46,10 +44,8 @@ public static class IngredientEndpoints
         if (string.IsNullOrWhiteSpace(request.Name))
             return TypedResults.BadRequest("Name is required.");
 
-        var userId = userContext.InternalId!.Value;
-
         var exists = await db.Ingredients
-            .AnyAsync(i => i.Name == request.Name && i.UserId == userId);
+            .AnyAsync(i => i.Name == request.Name);
 
         if (exists)
             return TypedResults.Conflict($"You already have an ingredient named '{request.Name}'.");
@@ -58,7 +54,7 @@ public static class IngredientEndpoints
         {
             Name = request.Name,
             Category = request.Category,
-            UserId = userId
+            UserId = userContext.InternalId
         };
 
         db.Ingredients.Add(ingredient);
@@ -77,22 +73,18 @@ public static class IngredientEndpoints
         if (string.IsNullOrWhiteSpace(request.Name))
             return TypedResults.BadRequest("Name is required.");
 
-        var userId = userContext.InternalId!.Value;
-
         var ingredient = await db.Ingredients
-            .FirstOrDefaultAsync(i => i.Id == id && i.UserId == userId);
+            .FirstOrDefaultAsync(i => i.Id == id);
 
-        if (ingredient is null)
+        if (ingredient is null || ingredient.UserId != userContext.InternalId)
             return TypedResults.NotFound();
 
-        // Check if new name conflicts with another ingredient
         var nameConflict = await db.Ingredients
-            .AnyAsync(i => i.Name == request.Name && i.UserId == userId && i.Id != id);
+            .AnyAsync(i => i.Name == request.Name && i.Id != id);
 
         if (nameConflict)
             return TypedResults.Conflict($"You already have an ingredient named '{request.Name}'.");
 
-        // Update properties
         db.Entry(ingredient).CurrentValues.SetValues(new Ingredient
         {
             Id = ingredient.Id,
@@ -111,12 +103,10 @@ public static class IngredientEndpoints
         PrepDb db,
         IUserContext userContext)
     {
-        var userId = userContext.InternalId!.Value;
-
         var ingredient = await db.Ingredients
-            .FirstOrDefaultAsync(i => i.Id == id && i.UserId == userId);
+            .FirstOrDefaultAsync(i => i.Id == id);
 
-        if (ingredient is null)
+        if (ingredient is null || ingredient.UserId != userContext.InternalId)
             return TypedResults.NotFound();
 
         db.Ingredients.Remove(ingredient);
@@ -127,22 +117,17 @@ public static class IngredientEndpoints
 
     public static async Task<Ok<List<IngredientDto>>> GetUserIngredients(
         PrepDb db,
-        IUserContext userContext,
         [AsParameters] GetIngredientsRequest request)
     {
-        var userId = userContext.InternalId!.Value;
-
         var take = Math.Min(request.Take, 100);
 
-        var query = db.Ingredients
-            .Where(i => i.UserId == null || i.UserId == userId);
+        var query = db.Ingredients.AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(request.Name))
         {
             query = query.Where(i => i.Name.Contains(request.Name));
         }
 
-        // Get both shared ingredients (UserId = null) and user's own ingredients
         var ingredients = await query
             .OrderBy(i => i.Name)
             .Skip(request.Skip)

@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 
+using PrepApi.Authorization;
 using PrepApi.Recipes;
 using PrepApi.Recipes.Requests;
-using PrepApi.Shared.Services;
 using PrepApi.Tests.Integration.TestHelpers;
 using PrepApi.Tests.Unit.TestHelpers;
 
@@ -56,7 +56,7 @@ public class RecipeEndpointsTests
         await using var context = _fakeDb.CreateDbContext();
 
         // Act
-        var result = await RecipeEndpoints.SetFavoriteVariant(Guid.NewGuid(), context, _userContext);
+        var result = await RecipeEndpoints.SetFavoriteVariant(Guid.NewGuid(), context);
 
         // Assert
         Assert.IsType<NotFound>(result.Result);
@@ -72,7 +72,7 @@ public class RecipeEndpointsTests
         var variant2 = await context.SeedVariantRecipeAsync(recipe.Id, "Variant 2", false);
 
         // Act
-        var result = await RecipeEndpoints.SetFavoriteVariant(variant2.Id, context, _userContext);
+        var result = await RecipeEndpoints.SetFavoriteVariant(variant2.Id, context);
 
         // Assert
         Assert.IsType<NoContent>(result.Result);

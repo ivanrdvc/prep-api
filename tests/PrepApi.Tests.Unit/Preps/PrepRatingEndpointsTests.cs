@@ -2,6 +2,7 @@ using FluentValidation;
 
 using Microsoft.AspNetCore.Http.HttpResults;
 
+using PrepApi.Authorization;
 using PrepApi.Preps;
 using PrepApi.Preps.Requests;
 using PrepApi.Shared.Services;
@@ -137,7 +138,7 @@ public class PrepRatingEndpointsTests
         await db.SeedDefaultRatingDimensionsAsync();
         var recipe = await db.SeedRecipeAsync();
         var prep = await db.SeedPrepAsync(recipe);
-        var rating = await db.SeedPrepRatingAsync(prep.Id, _userContext.InternalId!.Value);
+        var rating = await db.SeedPrepRatingAsync(prep.Id, _userContext.InternalId);
 
         // Act
         var updateRequest = new UpsertPrepRatingRequest
@@ -163,7 +164,7 @@ public class PrepRatingEndpointsTests
         var recipeInsightService = new RecipeInsightService(db);
         var recipe = await db.SeedRecipeAsync();
         var prep = await db.SeedPrepAsync(recipe);
-        var rating = await db.SeedPrepRatingAsync(prep.Id, _userContext.InternalId!.Value);
+        var rating = await db.SeedPrepRatingAsync(prep.Id, _userContext.InternalId);
         var invalidRequest = new UpsertPrepRatingRequest { OverallRating = 0, Liked = true, Dimensions = new() };
 
         // Act
@@ -195,7 +196,7 @@ public class PrepRatingEndpointsTests
         await using var db = _fakeDb.CreateDbContext();
         var recipe = await db.SeedRecipeAsync();
         var prep = await db.SeedPrepAsync(recipe);
-        await db.SeedPrepRatingAsync(prep.Id, _userContext.InternalId!.Value);
+        await db.SeedPrepRatingAsync(prep.Id, _userContext.InternalId);
 
         // Act
         var result = await PrepRatingEndpoints.GetPrepRatings(prep.Id, db);

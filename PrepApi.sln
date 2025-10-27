@@ -17,6 +17,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PrepApi.Tests.Integration",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PrepApi.Tests.Unit", "tests\PrepApi.Tests.Unit\PrepApi.Tests.Unit.csproj", "{41CAE196-811D-4E5F-9B72-A1BA06154B4F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{48A3C135-E4D7-4A6F-B0ED-D1D6F5FB8494}"
+	ProjectSection(SolutionItems) = preProject
+		docs\authorization.md = docs\authorization.md
+		docs\index.md = docs\index.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -40,5 +46,6 @@ Global
 		{D555F7F9-F99C-46B7-A5B4-37338118FD2F} = {ADDF833D-F778-4347-8A36-C64804FEE53B}
 		{A08F7239-01F8-4328-AB16-2BA71F04A2CE} = {E35F7946-B93D-4870-BD53-74782B032A4A}
 		{41CAE196-811D-4E5F-9B72-A1BA06154B4F} = {E35F7946-B93D-4870-BD53-74782B032A4A}
+		{48A3C135-E4D7-4A6F-B0ED-D1D6F5FB8494} = {191ED420-0D6F-41E2-9B21-F5E10C9FD890}
 	EndGlobalSection
 EndGlobal

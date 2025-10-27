@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 using PrepApi.Data;
 
-namespace PrepApi.Shared.Services;
+namespace PrepApi.Authorization;
 
 public static class UserContextExtensions
 {

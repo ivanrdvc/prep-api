@@ -2,10 +2,10 @@
 
 using Microsoft.EntityFrameworkCore;
 
+using PrepApi.Authorization;
 using PrepApi.Ingredients;
 using PrepApi.Preps.Entities;
 using PrepApi.Recipes.Entities;
-using PrepApi.Shared.Services;
 using PrepApi.Users;
 
 namespace PrepApi.Data;
@@ -307,6 +307,34 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
 
             entity.HasIndex(ri => ri.RecipeId).IsUnique();
         });
+
+        // Global query filters - automatically scope data by user
+        modelBuilder.Entity<Recipe>().HasQueryFilter(r =>
+            userContext.User != null && (
+                userContext.IsAdmin ||
+                r.UserId == userContext.User.Id));
+
+        modelBuilder.Entity<Prep>().HasQueryFilter(p =>
+            userContext.User != null && (
+                userContext.IsAdmin ||
+                p.UserId == userContext.User.Id));
+
+        modelBuilder.Entity<Tag>().HasQueryFilter(t =>
+            userContext.User != null && (
+                userContext.IsAdmin ||
+                t.UserId == userContext.User.Id));
+
+        modelBuilder.Entity<PrepRating>().HasQueryFilter(r =>
+            userContext.User != null && (
+                userContext.IsAdmin ||
+                r.UserId == userContext.User.Id));
+
+        // Special case: Ingredients can be shared (UserId == null) or user-owned
+        modelBuilder.Entity<Ingredient>().HasQueryFilter(i =>
+            userContext.User != null && (
+                userContext.IsAdmin ||
+                i.UserId == null || // Shared ingredients
+                i.UserId == userContext.User.Id)); // User's own ingredients
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -319,7 +347,7 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
             var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
             if (env != "Development") return;
 
-            if (await db.Users.AnyAsync(cancellationToken)) return;
+            if (await db.Users.IgnoreQueryFilters().AnyAsync(cancellationToken)) return;
 
             var seedPath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "seed");
             var options = new JsonSerializerOptions
@@ -367,7 +395,7 @@ public class PrepDb(DbContextOptions<PrepDb> options, IUserContext userContext) 
     {
         var timestamp = DateTimeOffset.UtcNow;
         var systemUser = new Guid("00000000-0000-0000-0000-000000000001");
-        var userId = userContext.InternalId ?? systemUser;
+        var userId = userContext.User is not null ? userContext.InternalId : systemUser;
 
         foreach (var entry in ChangeTracker.Entries<Entity>())
         {

@@ -1,10 +1,11 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 
+using PrepApi.Authorization;
 using PrepApi.Ingredients;
 using PrepApi.Ingredients.Requests;
-using PrepApi.Shared.Services;
 using PrepApi.Tests.Integration.TestHelpers;
 using PrepApi.Tests.Unit.TestHelpers;
+using PrepApi.Users;
 
 namespace PrepApi.Tests.Unit.Ingredients;
 
@@ -78,7 +79,7 @@ public class IngredientEndpointsTests
         var request = new GetIngredientsRequest { Skip = 0, Take = 10 };
 
         // Act
-        var result = await IngredientEndpoints.GetUserIngredients(context, _userContext, request);
+        var result = await IngredientEndpoints.GetUserIngredients(context, request);
 
         // Assert
         var ingredients = result.Value;
@@ -97,7 +98,7 @@ public class IngredientEndpointsTests
         var request = new GetIngredientsRequest { Skip = 0, Take = 10, Name = "Fl" };
 
         // Act
-        var result = await IngredientEndpoints.GetUserIngredients(context, _userContext, request);
+        var result = await IngredientEndpoints.GetUserIngredients(context, request);
 
         // Assert
         var ingredients = result.Value;
@@ -114,7 +115,7 @@ public class IngredientEndpointsTests
         var request = new GetIngredientsRequest { Skip = 0, Take = 2000 };
 
         // Act
-        var result = await IngredientEndpoints.GetUserIngredients(context, _userContext, request);
+        var result = await IngredientEndpoints.GetUserIngredients(context, request);
 
         // Assert - Should limit to 1000 max
         Assert.NotNull(result.Value);
@@ -128,7 +129,7 @@ public class IngredientEndpointsTests
         var ingredientService = new IngredientService(context);
 
         // Act
-        var result = await IngredientEndpoints.SearchIngredients(ingredientService, "", _userContext);
+        var result = await IngredientEndpoints.SearchIngredients(ingredientService, "");
 
         // Assert
         Assert.IsType<BadRequest<string>>(result.Result);
@@ -227,6 +228,57 @@ public class IngredientEndpointsTests
 
         // Act
         var result = await IngredientEndpoints.DeleteIngredient(Guid.NewGuid(), context, _userContext);
+
+        // Assert
+        Assert.IsType<NotFound>(result.Result);
+    }
+
+    [Fact]
+    public async Task UpdateIngredient_DifferentOwner_ReturnsNotFound()
+    {
+        // Arrange
+        var otherUserId = Guid.NewGuid();
+        var otherUserContext = new TestUserContext
+        {
+            User = new User
+            {
+                Id = otherUserId,
+                ExternalId = "other-user-external-id"
+            }
+        };
+        var otherUserDb = new FakeDb(otherUserContext);
+        await using var context = otherUserDb.CreateDbContext();
+
+        var createRequest = new UpsertIngredientRequest { Name = "Other User's Ingredient" };
+        var createResult = await IngredientEndpoints.CreateIngredient(createRequest, context, otherUserContext);
+        var created = (Created<IngredientDto>)createResult.Result;
+
+        var updateRequest = new UpsertIngredientRequest { Name = "Hacked Name" };
+
+        // Act
+        var result = await IngredientEndpoints.UpdateIngredient(created.Value!.Id, updateRequest, context, _userContext);
+
+        // Assert
+        Assert.IsType<NotFound>(result.Result);
+    }
+
+    [Fact]
+    public async Task DeleteIngredient_SharedIngredient_ReturnsNotFound()
+    {
+        // Arrange
+        await using var context = _fakeDb.CreateDbContext();
+
+        var sharedIngredient = new Ingredient
+        {
+            Name = "Shared Flour",
+            UserId = null,
+            Category = "Grains"
+        };
+        context.Ingredients.Add(sharedIngredient);
+        await context.SaveChangesAsync();
+
+        // Act
+        var result = await IngredientEndpoints.DeleteIngredient(sharedIngredient.Id, context, _userContext);
 
         // Assert
         Assert.IsType<NotFound>(result.Result);

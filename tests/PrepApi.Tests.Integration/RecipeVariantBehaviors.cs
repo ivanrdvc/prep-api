@@ -40,6 +40,7 @@ public class RecipeVariantBehaviors(TestWebAppFactory factory) : IClassFixture<T
 
         await using var assertContext = await factory.CreateScopedDbContextAsync();
         var variant = await assertContext.Recipes
+            .IgnoreQueryFilters()
             .Include(r => r.RecipeIngredients)
             .FirstOrDefaultAsync(r => r.Id == variantId);
 
@@ -72,8 +73,8 @@ public class RecipeVariantBehaviors(TestWebAppFactory factory) : IClassFixture<T
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
         await using var assertContext = await factory.CreateScopedDbContextAsync();
-        var updatedVariant1 = await assertContext.Recipes.FindAsync(variant1.Id);
-        var updatedVariant2 = await assertContext.Recipes.FindAsync(variant2.Id);
+        var updatedVariant1 = await assertContext.Recipes.IgnoreQueryFilters().FirstOrDefaultAsync(r => r.Id == variant1.Id);
+        var updatedVariant2 = await assertContext.Recipes.IgnoreQueryFilters().FirstOrDefaultAsync(r => r.Id == variant2.Id);
 
         Assert.NotNull(updatedVariant1);
         Assert.NotNull(updatedVariant2);

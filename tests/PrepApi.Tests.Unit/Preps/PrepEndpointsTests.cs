@@ -3,15 +3,13 @@ using FluentValidation;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
-using NSubstitute;
-
+using PrepApi.Authorization;
 using PrepApi.Data;
 using PrepApi.Preps;
 using PrepApi.Preps.Entities;
 using PrepApi.Preps.Requests;
 using PrepApi.Shared.Dtos;
 using PrepApi.Shared.Requests;
-using PrepApi.Shared.Services;
 using PrepApi.Tests.Integration.TestHelpers;
 using PrepApi.Tests.Unit.TestHelpers;
 
@@ -39,7 +37,7 @@ public class PrepEndpointsTests
         await using var context = _fakeDb.CreateDbContext();
 
         // Act
-        var result = await PrepEndpoints.GetPrep(Guid.NewGuid(), context, _userContext);
+        var result = await PrepEndpoints.GetPrep(Guid.NewGuid(), context);
 
         // Assert
         Assert.IsType<NotFound>(result.Result);
@@ -54,7 +52,7 @@ public class PrepEndpointsTests
         var prep = await db.SeedPrepAsync(recipe);
 
         // Act
-        var result = await PrepEndpoints.GetPrep(prep.Id, db, _userContext);
+        var result = await PrepEndpoints.GetPrep(prep.Id, db);
 
         // Assert
         Assert.IsType<Ok<PrepDto>>(result.Result);
@@ -119,7 +117,7 @@ public class PrepEndpointsTests
         var request = CreateUpsertPrepRequest(db, prep.RecipeId);
 
         // Act
-        var result = await PrepEndpoints.UpdatePrep(prep.Id, request, db, _userContext, _prepService, _validator);
+        var result = await PrepEndpoints.UpdatePrep(prep.Id, request, db, _prepService, _validator);
 
         // Assert
         Assert.IsType<NoContent>(result.Result);
@@ -134,26 +132,7 @@ public class PrepEndpointsTests
         var request = CreateUpsertPrepRequest(db, recipe.Id);
 
         // Act
-        var result = await PrepEndpoints.UpdatePrep(Guid.NewGuid(), request, db, _userContext, _prepService, _validator);
-
-        // Assert
-        Assert.IsType<NotFound>(result.Result);
-    }
-
-    [Fact]
-    public async Task UpdatePrep_DifferentUser_ReturnsNotFound()
-    {
-        // Arrange
-        await using var db = _fakeDb.CreateDbContext();
-        var recipe = await db.SeedRecipeAsync();
-        var prep = await db.SeedPrepAsync(recipe);
-        var request = CreateUpsertPrepRequest(db, prep.RecipeId);
-
-        var differentUserContext = Substitute.For<IUserContext>();
-        differentUserContext.InternalId.Returns(Guid.NewGuid());
-
-        // Act
-        var result = await PrepEndpoints.UpdatePrep(prep.Id, request, db, differentUserContext, _prepService, _validator);
+        var result = await PrepEndpoints.UpdatePrep(Guid.NewGuid(), request, db, _prepService, _validator);
 
         // Assert
         Assert.IsType<NotFound>(result.Result);
@@ -177,7 +156,7 @@ public class PrepEndpointsTests
         });
 
         // Act
-        var result = await PrepEndpoints.UpdatePrep(prep.Id, request, db, _userContext, _prepService, _validator);
+        var result = await PrepEndpoints.UpdatePrep(prep.Id, request, db, _prepService, _validator);
 
         // Assert
         Assert.IsType<ValidationProblem>(result.Result);
@@ -192,7 +171,7 @@ public class PrepEndpointsTests
         var prep = await db.SeedPrepAsync(recipe);
 
         // Act
-        var result = await PrepEndpoints.DeletePrep(prep.Id, db, _userContext);
+        var result = await PrepEndpoints.DeletePrep(prep.Id, db);
 
         // Assert
         Assert.IsType<NoContent>(result.Result);
@@ -205,7 +184,7 @@ public class PrepEndpointsTests
         await using var context = _fakeDb.CreateDbContext();
 
         // Act
-        var result = await PrepEndpoints.DeletePrep(Guid.NewGuid(), context, _userContext);
+        var result = await PrepEndpoints.DeletePrep(Guid.NewGuid(), context);
 
         // Assert
         Assert.IsType<NotFound>(result.Result);
@@ -221,7 +200,7 @@ public class PrepEndpointsTests
         var request = new PaginationRequest { PageIndex = 0, PageSize = 10 };
 
         // Act
-        var result = await PrepEndpoints.GetPrepsByRecipe(recipe.Id, request, db, _userContext);
+        var result = await PrepEndpoints.GetPrepsByRecipe(recipe.Id, request, db);
 
         // Assert
         Assert.IsType<Ok<PaginatedItems<PrepSummaryDto>>>(result.Result);
@@ -236,7 +215,7 @@ public class PrepEndpointsTests
         var request = new PaginationRequest { PageIndex = 0, PageSize = 0 };
 
         // Act
-        var result = await PrepEndpoints.GetPrepsByRecipe(recipe.Id, request, db, _userContext);
+        var result = await PrepEndpoints.GetPrepsByRecipe(recipe.Id, request, db);
 
         // Assert
         Assert.Empty(Assert.IsType<Ok<PaginatedItems<PrepSummaryDto>>>(result.Result).Value!.Data);
@@ -272,7 +251,7 @@ public class PrepEndpointsTests
         };
 
         // Act
-        var result = await PrepEndpoints.GetPrepsByRecipe(recipe.Id, request, db, _userContext);
+        var result = await PrepEndpoints.GetPrepsByRecipe(recipe.Id, request, db);
 
         // Assert
         var data = Assert.IsType<Ok<PaginatedItems<PrepSummaryDto>>>(result.Result).Value!.Data.ToList();
