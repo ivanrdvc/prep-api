@@ -5,6 +5,7 @@ using PrepApi.Ingredients;
 using PrepApi.Ingredients.Requests;
 using PrepApi.Tests.Integration.TestHelpers;
 using PrepApi.Tests.Unit.TestHelpers;
+using PrepApi.Users;
 
 namespace PrepApi.Tests.Unit.Ingredients;
 
@@ -227,6 +228,57 @@ public class IngredientEndpointsTests
 
         // Act
         var result = await IngredientEndpoints.DeleteIngredient(Guid.NewGuid(), context, _userContext);
+
+        // Assert
+        Assert.IsType<NotFound>(result.Result);
+    }
+
+    [Fact]
+    public async Task UpdateIngredient_DifferentOwner_ReturnsNotFound()
+    {
+        // Arrange
+        var otherUserId = Guid.NewGuid();
+        var otherUserContext = new TestUserContext
+        {
+            User = new User
+            {
+                Id = otherUserId,
+                ExternalId = "other-user-external-id"
+            }
+        };
+        var otherUserDb = new FakeDb(otherUserContext);
+        await using var context = otherUserDb.CreateDbContext();
+
+        var createRequest = new UpsertIngredientRequest { Name = "Other User's Ingredient" };
+        var createResult = await IngredientEndpoints.CreateIngredient(createRequest, context, otherUserContext);
+        var created = (Created<IngredientDto>)createResult.Result;
+
+        var updateRequest = new UpsertIngredientRequest { Name = "Hacked Name" };
+
+        // Act
+        var result = await IngredientEndpoints.UpdateIngredient(created.Value!.Id, updateRequest, context, _userContext);
+
+        // Assert
+        Assert.IsType<NotFound>(result.Result);
+    }
+
+    [Fact]
+    public async Task DeleteIngredient_SharedIngredient_ReturnsNotFound()
+    {
+        // Arrange
+        await using var context = _fakeDb.CreateDbContext();
+
+        var sharedIngredient = new Ingredient
+        {
+            Name = "Shared Flour",
+            UserId = null,
+            Category = "Grains"
+        };
+        context.Ingredients.Add(sharedIngredient);
+        await context.SaveChangesAsync();
+
+        // Act
+        var result = await IngredientEndpoints.DeleteIngredient(sharedIngredient.Id, context, _userContext);
 
         // Assert
         Assert.IsType<NotFound>(result.Result);
